@@ -2,7 +2,7 @@ import pack from "./src"
 
 const global = window || global || self || this || {};
 global.defaultjs = global.defaultjs || {};
-global.defaultjs.el = global.defaultjs.el || {
+global.defaultjs.tl = global.defaultjs.tl || {
 	VERSION : "${version}",
-	ExpressionResolver : pack.ExpressionResolver
+	TaskChain : pack.TaskChain
 };
