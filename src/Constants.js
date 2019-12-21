@@ -6,14 +6,14 @@ export default {
 		onReady : "jstl-on-ready"
 	},
 	PHASE : {
-		INIT:0,
-		CONDITION:1,
-		CONTEXT:2,
-		MANIPULATION:3,
-		CONTENT:4,
-		CLEANING: 5,
-		CHILDREN:6,
-		BINDING:7,
-		FINISH:8
+		INIT : 1000,
+		CONDITION : 2000,
+		CONTEXT : 3000,
+		MANIPULATION : 4000,
+		CONTENT : 5000,
+		CLEANING : 6000,
+		CHILDREN : 7000,
+		BINDING : 8000,
+		FINISH : 9000
 	}
 };	

@@ -25,7 +25,6 @@ module.exports = {
 		"test/*.js" : [ "webpack", "sourcemap"],
 		"test/sites/**/*.html" : [ "html2js" ]
 	},
-	webpack : webpackconf,
 	// test results reporter to use
 	// possible values: "dots", "progress"
 	// available reporters: https://npmjs.org/browse/keyword/karma-reporter

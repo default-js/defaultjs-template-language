@@ -1,24 +1,50 @@
 import Constants from "./Constants";
 import TaskChain from "./TaskChain";
 
+const taskchain = new TaskChain();
 
-
-
- const Processor = {
-	addTask : function(){
-		
-	},		 
-	process : function(aElement, aData){		
-		aContext.element.trigger(Constants.EVENTS.onExecute)
-		return TaskChain.execute({
+const Processor = {
+	/**
+	* @param aTask : {
+	* 		title : string,
+	* 		accept(aElement) : Promise(Boolean)
+	* 		execute(aContext) : Promise(new Context)
+	* }
+	* @param aPhase : Contants.PHASE
+	*/	
+	addTask : function(aTask, aPhase){
+		taskchain.add(aTask, aPhase)
+	},
+	getTaskchain : function(){
+		return taskchain;
+	},
+	execute : function(aElement, aData, aRoot){
+		console.log("process:", aElement);
+		aElement.trigger(Constants.EVENTS.onExecute);
+		const context = {
 			element : aElement,
 			data : aData,
-			root : aElement,
+			root : aRoot || aElement,
 			processor : this
-		}).then(function(aContext){
+		};
+		
+		return taskchain.execute(context).then(function(aContext){
+			if(typeof aRoot === "undefined")
+				return Promise.resolve({
+					element : aElement,
+					data : aData
+				});
 			aContext.element.trigger(Constants.EVENTS.onReady);
-		})["catch"](function(aContext){
-			aContext.element.trigger(Constants.EVENTS.onFail);
+			return Promise.resolve(aContext);
+		})["catch"](function(aError){
+			console.error(aError);			
+			if(typeof aRoot === "undefined")
+				return Promise.resolve({
+					element : aElement,
+					data : aData
+				});
+			aElement.trigger(Constants.EVENTS.onFail);
+			return Promise.resolve(context);
 		});
 	}
 };

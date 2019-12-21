@@ -1,5 +1,8 @@
-export default {
-	title : "foreach",
+import Constants from "../Constants";
+import Processor from "../Processor";
+
+const Task = {
+	id : "foreach",
 	accept : function(aElement){
 		return Promise.resolve(true);
 	},
@@ -7,3 +10,5 @@ export default {
 		return Promise.resolve(aContext);
 	}
 };
+
+Processor.addTask(Task, Constants.PHASE.MANIPULATION);
