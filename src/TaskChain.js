@@ -26,13 +26,20 @@ const insert = function(aEntry, aChain){
 
 const executeChain = function(aContext, aChain){
 	console.log("execute chain:", aChain.task.id, "context:", aContext);
-	return aChain.task.execute(aContext)
-	.then(function(aContext){
-		if(aContext.exit || aChain.next == null)
-			return Promise.resolve(aContext);
+	
+	return Promise.resolve(aChain.task.accept(aContext))
+	.then(function(isAccepted){
+		if(!isAccepted)
+			return aChain.next == null ? aContext : executeChain(aContext, aChain.next);
 		
-		return executeChain(aContext, aChain.next);
-	});
+		return Promise.resolve(aChain.task.execute(aContext))
+		.then(function(aContext){
+			if(aContext.exit || aChain.next == null)
+				return aContext;
+			
+			return executeChain(aContext, aChain.next);
+		});
+	});	
 };
 
 const TaskChain = function(){

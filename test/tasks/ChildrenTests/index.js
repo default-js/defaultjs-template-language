@@ -11,7 +11,7 @@ describe("Children Task Test", function() {
 	
 	it("test", function(done){	
 		const element = find("#test-case").first();		
-		const data = { test : true };
+		const data = { test : false };
 		Processor.execute(element, data)
 		.then(function(aResult){
 			
@@ -29,6 +29,6 @@ describe("Children Task Test", function() {
 	});	
 	
 	afterAll(function() {
-		window.document.body.innerHTML = "";
+		//window.document.body.innerHTML = "";
 	});
 });

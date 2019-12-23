@@ -5,8 +5,9 @@ import Processor from "../Processor";
 const executeNext = function(children, index, aContext){
 	return aContext.processor.execute(children[index], aContext.data, aContext.root)
 	.then(function(aContext){
-		if(children.length < index)
-			return executeNext(children, index + 1, aContext);
+		const nextIndex = index + 1;
+		if(children.length > nextIndex)
+			return executeNext(children, nextIndex, aContext);
 		else
 			return aContext;
 	});
@@ -14,15 +15,12 @@ const executeNext = function(children, index, aContext){
 
 const Task = {
 	id : "children",
-	accept : function(aElement){		
-		return Promise.resolve(true);
-	},
-	execute : function(aContext){		
+	accept : function(aContext){
 		const children = aContext.element.children;
-		if(typeof children !== "undefined" && children != null && children.length > 0)
-			return executeNext(children, 0, aContext);
-		
-		return aContext;
+		return children != null && children.length > 0;
+	},
+	execute : function(aContext){
+		return executeNext(Array.from(aContext.element.children), 0, aContext);
 	}
 };
 

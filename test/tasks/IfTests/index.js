@@ -9,13 +9,25 @@ describe("If Task Test", function() {
 	});
 	
 	
-	it("test", function(done){	
-		const element = find("#test-case").first();		
+	it("if == true", function(done){	
+		const element = find("#test-case-1").first();		
 		const data = { test : true };
 		Processor.execute(element, data)
 		.then(function(aResult){
 			
-			const elements = find("#test-case").first();
+			const elements = find("#test-case-1").first();
+			expect(elements).toBeDefined();			
+			done();
+		});
+	});	
+	
+	it("if == false", function(done){	
+		const element = find("#test-case-1").first();		
+		const data = { test : false };
+		Processor.execute(element, data)
+		.then(function(aResult){
+			
+			const elements = find("#test-case-1").first();
 			expect(elements).toBeUndefined();			
 			done();
 		});

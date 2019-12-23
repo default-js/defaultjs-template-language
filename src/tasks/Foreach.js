@@ -3,8 +3,8 @@ import Processor from "../Processor";
 
 const Task = {
 	id : "foreach",
-	accept : function(aElement){
-		return Promise.resolve(true);
+	accept : function(aContext){
+		return false;
 	},
 	execute : function(aContext){
 		return Promise.resolve(aContext);
