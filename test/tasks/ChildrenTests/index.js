@@ -29,6 +29,6 @@ describe("Children Task Test", function() {
 	});	
 	
 	afterAll(function() {
-		//window.document.body.innerHTML = "";
+		window.document.body.innerHTML = "";
 	});
 });

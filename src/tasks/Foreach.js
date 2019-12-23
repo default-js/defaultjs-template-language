@@ -21,9 +21,10 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.COUNT), aContext.data, 0),
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STEP), aContext.data, 1)
 	]).then(function(aResults){
+		console.log("foreach - aResults", aResults, arguments);
 		let promises = [];
 		for (let i = aResults[0]; i < aResults[1]; i += aResults[2]) {    			    
-		    const context = ObjectUtils.extend({}, aContext);
+		    const context = ObjectUtils.merge({}, aContext);
 		    context[aVarname] = i,
 		    context[aStatusname] = {
 		        "index" : i,
@@ -31,7 +32,7 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		        "count" : aResults[1],
 		        "context" : aContext.data
 		    };
-		    promises.push(aContext.processor.execute(aTemplate.clone(), context, aContext.root));
+		    promises.push(aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root));
 	    }
 		
 		return Promise.all(promises);
@@ -42,7 +43,7 @@ const iterateList = function(aIndex, aData, aBreakCondition, aVarname, aStatusna
 	if(aIndex >= aData.length)
 		return aResult;	
 	
-	const context = ObjectUtils.extend({}, aContext);
+	const context = ObjectUtils.merge({}, aContext);
     context[aVarname] = aData[aIndex],
     context[aStatusname] = {
         "index" : aIndex,
@@ -51,22 +52,23 @@ const iterateList = function(aIndex, aData, aBreakCondition, aVarname, aStatusna
         "data" : aData,
         "context" : aContext.data
     };
+    
     return Resolver.resolve(aBreakCondition, context, false)
     .then(function(doBreak){
     	if(!doBreak){
-    		return aContext.processor.execute(aTemplate.clone(), context, aContext.root)).
-    		then(function(aContent){
+    		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
+    		.then(function(aContent){
     			return aResult.push(aContent);
     		});    		
     	}
     	
     	return aResult;
-    })	
+    });	
 };
 
 const list = function(aData, aVarname, aStatusname, aContext, aTemplate) {	
 	const breakCondition = aContext.element.attr(ATTRIBUTE.BREAKCONDITION);
-	return Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0))
+	return Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0)
 	.then(function(aStartIndex){
 		return iterateList(aStartIndex,aData, aVarname, aStatusname, aContext, aTemplate, []);	    	
 	});
@@ -77,7 +79,7 @@ const iterateMap = function(aIndex, aKeys, aData, aBreakCondition, aVarname, aSt
 		return aResult;
 	
 	const key = aKeys[aIndex];
-	const context = ObjectUtils.extend({}, aContext);
+	const context = ObjectUtils.merge({}, aContext);
     context[aVarname] = aData[key],
     context[aStatusname] = {
         "index" : aIndex,
@@ -87,31 +89,32 @@ const iterateMap = function(aIndex, aKeys, aData, aBreakCondition, aVarname, aSt
         "data" : aData,
         "context" : aContext.data
     };
+    
     return Resolver.resolve(aBreakCondition, context, false)
     .then(function(doBreak){
     	if(!doBreak){
-    		return aContext.processor.execute(aTemplate.clone(), context, aContext.root)).
-    		then(function(aContent){
+    		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
+    		.then(function(aContent){
     			return aResult.push(aContent);
     		});    		
     	}
     	
     	return aResult;
-    })	
+    });
 };
 
-const map = function(aMap, aTemplate, aVarname, aStatusName, aElement, aContext, aProcessor, aTaskChain) {
+const map = function(aData, aVarname, aStatusname, aContext, aTemplate) {
 	const breakCondition = aContext.element.attr(ATTRIBUTE.BREAKCONDITION);
-	return Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0))
+	return Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0)
 	.then(function(aStartIndex){
 		return iterateMap(aStartIndex, Object.getOwnPropertyNames(aData), aData, aVarname, aStatusname, aContext, aTemplate, []);	    	
 	});
-},
+};
 
-const template : function(aElement) {
+const getTemplate = function(aElement) {
     let template = aElement.data(DATANAME);
     if (typeof template === 'undefined') {
-	    template = aElement.contents();
+	    template = aElement.content();
 	    aElement.data(DATANAME, template);
     }
     return template;
@@ -119,20 +122,20 @@ const template : function(aElement) {
 
 
 const execute = function(anExpression, aVarname, aStatusname, aContext, aTemplate){
-	if (expression == null && typeof aElement.attr("jstl-foreach-count") !== "undefined")
-	    return count(varname, statusname, aContext, template);
+	if (anExpression == null && typeof aContext.element.attr(ATTRIBUTE.COUNT) !== "undefined")
+	    return count(aVarname, aStatusname, aContext, aTemplate);
     else if(expression != null){
-	    let data = Resolver.resolve(expression, aContext, null);
+	    let data = Resolver.resolve(anExpression, aContext, null);
 	    if(data == null)
 	    	return aContext;
 	    else if (data instanceof Array)
-		    return list(data, varname, statusname, aContext, template);
+		    return list(data, aVarname, aStatusname, aContext, aTemplate);
 	    else if(data instanceof Object)
-		    return map(data, template, varName, statusName, aElement, aContext, aProcessor, aTaskChain);					   
+	    	return map(data, aVarname, aStatusname, aContext, aTemplate);				   
 	    else
 		    return null;
     }
-}
+};
 
 
 const Task = {
@@ -142,7 +145,7 @@ const Task = {
 	},
 	execute : function(aContext){		
 		const element = aContext.element;
-		const template = template(element);
+		const template = getTemplate(aContext.element);
 	    if (typeof template !== 'undefined') {
 	    	const expression = element.attr(ATTRIBUTE.DATA) || null;
 	    	const varname = element.attr(ATTRIBUTE.VARNAME) || "itemVar"; 
@@ -152,7 +155,7 @@ const Task = {
 		    	if(aContent != null)
 		    		element.append(aContent)
 		    	return aContext;		    	
-		    });
+		    })["catch"](console.error);
 	    }
 	    
 		return aContext;
