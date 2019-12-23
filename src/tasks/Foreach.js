@@ -1,7 +1,7 @@
 import el from "@modules/defaultjs-expression-language";
 import Constants from "../Constants";
 import Processor from "../Processor";
-import ObjectUtils from "../ObjectUtils";
+import ObjectUtils from "../utils/ObjectUtils";
 
 const Resolver = el.ExpressionResolver;
 const DATANAME = "defaultjs.tl.foreach.template";
@@ -16,14 +16,18 @@ const ATTRIBUTE = {
 };
 
 const count = function(aVarname, aStatusname, aContext, aTemplate) {	
+	console.log("count");
 	return Promise.all([
-		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0),
-		Resolver.resolve(aContext.element.attr(ATTRIBUTE.COUNT), aContext.data, 0),
-		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STEP), aContext.data, 1)
+		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX) || 0, aContext.data, 0),
+		Resolver.resolve(aContext.element.attr(ATTRIBUTE.COUNT) || 0, aContext.data, 0),
+		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STEP) || 1, aContext.data, 1)
 	]).then(function(aResults){
 		console.log("foreach - aResults", aResults, arguments);
 		let promises = [];
-		for (let i = aResults[0]; i < aResults[1]; i += aResults[2]) {    			    
+		const start = aResults[0] || 0;
+		const count = aResults[1] || 0;
+		const step = aResults[2] || 1;
+		for (let i = start; i < count; i += step) {    			    
 		    const context = ObjectUtils.merge({}, aContext);
 		    context[aVarname] = i,
 		    context[aStatusname] = {
@@ -32,7 +36,10 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		        "count" : aResults[1],
 		        "context" : aContext.data
 		    };
-		    promises.push(aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root));
+		    promises.push(aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
+    		.then(function(aContext){
+    			return Promise.resolve(aContext.element);
+    		}));
 	    }
 		
 		return Promise.all(promises);
@@ -58,7 +65,7 @@ const iterateList = function(aIndex, aData, aBreakCondition, aVarname, aStatusna
     	if(!doBreak){
     		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
     		.then(function(aContent){
-    			return aResult.push(aContent);
+    			return aResult.push(aContent.element);
     		});    		
     	}
     	
@@ -95,7 +102,7 @@ const iterateMap = function(aIndex, aKeys, aData, aBreakCondition, aVarname, aSt
     	if(!doBreak){
     		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
     		.then(function(aContent){
-    			return aResult.push(aContent);
+    			return aResult.push(aContent.element);
     		});    		
     	}
     	
@@ -122,6 +129,7 @@ const getTemplate = function(aElement) {
 
 
 const execute = function(anExpression, aVarname, aStatusname, aContext, aTemplate){
+	console.log("execute");
 	if (anExpression == null && typeof aContext.element.attr(ATTRIBUTE.COUNT) !== "undefined")
 	    return count(aVarname, aStatusname, aContext, aTemplate);
     else if(expression != null){
@@ -150,7 +158,17 @@ const Task = {
 	    	const expression = element.attr(ATTRIBUTE.DATA) || null;
 	    	const varname = element.attr(ATTRIBUTE.VARNAME) || "itemVar"; 
 		    const statusname = element.attr(ATTRIBUTE.STATUSVARNAME) || "statusVar";
-		    return Promise.resolve(execute(expression, varname, statusname, aContext, template)).then(function(aContent){
+		    return Promise.resolve(execute(expression, varname, statusname, aContext, template))
+		    .then(function(aContent){
+		    	const result = [];
+	    		aContent.forEach(function(aItem){
+	    			aItem.forEach(function(node){
+	    				result.push(node);
+	    			});
+	    		});
+		    	
+		    	return Promise.resolve(result);
+		    }).then(function(aContent){
 		    	element.empty();
 		    	if(aContent != null)
 		    		element.append(aContent)
