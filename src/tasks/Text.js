@@ -33,6 +33,7 @@ const CONTENTTYPE = {
         	aNode.textContent = JSON.stringify(aText);
     },
     "text" : function(aNode, aText, aContext) {
+    	console.log("process text:", aText);
         let text = aText;
         let addAsHtml = false;
 
@@ -69,27 +70,35 @@ const Task = {
 		return !aContext.element.is("[jstl-text-ignore]");
 	},
 	execute : function(aContext){
+		console.log("execute text");
 		const type = aContext.element.attr("jstl-text-content-type") || "text";
 		if(typeof CONTENTTYPE[type] === "undefined")
 			return;
 		
+		const promises = [];		
 		normalize(aContext.element);
 		Array.from(aContext.element.childNodes || [])
-		.filter(function(aItem) {
-			return (aItem === 3 || aItem === 4) && typeof aItem.textContent !== "undefined" && aItem.textContent.trim().length > 0;
+		.filter(function(aNode) {
+			console.log("filter node:", aNode);
+			return (aNode.nodeType === 3 || aNode.nodeType === 4) && typeof aNode.textContent !== "undefined" && aNode.textContent.trim().length > 0;
 		}).forEach(function(aNode) {
+			console.log("process node:", aNode);
 		    let text = aNode.textContent;
 		    if (text) {
-			    text = Resolver.resolveText(text, aContext.data)
-			    .then(function(aText){					
-					CONTENTTYPE[type](aNode, aText, aContext);
-			    });
+		    	promises.push(
+				    Resolver.resolveText(text, aContext.data)
+				    .then(function(aText){					
+						CONTENTTYPE[type](aNode, aText, aContext);
+				    })
+			    );
+			    
 		    }
-	    });
+	    });		
 		
-		
-		
-		return Promise.resolve(aContext);
+		return Promise.all(promises)
+		.then(function(){
+			return Promise.resolve(aContext);
+		});
 	}
 };
 

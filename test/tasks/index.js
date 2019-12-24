@@ -1,3 +1,4 @@
 //import "./IfTests";
 //import "./ChildrenTests";
-import "./Foreach";
+//import "./Foreach";
+import "./Text";
