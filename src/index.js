@@ -1,11 +1,12 @@
-import "@modules/defaultjs-extdom";
-import TaskChain from "./TaskChain";
+import "@default-js/defaultjs-extdom";
+import Constants from "./Constants";
 import Processor from "./Processor";
 import "./tasks";
 
-
-
-export default {
-	TaskChain : TaskChain,
+const pack = {
+	Constants : Constants,
 	Processor : Processor
 };
+
+export default pack;
+export {Constants, Processor};

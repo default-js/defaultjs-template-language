@@ -1,7 +1,6 @@
-import el from "@modules/defaultjs-expression-language";
+import el from "@default-js/defaultjs-expression-language";
 import Constants from "../Constants";
 import Processor from "../Processor";
-import ObjectUtils from "../utils/ObjectUtils";
 import StringUtils from "../utils/StringUtils";
 
 const Resolver = el.ExpressionResolver;
@@ -81,10 +80,11 @@ const Task = {
 		}).forEach(function(aNode) {
 		    let text = aNode.textContent;
 		    if (text) {
+		    	console.log("resolve text:", text, "context:", aContext.data);
 		    	promises.push(
 				    Resolver.resolveText(text, aContext.data)
-				    .then(function(aText){					
-						CONTENTTYPE[type](aNode, aText, aContext);
+				    .then(function(aText){
+						return CONTENTTYPE[type](aNode, aText, aContext);
 				    })
 			    );
 			    

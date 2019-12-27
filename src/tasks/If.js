@@ -1,4 +1,4 @@
-import el from "@modules/defaultjs-expression-language";
+import el from "@default-js/defaultjs-expression-language";
 import Constants from "../Constants";
 import Processor from "../Processor";
 
@@ -10,11 +10,9 @@ const Task = {
 		return Promise.resolve(aContext.element.is("[jstl-if]"));
 	},
 	execute : function(aContext){
-		console.log("execute if", aContext);
 		const expression = aContext.element.attr("jstl-if");
 		return Resolver.resolve(expression, aContext.data, false)
 		.then(function(aResult){
-			console.log("if", aContext, "expr:",expression,"->", aResult);
 			if(!aResult)
 				aContext.element.remove();
 			

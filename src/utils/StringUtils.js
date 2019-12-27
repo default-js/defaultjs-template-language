@@ -1,4 +1,4 @@
-import ObjectUtils from "./ObjectUtils";
+import ObjectUtils from "@default-js/defaultjs-common-utils/src/ObjectUtils";
 
 const DEFAULTS = {
 	formatToHtml : {
@@ -17,7 +17,7 @@ const StringUtils = {
 		if (aText == undefined || typeof aText !== "string" || aText == "")
 			return aText;
 
-		let settings = ObjectUtils.extend({}, theSettings, DEFAULTS.trimTextLength);
+		let settings = ObjectUtils.megre({}, theSettings, DEFAULTS.trimTextLength);
 
 		if (aText.length > maxLength) {
 			let end = maxLength - settings.postfix.length;
@@ -29,7 +29,7 @@ const StringUtils = {
 	formatToHtml : function(aText, theSettings) {
 		if (aText == undefined || typeof aText !== "string" || aText == "")
 			return aText;
-		let settings = ObjectUtils.extend({}, theSettings ,DEFAULTS.formatToHtml);
+		let settings = ObjectUtils.merge({}, theSettings ,DEFAULTS.formatToHtml);
 		let lines = aText.replace(/\n\r/g, "\n").replace(/\r/g, "\n").split("\n");
 		let text = "";
 		for (let i = 0; i < lines.length; i++) {

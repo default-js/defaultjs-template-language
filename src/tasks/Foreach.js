@@ -1,7 +1,7 @@
-import el from "@modules/defaultjs-expression-language";
+import el from "@default-js/defaultjs-expression-language";
 import Constants from "../Constants";
 import Processor from "../Processor";
-import ObjectUtils from "../utils/ObjectUtils";
+import ObjectUtils from "@default-js/defaultjs-common-utils/src/ObjectUtils";
 
 const Resolver = el.ExpressionResolver;
 const DATANAME = "defaultjs.tl.foreach.template";
@@ -22,13 +22,12 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.COUNT) || 0, aContext.data, 0),
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STEP) || 1, aContext.data, 1)
 	]).then(function(aResults){
-		console.log("foreach - aResults", aResults, arguments);
 		let promises = [];
 		const start = aResults[0] || 0;
 		const count = aResults[1] || 0;
 		const step = aResults[2] || 1;
 		for (let i = start; i < count; i += step) {    			    
-		    const context = ObjectUtils.merge({}, aContext);
+		    const context = ObjectUtils.merge({}, aContext.data);
 		    context[aVarname] = i,
 		    context[aStatusname] = {
 		        "index" : i,
@@ -36,10 +35,10 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		        "count" : aResults[1],
 		        "context" : aContext.data
 		    };
-		    promises.push(aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
-    		.then(function(aContext){
-    			return Promise.resolve(aContext.element);
-    		}));
+		    promises.push(Processor.execute(aTemplate.cloneNode(true), context, aContext.root)
+		    	.then(function(aResult){
+	    			return aResult.element;
+	    		}));
 	    }
 		
 		return Promise.all(promises);
@@ -129,7 +128,6 @@ const getTemplate = function(aElement) {
 
 
 const execute = function(anExpression, aVarname, aStatusname, aContext, aTemplate){
-	console.log("execute");
 	if (anExpression == null && typeof aContext.element.attr(ATTRIBUTE.COUNT) !== "undefined")
 	    return count(aVarname, aStatusname, aContext, aTemplate);
     else if(expression != null){
@@ -160,18 +158,27 @@ const Task = {
 		    const statusname = element.attr(ATTRIBUTE.STATUSVARNAME) || "statusVar";
 		    return Promise.resolve(execute(expression, varname, statusname, aContext, template))
 		    .then(function(aContent){
+		    	console.log("foreach content:", aContent);
+		    	
+		    	if(typeof aContent === "undefined")
+		    		return [];
+		    	
 		    	const result = [];
 	    		aContent.forEach(function(aItem){
-	    			aItem.forEach(function(node){
-	    				result.push(node);
-	    			});
+	    			if(typeof aItem !== "undefined")
+		    			aItem.forEach(function(aNode){
+		    				if(typeof aNode !== "undefined")
+		    					result.push(aNode);
+		    			});
 	    		});
 		    	
-		    	return Promise.resolve(result);
+		    	return result;
 		    }).then(function(aContent){
 		    	element.empty();
 		    	if(aContent != null)
 		    		element.append(aContent)
+		    		
+		    	aContext.exit = true;
 		    	return aContext;		    	
 		    })["catch"](console.error);
 	    }

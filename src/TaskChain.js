@@ -24,9 +24,7 @@ const insert = function(aEntry, aChain){
 	return aChain;
 };
 
-const executeChain = function(aContext, aChain){
-	console.log("execute chain:", aChain.task.id, "context:", aContext);
-	
+const executeChain = function(aContext, aChain){	
 	return Promise.resolve(aChain.task.accept(aContext))
 	.then(function(isAccepted){
 		if(!isAccepted)
