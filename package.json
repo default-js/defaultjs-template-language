@@ -41,8 +41,9 @@
   },
   "homepage": "https://github.com/default-js/defaultjs-template-language#readme",
   "dependencies": {
-    "defaultjs-expression-language": "^1.0.0-beta.1",
-    "defaultjs-extdom": "^1.0.0-beta.1"
+    "@default-js/defaultjs-common-utils": "^0.3.0",
+    "@default-js/defaultjs-expression-language": "^1.0.0-beta.1",
+    "@default-js/defaultjs-extdom": "^1.0.0-beta.1"
   },
   "directories": {
     "test": "test"
