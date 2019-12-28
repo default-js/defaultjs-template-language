@@ -93,7 +93,7 @@ const Task = {
 		
 		return Promise.all(promises)
 		.then(function(){
-			return Promise.resolve(aContext);
+			return aContext;
 		});
 	}
 };

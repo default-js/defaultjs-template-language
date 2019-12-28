@@ -1,4 +1,5 @@
 import "./Async";
+import "./AddAttribute";
 import "./Attribute";
 import "./Choose";
 import "./Data";

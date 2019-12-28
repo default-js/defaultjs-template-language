@@ -23,9 +23,11 @@ describe("Default Processor Taskchain Test", function() {
 		chain = chain.next;
 		expect(chain.task.id).toBe("choose");
 		chain = chain.next;
-		expect(chain.task.id).toBe("attribute");
+		expect(chain.task.id).toBe("add-attribute");
 		chain = chain.next;
-		expect(chain.task.id).toBe("text");		
+		expect(chain.task.id).toBe("text");
+		chain = chain.next;
+		expect(chain.task.id).toBe("attribute");	
 		
 		done();
 	});	

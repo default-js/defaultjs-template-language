@@ -44,10 +44,12 @@ describe("Text Test", function() {
 			text3 : "text-3",
 		};
 		Processor.execute(element, data)
-		.then(function(aResult){
+		.then(function(){
 			expect(element.textContent).toBe("this is a text-1, a text-2 and a text-3");
-			done();
-		});
+		})["catch"](function(aError){
+			console.error(aError);
+			expect(aError).toBeUndefined();
+		})["finally"](done);
 	});	
 	
 	afterAll(function() {
