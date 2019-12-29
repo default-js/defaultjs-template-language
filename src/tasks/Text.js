@@ -23,7 +23,7 @@ const normalize = function(aNode) {
 
 const CONTENTTYPE = {
     "html" : function(aNode, aText, aContext) {
-        aContext.element.replaceChild(aNode, create(aText));
+        aNode.replace(create(aText));
     },
     "json" : function(aNode, aText, aContext) {
         if (typeof aText === "string")
