@@ -1,27 +1,24 @@
-import tl from "@src/index.js";
-const Processor = tl.Processor;
+import {Processor} from "@src/index.js";
 
+const CONTAINER_SELECTOR= "#foreach-count-test-cases";
 describe("Foreach Count Test", function() {
 	
-	beforeAll(function(done){
-		window.document.body.innerHTML = window.__html__["test/sites/tasks/foreach/CountTest.html"];
-		done();
+	beforeAll(function(){
+		window.document.body.append(create(window.__html__["test/sites/tasks/foreach/CountTest.html"]));
 	});
 	
 	
-	it("count test", function(done){	
-		const element = find("#test-case-1").first();		
+	it("count test", function(){
+		const container = find(CONTAINER_SELECTOR).first();
 		const data = {};
-		Processor.execute(element, data)
-		.then(function(aResult){
-			
-			const elements = find("#test-case-1 *");
-			expect(elements.length).toBe(10);			
-			done();
+		return Processor.execute(container, data)
+		.then(function(){			
+			const elements = container.find("*");
+			expect(elements.length).toBe(10);	
 		});
 	});	
 	
 	afterAll(function() {
-		//window.document.body.innerHTML = "";
+		find(CONTAINER_SELECTOR).remove();
 	});
 });

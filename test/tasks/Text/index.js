@@ -1,3 +1,2 @@
-import "./JsonAsText";
-//import "./HtmlText";
-//import "./SimpleText";
+import "./Html";
+import "./Text";

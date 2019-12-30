@@ -1,15 +1,16 @@
-import tl from "@src/index.js";
-const Processor = tl.Processor;
+import {Processor} from "@src/index.js";
 
+const CONTAINER_SELECTOR= "#text-html-test-cases";
 describe("HTML Text Test", function() {	
 	
 	beforeAll(function(){
-		window.document.body.innerHTML = window.__html__["test/sites/tasks/text/TestCase2.html"];
+		window.document.body.append(create(window.__html__["test/sites/tasks/text/HtmlTestCase.html"]));
 	});
 	
 	
-	it("single html content test", function(){	
-		const element = find("#test-case-1").first();		
+	it("single html content test", function(){
+		const container = find(CONTAINER_SELECTOR).first();
+		const element = container.find(".test-case-1").first();		
 		const data = {html:"<div></div>"};
 		return Processor.execute(element, data)
 		.then(function(){
@@ -20,8 +21,9 @@ describe("HTML Text Test", function() {
 		});
 	});
 	
-	it("multiple html contents from one textnode test", function(){	
-		const element = find("#test-case-2").first();		
+	it("multiple html contents from one textnode test", function(){
+		const container = find(CONTAINER_SELECTOR).first();
+		const element = container.find(".test-case-2").first();		
 		const data = {
 			html1:"<b>html-1</b>",
 			html2:"<b>html-2</b>",
@@ -40,8 +42,9 @@ describe("HTML Text Test", function() {
 		});
 	});
 	
-	it("single html contents with other sibling nodes test", function(){	
-		const element = find("#test-case-3").first();		
+	it("single html contents with other sibling nodes test", function(){
+		const container = find(CONTAINER_SELECTOR).first();
+		const element = container.find(".test-case-3").first();		
 		const data = {
 			html:"<div id=\"result\">html-1</div>"
 		};
@@ -63,6 +66,6 @@ describe("HTML Text Test", function() {
 	});
 	
 	afterAll(function() {
-		window.document.body.innerHTML = "";
+		find(CONTAINER_SELECTOR).remove();
 	});
 });

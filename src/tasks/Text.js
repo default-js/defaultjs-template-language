@@ -25,20 +25,19 @@ const CONTENTTYPE = {
     "html" : function(aNode, aText, aContext) {
         aNode.replace(create(aText));
     },
-    "json" : function(aNode, aText, aContext) {
-        if (typeof aText === "string")
-        	aNode.textContent = aText;
-        else
-        	aNode.textContent = JSON.stringify(aText);
-    },
     "text" : function(aNode, aText, aContext) {
         let text = aText;
         let addAsHtml = false;
 
+        let preventFormat = aContext.element.attr("jstl-text-prevent-format");
+        if(typeof preventFormat === "string" && preventFormat.trim().length == 0)
+        	preventFormat = "true";
+        
         Promise.all([
-        	Resolver.resolve(aContext.element.attr("jstl-text-prevent-format"), aContext.data, false),
-        	Resolver.resolve(aContext.element.attr("jstl-text-trim-length"), aContext.data, 0),
+        	Resolver.resolve(preventFormat, aContext.data, false),
+        	Resolver.resolve(aContext.element.attr("jstl-text-trim-length") || "0", aContext.data, 0),
         ]).then(function(aResults){
+        	console.log("aResults", aResults);
         	const preventFormat = !!aResults[0];
         	const maxLength = aResults[1];
         	
@@ -49,18 +48,12 @@ const CONTENTTYPE = {
         		
         		
     		 if (preventFormat)
-    			 aContext.element.replaceChild(aNode, create(text));
+    			 aNode.replace(create(text));
     		 else
     			 aNode.textContent = text;
         });
     }
 };
-
-CONTENTTYPE["text/html"] = CONTENTTYPE["html"];
-CONTENTTYPE["application/json"] = CONTENTTYPE["json"];
-CONTENTTYPE["text/plain"] = CONTENTTYPE["text"];
-
-
 
 const Task = {
 	id : "text",
