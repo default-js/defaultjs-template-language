@@ -4,7 +4,7 @@ import TaskChain from "./TaskChain";
 const taskchain = new TaskChain();
 
 const executeElement = function(aElement, aData, aRoot){
-	console.log("processor.execute(", aElement, aData, aRoot,")");
+	console.log("processor.execute(", aElement ? aElement.selector() : aElement, aData, aRoot ? aRoot.selector() : aRoot,")");
 	
 	aElement.trigger(Constants.EVENTS.onExecute);
 	
