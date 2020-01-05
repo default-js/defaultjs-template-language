@@ -1,0 +1,2 @@
+import "./DirectModeTest";
+import "./RemoteModeTest";

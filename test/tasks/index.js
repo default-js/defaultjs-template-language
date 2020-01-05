@@ -4,3 +4,4 @@ import "./Foreach";
 import "./Text";
 import "./Attribute";
 import "./Choose";
+import "./Data";

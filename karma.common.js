@@ -12,8 +12,12 @@ module.exports = {
 	files : [
 		"src/**/*.js",
 		"test/index.js",
-		"test/sites/**/*.html" 
+		"test/sites/**/*.html",
+		{pattern: "test/data/**/*", included: false, served: true, watched: false, nocache: false}		
 	],
+	proxies: {
+		"/data/": "/base/test/data/"
+	},
 	// list of files / patterns to exclude
 	exclude : [
 		//"node_modules/*"

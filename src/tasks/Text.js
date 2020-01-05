@@ -37,7 +37,6 @@ const CONTENTTYPE = {
         	Resolver.resolve(preventFormat, aContext.data, false),
         	Resolver.resolve(aContext.element.attr("jstl-text-trim-length") || "0", aContext.data, 0),
         ]).then(function(aResults){
-        	console.log("aResults", aResults);
         	const preventFormat = !!aResults[0];
         	const maxLength = aResults[1];
         	
@@ -73,7 +72,6 @@ const Task = {
 		}).forEach(function(aNode) {
 		    let text = aNode.textContent;
 		    if (text) {
-		    	console.log("resolve text:", text, "context:", aContext.data);
 		    	promises.push(
 				    Resolver.resolveText(text, aContext.data)
 				    .then(function(aText){
