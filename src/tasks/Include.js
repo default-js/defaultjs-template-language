@@ -36,7 +36,7 @@ const Task = {
 					else if(mode == "preppend")
 						aContext.element.preppend(aContent);
 					else {
-						aContent.element.empty();
+						aContext.element.empty();
 						aContext.element.append(aContent);
 					}
 				});
