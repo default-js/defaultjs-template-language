@@ -15,8 +15,7 @@ const ATTRIBUTE = {
 	BREAKCONDITION : "jstl-foreach-break-condition"
 };
 
-const count = function(aVarname, aStatusname, aContext, aTemplate) {	
-	console.log("count");
+const count = function(aVarname, aStatusname, aContext, aTemplate) {
 	return Promise.all([
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX) || 0, aContext.data, 0),
 		Resolver.resolve(aContext.element.attr(ATTRIBUTE.COUNT) || 0, aContext.data, 0),
@@ -65,7 +64,7 @@ const iterateList = function(aIndex, aData, aBreakCondition, aVarname, aStatusna
     		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
     		.then(function(aContent){
     			return aResult.push(aContent.element);
-    		});    		
+    		});
     	}
     	
     	return aResult;
@@ -158,8 +157,6 @@ const Task = {
 		    const statusname = element.attr(ATTRIBUTE.STATUSVARNAME) || "statusVar";
 		    return Promise.resolve(execute(expression, varname, statusname, aContext, template))
 		    .then(function(aContent){
-		    	console.log("foreach content:", aContent);
-		    	
 		    	if(typeof aContent === "undefined")
 		    		return [];
 		    	

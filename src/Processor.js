@@ -3,9 +3,7 @@ import TaskChain from "./TaskChain";
 
 const taskchain = new TaskChain();
 
-const executeElement = function(aElement, aData, aRoot){
-	console.log("processor.execute(", aElement ? aElement.selector() : aElement, aData, aRoot ? aRoot.selector() : aRoot,")");
-	
+const executeElement = function(aElement, aData, aRoot){	
 	aElement.trigger(Constants.EVENTS.onExecute);
 	
 	return taskchain.execute({
@@ -45,6 +43,8 @@ const Processor = {
 		if(typeof aElement === "undefined")
 			return Promise.reject(new Error("Parameter \"aElement\" is undefined!"));
 		else if(aElement instanceof NodeList){
+			
+			//@TODO rebuild to sequence processing
 			const promises = [];
 			aElement.forEach(function(aElement){
 				if(typeof aElement !== "undefined" && aElement.nodeType != 3 && aElement.nodeType != 4)
