@@ -176,7 +176,7 @@ const Task = {
 		    		element.append(aContent)
 		    		
 		    	aContext.exit = true;
-		    	return aContext;		    	
+		    	return aContext;	    	
 		    })["catch"](console.error);
 	    }
 	    

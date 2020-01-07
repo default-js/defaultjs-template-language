@@ -9,7 +9,8 @@ const executeElement = function(aElement, aData, aRoot){
 	return taskchain.execute({
 		element : aElement,
 		data : aData,
-		root : aRoot || aElement
+		root : aRoot || aElement,
+		exit : false
 	}).then(function(){
 		if(typeof aRoot === "undefined")
 			aElement.trigger(Constants.EVENTS.onReady);
@@ -21,6 +22,16 @@ const executeElement = function(aElement, aData, aRoot){
 		
 		throw aError;
 	});
+};
+
+const executeElements = function(theElements, aData, aRoot){
+	return executeElement(theElements.shift(), aData, aRoot)
+		.then(function(aContext){
+			if(theElements.length != 0)
+				return executeElements(theElements, aContext.data, aContext.root);
+			else
+				return aContext;
+		});
 };
 
 const Processor = {
@@ -40,23 +51,19 @@ const Processor = {
 	},
 	execute : function(aElement, aData, aRoot){
 		//@TODO load template data - is not the same as jstl-include
-		if(typeof aElement === "undefined")
+		if(typeof aElement === "undefined" || aElement == null)
 			return Promise.reject(new Error("Parameter \"aElement\" is undefined!"));
-		else if(aElement instanceof NodeList){
-			
-			//@TODO rebuild to sequence processing
-			const promises = [];
-			aElement.forEach(function(aElement){
-				if(typeof aElement !== "undefined" && aElement.nodeType != 3 && aElement.nodeType != 4)
-					promises.push(executeElement(aElement, aData, aRoot));
-			})
-			
-			return Promise.all(promises)
-			.then(function(){
-				return {element : aElement, data : aData, root : aRoot};
-			});
-		}
-		else if(aElement instanceof Node)
+		else if(aElement instanceof NodeList){			
+			return executeElements(Array.from(aElement), aData, aRoot)
+				.then(function(){
+					return {element : aElement, data : aData, root : aRoot};
+				});
+		} else if(aElement instanceof Array){
+			return executeElements(aElement, aData, aRoot)
+				.then(function(){
+					return {element : aElement, data : aData, root : aRoot};
+				});
+		} else if(aElement instanceof Node)
 			return executeElement(aElement, aData, aRoot)
 		else
 			 return Promise.reject(new Error("Type of \"aElement\" - \"" + typeof aElement + "\" is not supported!"));

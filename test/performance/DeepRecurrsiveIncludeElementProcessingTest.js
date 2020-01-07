@@ -1,11 +1,11 @@
 import {Processor} from "@src/index.js";
 
-const CONTAINER_SELECTOR= "#performance-test-cases-many-element-processing";
-describe("Performance Test - many element processing", function() {
+const CONTAINER_SELECTOR= "#performance-test-cases-deep-element-processing";
+describe("Performance Test - deep element processing", function() {
 	
 	beforeAll(function(){
 		const start = Date.now();
-		window.document.body.append(create(window.__html__["test/sites/performance/ManyElementProcessingTest.html"]));
+		window.document.body.append(create(window.__html__["test/sites/performance/DeepElementProcessingTest.html"]));
 		const end = Date.now();
 		console.log("append test html at:", (end - start), "ms");
 	});
@@ -23,10 +23,9 @@ describe("Performance Test - many element processing", function() {
 		const start = Date.now();
 		return Processor.execute(element, data)
 		.then(function(){			
-			const elements = container.find(".test-case-1 > *");
+			const elements = container.find(".test-case-1 *");
 			const end = Date.now();
-			console.log("many element process", elements.length, "elements at" , (end - start), "ms");
-			expect(elements.length).toBe(2000);
+			console.log("deep process", elements.length, "elements at" , (end - start), "ms");
 		});
 	});
 	

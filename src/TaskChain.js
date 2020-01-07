@@ -31,15 +31,17 @@ const executeChain = function(aContext, aChain){
 			return aChain.next == null ? aContext : executeChain(aContext, aChain.next);
 		
 		return Promise.resolve(aChain.task.execute(aContext))
-		.then(function(aContext){
-			if(aContext.exit || aChain.next == null)
-				return aContext;
-			
-			return executeChain(aContext, aChain.next);
-		});
+			.then(function(aContext){
+				if(typeof aContext === "undefined")
+					debugger;
+				if(aContext.exit || aChain.next == null)
+					return aContext;
+				
+				return executeChain(aContext, aChain.next);
+			});
 	});	
 };
-
+j
 const TaskChain = function(){
 	const tasks = {};	
 	return {
