@@ -1,5 +1,4 @@
 const path = require('path');
-const webpackconf = require("./webpack.prod.js")
 
 module.exports = {
 	// base path that will be used to resolve all patterns (eg. files,

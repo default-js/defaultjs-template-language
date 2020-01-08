@@ -24,24 +24,25 @@ const insert = function(aEntry, aChain){
 	return aChain;
 };
 
-const executeChain = function(aContext, aChain){	
-	return Promise.resolve(aChain.task.accept(aContext))
-	.then(function(isAccepted){
-		if(!isAccepted)
-			return aChain.next == null ? aContext : executeChain(aContext, aChain.next);
-		
-		return Promise.resolve(aChain.task.execute(aContext))
-			.then(function(aContext){
-				if(typeof aContext === "undefined")
-					debugger;
-				if(aContext.exit || aChain.next == null)
-					return aContext;
-				
-				return executeChain(aContext, aChain.next);
+const executeChain = function(aContext, aChain){
+	try{
+		return Promise.resolve(aChain.task.accept(aContext))
+			.then(function(isAccepted){
+				if(!isAccepted)
+					return aChain.next == null ? aContext : executeChain(aContext, aChain.next);
+				return Promise.resolve(aChain.task.execute(aContext))
+					.then(function(aContext){
+						if(aContext.exit || aChain.next == null)
+							return aContext;
+						
+						return executeChain(aContext, aChain.next);
+					});
 			});
-	});	
+	}catch(aError){
+		return Promise.reject(aError);
+	}
 };
-j
+
 const TaskChain = function(){
 	const tasks = {};	
 	return {
@@ -71,8 +72,13 @@ const TaskChain = function(){
 		 *		processor,
 		 *	}
 		 */
-		execute : function(aContext){
-			return executeChain(aContext, this.chain);
+		execute : function(aElement, aData, aRoot){
+			return executeChain({
+				element : aElement,
+				data : aData,
+				root : aRoot || aElement,
+				exit : false
+			}, this.chain);
 		}
 	};
 };

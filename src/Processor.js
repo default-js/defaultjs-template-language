@@ -1,37 +1,76 @@
 import Constants from "./Constants";
 import TaskChain from "./TaskChain";
 
+
+const TEMPALTE_DATA_NAME = "defaultjs.tl.Processor.template";
 const taskchain = new TaskChain();
 
-const executeElement = function(aElement, aData, aRoot){	
-	aElement.trigger(Constants.EVENTS.onExecute);
+const executeElement = function(aElement, aData, aRoot, aTimeout){
+	aElement.trigger(Constants.EVENTS.onExecute);	
+	if(typeof aTimeout === "number")
+		return new Promise(function(resolve){
+			setTimeout(function(){
+				resolve(executeElement(aElement, aData, aRoot));
+			}, aTimeout);
+		});
 	
-	return taskchain.execute({
-		element : aElement,
-		data : aData,
-		root : aRoot || aElement,
-		exit : false
-	}).then(function(){
-		if(typeof aRoot === "undefined")
-			aElement.trigger(Constants.EVENTS.onReady);
-		
-		return {element : aElement, data : aData, root : aRoot};
-	})["catch"](function(aError){
-		if(typeof aRoot === "undefined")
-			aElement.trigger(Constants.EVENTS.onFail);
-		
-		throw aError;
-	});
+	let template = aElement;
+	if(!aRoot)
+		template = getTemplate(aElement);
+	
+	return taskchain.execute(template, aData, aRoot)
+		.then(function(aResult){
+			if(!aRoot && !aResult.removed && !!aResult.element){
+				console.log("result:", aResult.element ? aResult.element.tagName : undefined, aResult.exit, aResult.removed);
+				aElement.trigger(Constants.EVENTS.onReady);
+				aResult.element.trigger(Constants.EVENTS.onReady);
+				if(aElement.parentNode.contains(aElement))
+					aElement.parentNode.replaceChild(aResult.element, aElement);
+			}
+			return {element : aResult.element, data : aData, root : aRoot};
+		})["catch"](function(aError){
+			if(typeof aRoot === "undefined")
+				aElement.trigger(Constants.EVENTS.onFail);
+			
+			throw aError;
+		});
 };
 
+const getTemplate = function(aElement){
+	let template = aElement.data(TEMPALTE_DATA_NAME);
+	if(!template){
+		template = aElement.cloneNode(true);
+		aElement.data(TEMPALTE_DATA_NAME, template);
+	}
+	return template.cloneNode(true);
+}
+
 const executeElements = function(theElements, aData, aRoot){
-	return executeElement(theElements.shift(), aData, aRoot)
-		.then(function(aContext){
-			if(theElements.length != 0)
-				return executeElements(theElements, aContext.data, aContext.root);
-			else
-				return aContext;
-		});
+	if(theElements.length != 0)
+		return Promise.resolve(theElements.shift())
+			.then(function(aElement){
+				if(aElement instanceof HTMLElement)					
+					return executeElement(aElement, aData, aRoot)
+						.then(function(){
+							return executeElements(theElements, aData, aRoot);
+						});
+				
+				return executeElements(theElements, aData, aRoot);
+			})
+};
+
+const execute = function(aElement, aData, aRoot){	
+	//@TODO load template data - is not the same as jstl-include
+	if(typeof aElement === "undefined" || aElement == null)
+		return Promise.reject(new Error("Parameter \"aElement\" is undefined!"));
+	else if(aElement instanceof NodeList || aElement instanceof Array || aElement instanceof HTMLCollection){
+		const elements = Array.from(aElement);
+		return executeElements(elements, aData, aRoot);
+	}
+	else if(aElement instanceof HTMLElement)
+		return executeElement(aElement, aData, aRoot)
+	else
+		 return Promise.reject(new Error("Type of \"aElement\" - \"" + typeof aElement + "\" is not supported!"));
 };
 
 const Processor = {
@@ -49,24 +88,11 @@ const Processor = {
 	getTaskchain : function(){
 		return taskchain;
 	},
-	execute : function(aElement, aData, aRoot){
-		//@TODO load template data - is not the same as jstl-include
-		if(typeof aElement === "undefined" || aElement == null)
-			return Promise.reject(new Error("Parameter \"aElement\" is undefined!"));
-		else if(aElement instanceof NodeList){			
-			return executeElements(Array.from(aElement), aData, aRoot)
-				.then(function(){
-					return {element : aElement, data : aData, root : aRoot};
-				});
-		} else if(aElement instanceof Array){
-			return executeElements(aElement, aData, aRoot)
-				.then(function(){
-					return {element : aElement, data : aData, root : aRoot};
-				});
-		} else if(aElement instanceof Node)
-			return executeElement(aElement, aData, aRoot)
-		else
-			 return Promise.reject(new Error("Type of \"aElement\" - \"" + typeof aElement + "\" is not supported!"));
+	execute : function(aElement, aData, aRoot){		
+		return Promise.resolve(execute(aElement, aData, aRoot))
+			.then(function(){
+				return {element : aElement, data : aData, root : aRoot};
+			});
 	}
 };
 export default Processor;

@@ -7,7 +7,7 @@ const ATTRIBUTE = "jstl-if";
 const Task = {
 	id : "if",
 	accept : function(aContext){		
-		return Promise.resolve(aContext.element.is("[jstl-if]"));
+		return aContext.element.is("[jstl-if]");
 	},
 	execute : function(aContext){
 		const expression = aContext.element.attr("jstl-if");
@@ -17,7 +17,9 @@ const Task = {
 				aContext.element.remove();
 			
 			aContext.exit = !!aResult;
-			return Promise.resolve(aContext);
+			aContext.remove = !aResult;
+			aContext.element = undefined;
+			return aContext;
 		});
 	}
 };

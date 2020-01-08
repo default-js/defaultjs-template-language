@@ -8,5 +8,6 @@ module.exports = {
 			"@test" : path.resolve(__dirname + '/test'),
 			"@modules": path.resolve(__dirname + '/node_modules') 
 		}
-	}
+	},
+	target : "web"
 };

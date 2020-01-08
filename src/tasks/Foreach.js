@@ -25,16 +25,16 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		const start = aResults[0] || 0;
 		const count = aResults[1] || 0;
 		const step = aResults[2] || 1;
-		for (let i = start; i < count; i += step) {    			    
-		    const context = ObjectUtils.merge({}, aContext.data);
-		    context[aVarname] = i,
-		    context[aStatusname] = {
+		for (let i = start; i < count; i += step) {
+		    const data = ObjectUtils.merge({}, aContext.data);
+		    data[aVarname] = i,
+		    data[aStatusname] = {
 		        "index" : i,
 		        "number" : i + 1, 
 		        "count" : aResults[1],
 		        "context" : aContext.data
 		    };
-		    promises.push(Processor.execute(aTemplate.cloneNode(true), context, aContext.root)
+		    promises.push(Processor.execute(aTemplate.cloneNode(true), data, aContext.root)
 		    	.then(function(aResult){
 	    			return aResult.element;
 	    		}));
@@ -101,7 +101,7 @@ const iterateMap = function(aIndex, aKeys, aData, aBreakCondition, aVarname, aSt
     		return aContext.processor.execute(aTemplate.cloneNode(true), context, aContext.root)
     		.then(function(aContent){
     			return aResult.push(aContent.element);
-    		});    		
+    		});
     	}
     	
     	return aResult;
@@ -112,7 +112,7 @@ const map = function(aData, aVarname, aStatusname, aContext, aTemplate) {
 	const breakCondition = aContext.element.attr(ATTRIBUTE.BREAKCONDITION);
 	return Resolver.resolve(aContext.element.attr(ATTRIBUTE.STARTINDEX), aContext.data, 0)
 	.then(function(aStartIndex){
-		return iterateMap(aStartIndex, Object.getOwnPropertyNames(aData), aData, aVarname, aStatusname, aContext, aTemplate, []);	    	
+		return iterateMap(aStartIndex, Object.getOwnPropertyNames(aData), aData, aVarname, aStatusname, aContext, aTemplate, []);
 	});
 };
 
@@ -148,7 +148,7 @@ const Task = {
 	accept : function(aContext){
 		return aContext.element.is("[jstl-foreach]");
 	},
-	execute : function(aContext){		
+	execute : function(aContext){
 		const element = aContext.element;
 		const template = getTemplate(aContext.element);
 	    if (typeof template !== 'undefined') {
@@ -176,7 +176,7 @@ const Task = {
 		    		element.append(aContent)
 		    		
 		    	aContext.exit = true;
-		    	return aContext;	    	
+		    	return aContext;
 		    })["catch"](console.error);
 	    }
 	    
