@@ -1,4 +1,4 @@
-//import "./Text";
+import "./Text";
 import "./If";
 //import "./Children";
 //import "./Foreach";

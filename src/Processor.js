@@ -6,10 +6,14 @@ const TEMPALTE_DATA_NAME = "defaultjs.tl.Processor.template";
 const taskchain = new TaskChain();
 
 const executeElement = function(aElement, aData, aRoot){
-	aElement.trigger(Constants.EVENTS.onExecute);	
+	aElement.trigger(Constants.EVENTS.onExecute);
+	let container = null;
 	let template = aElement;
-	if(!aRoot)
+	if(!aRoot){		
 		template = getTemplate(aElement);
+		container = new DocumentFragment();
+		container.append(template);		
+	}
 	
 	return taskchain.execute(template, aData, aRoot)
 		.then(function(aResult){
@@ -17,8 +21,7 @@ const executeElement = function(aElement, aData, aRoot){
 			
 			if(!aRoot){
 				aElement.trigger(Constants.EVENTS.onReady);
-				if(aResult.element)
-					aElement.replace(aResult.element);
+				aElement.replace(container.content());					
 			}
 			
 			

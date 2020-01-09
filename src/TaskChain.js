@@ -81,8 +81,7 @@ const TaskChain = function(){
 			return executeChain({
 				element : aElement,
 				data : aData,
-				root : aRoot || aElement,
-				exit : false
+				root : aRoot || aElement
 			}, this.chain);
 		}
 	};
