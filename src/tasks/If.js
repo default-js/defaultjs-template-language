@@ -3,23 +3,19 @@ import Constants from "../Constants";
 import Processor from "../Processor";
 
 const Resolver = el.ExpressionResolver;
-const ATTRIBUTE = "jstl-if";
 const Task = {
 	id : "if",
-	accept : function(aContext){		
-		return aContext.element.is("[jstl-if]");
-	},
-	execute : function(aContext){
+	execute : function(aNextTask, aContext){
+		if(!aContext.element.is("[jstl-if]"))
+			return aNextTask();
+		
 		const expression = aContext.element.attr("jstl-if");
 		return Resolver.resolve(expression, aContext.data, false)
 		.then(function(aResult){
-			if(!aResult)
-				aContext.element.remove();
+			if(aResult)
+				return aNextTask();
 			
-			aContext.exit = !!aResult;
-			aContext.remove = !aResult;
-			aContext.element = undefined;
-			return aContext;
+			aContext.element.remove();
 		});
 	}
 };

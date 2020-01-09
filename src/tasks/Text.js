@@ -56,10 +56,10 @@ const CONTENTTYPE = {
 
 const Task = {
 	id : "text",
-	accept : function(aContext){
-		return !aContext.element.is("[jstl-text-ignore]");
-	},
-	execute : function(aContext){
+	execute : function(aNextTask, aContext){
+		if(aContext.element.is("[jstl-text-ignore]"))
+			return aNextTask();
+		
 		const type = aContext.element.attr("jstl-text-content-type") || "text";
 		if(typeof CONTENTTYPE[type] === "undefined")
 			return;
@@ -84,7 +84,7 @@ const Task = {
 		
 		return Promise.all(promises)
 		.then(function(){
-			return aContext;
+			return aNextTask();
 		});
 	}
 };

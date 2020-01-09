@@ -5,29 +5,24 @@ import TaskChain from "./TaskChain";
 const TEMPALTE_DATA_NAME = "defaultjs.tl.Processor.template";
 const taskchain = new TaskChain();
 
-const executeElement = function(aElement, aData, aRoot, aTimeout){
+const executeElement = function(aElement, aData, aRoot){
 	aElement.trigger(Constants.EVENTS.onExecute);	
-	if(typeof aTimeout === "number")
-		return new Promise(function(resolve){
-			setTimeout(function(){
-				resolve(executeElement(aElement, aData, aRoot));
-			}, aTimeout);
-		});
-	
 	let template = aElement;
 	if(!aRoot)
 		template = getTemplate(aElement);
 	
 	return taskchain.execute(template, aData, aRoot)
 		.then(function(aResult){
-			if(!aRoot && !aResult.removed && !!aResult.element){
-				console.log("result:", aResult.element ? aResult.element.tagName : undefined, aResult.exit, aResult.removed);
+			console.log("aResult:", aResult)
+			
+			if(!aRoot){
 				aElement.trigger(Constants.EVENTS.onReady);
-				aResult.element.trigger(Constants.EVENTS.onReady);
-				if(aElement.parentNode.contains(aElement))
-					aElement.parentNode.replaceChild(aResult.element, aElement);
+				if(aResult.element)
+					aElement.replace(aResult.element);
 			}
-			return {element : aResult.element, data : aData, root : aRoot};
+			
+			
+			return aResult;
 		})["catch"](function(aError){
 			if(typeof aRoot === "undefined")
 				aElement.trigger(Constants.EVENTS.onFail);

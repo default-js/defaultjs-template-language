@@ -146,9 +146,12 @@ const execute = function(anExpression, aVarname, aStatusname, aContext, aTemplat
 const Task = {
 	id : "foreach",
 	accept : function(aContext){
-		return aContext.element.is("[jstl-foreach]");
+		return ;
 	},
-	execute : function(aContext){
+	execute : function(aNextTask, aContext){
+		if(!aContext.element.is("[jstl-foreach]"))
+			return aNextTask();
+			
 		const element = aContext.element;
 		const template = getTemplate(aContext.element);
 	    if (typeof template !== 'undefined') {
@@ -173,14 +176,10 @@ const Task = {
 		    }).then(function(aContent){
 		    	element.empty();
 		    	if(aContent != null)
-		    		element.append(aContent)
-		    		
-		    	aContext.exit = true;
-		    	return aContext;
+		    		element.append(aContent)		    		
+		    	
 		    })["catch"](console.error);
 	    }
-	    
-		return aContext;
 	}
 };
 

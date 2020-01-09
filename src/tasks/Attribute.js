@@ -12,13 +12,17 @@ const execute = function(aKey, aValue, aContext){
 	});
 };
 
+const acceped = function(aContext){
+	const attributes = aContext.element.attr();
+	return typeof attributes !== "undefined" && attributes != null && !aContext.element.is("[jstl-attribute-ignore]");
+};
+
 const Task = {
 	id : "attribute",
-	accept : function(aContext){
-		const attributes = aContext.element.attr();
-		return typeof attributes !== "undefined" && attributes != null && !aContext.element.is("[jstl-attribute-ignore]");
-	},
-	execute : function(aContext){
+	execute : function(aNextTask, aContext){
+		if(!acceped(aContext))
+			return aNextTask();
+		
 		const attributes = aContext.element.attr();
 		const promises = [];
 		for(const key in attributes)
@@ -26,7 +30,7 @@ const Task = {
 		
 		return Promise.all(promises)
 		.then(function(){
-			return aContext;
+			return aNextTask();
 		});
 	}
 };

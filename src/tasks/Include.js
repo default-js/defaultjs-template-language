@@ -15,7 +15,10 @@ const Task = {
 	accept : function(aContext){
 		return aContext.element.is("[jstl-include]");
 	},
-	execute : function(aContext){
+	execute : function(aNextChain, aContext){
+		if(!aContext.element.is("[jstl-include]"))
+			return aNextChain();
+		
 		const mode = aContext.element.attr("jstl-include-mode") || MODES.replace;
 		const expression = aContext.element.attr("jstl-include");
 		const option = aContext.element.attr("jstl-include-options");
@@ -49,8 +52,7 @@ const Task = {
 				});
 			})
 		}).then(function(){
-			aContext.exit = true;
-			return aContext;
+			return aNextChain();
 		});
 	}
 };

@@ -23,16 +23,16 @@ const when = function(theNodes, aContext){
 
 const Task = {
 	id : "choose",
-	accept : function(aContext){
-		return aContext.element.is("[jstl-choose]");
-	},
-	execute : function(aContext){
+	execute : function(aNextTask, aContext){
+		if(!aContext.element.is("[jstl-choose]"))
+			return aNextTask();
+		
 		return when(Array.from(aContext.element.find(":scope > [jstl-when]")), aContext)
 		.then(function(aResult){
 			if(!!aResult)
 				aContext.element.find(":scope > [jstl-otherwise]").remove();			
 		}).then(function(){
-			return aContext;
+			return aNextTask();
 		});
 	}
 };

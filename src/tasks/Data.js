@@ -33,7 +33,7 @@ const MODES = {
 				.then(function(aDatatype){
 					const mapper = DATATYPES[aDatatype];
 					if(typeof mapper === "function")
-						return mapper(aResponse, aContext);					
+						return mapper(aResponse, aContext);
 				});
 			});
 	},
@@ -56,7 +56,10 @@ const Task = {
 	accept : function(aContext){
 		return aContext.element.is("[jstl-data]");
 	},
-	execute : function(aContext){		
+	execute : function(aNextTask, aContext){
+		if(!aContext.element.is("[jstl-data]"))
+			return aNextTask();
+		
 		const mode = aContext.element.attr("jstl-data-mode") || "direct";
 		const action = MODES[mode];
 		if(typeof action !== "function")		
@@ -79,7 +82,7 @@ const Task = {
 				else if(typeof aData !== "undefined")
 					ObjectUtils.merge(aContext.data, aData);
 				
-				return aContext;
+				return aNextTask(aContext);
 			});
 	}
 };

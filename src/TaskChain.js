@@ -24,19 +24,23 @@ const insert = function(aEntry, aChain){
 	return aChain;
 };
 
-const executeChain = function(aContext, aChain){
+const executeChain = function(aContext, aTask){
 	try{
-		return Promise.resolve(aChain.task.accept(aContext))
-			.then(function(isAccepted){
-				if(!isAccepted)
-					return aChain.next == null ? aContext : executeChain(aContext, aChain.next);
-				return Promise.resolve(aChain.task.execute(aContext))
-					.then(function(aContext){
-						if(aContext.exit || aChain.next == null)
-							return aContext;
-						
-						return executeChain(aContext, aChain.next);
-					});
+		let task = aTask;
+		let context = aContext
+		let nextChain = function(aContext){
+			context = aContext || context;
+			
+			if(task.next == null)
+				return context;
+			
+			task = task.next;
+			return task.execute(nextChain, context);
+		}
+		
+		return Promise.resolve(task.execute(nextChain, context))
+			.then(function(aResultContext){
+				return aResultContext || context || aContext;
 			});
 	}catch(aError){
 		return Promise.reject(aError);
@@ -58,10 +62,11 @@ const TaskChain = function(){
 		add : function(aTask, aPhase){
 			if(typeof tasks[aTask.id] === "undefined")		
 				this.chain = insert({
-					task : aTask,
+					execute : aTask.execute,
+					id : aTask.id || "unkown",
 					phase : (typeof aPhase !== "undefined" ? aPhase : Constants.PHASE.FINISH),
 					next : null
-				}, this.chain);			
+				}, this.chain);
 		},
 		
 		/**

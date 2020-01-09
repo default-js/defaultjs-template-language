@@ -66,6 +66,6 @@ describe("HTML Text Test", function() {
 	});
 	
 	afterAll(function() {
-		find(CONTAINER_SELECTOR).remove();
+		//find(CONTAINER_SELECTOR).remove();
 	});
 });
