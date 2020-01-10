@@ -9,21 +9,18 @@ const executeElement = function(aElement, aData, aRoot){
 	aElement.trigger(Constants.EVENTS.onExecute);
 	let container = null;
 	let template = aElement;
-	if(!aRoot){		
+	if(!aRoot){
 		template = getTemplate(aElement);
 		container = new DocumentFragment();
-		container.append(template);		
+		container.append(template);
 	}
 	
 	return taskchain.execute(template, aData, aRoot)
 		.then(function(aResult){
-			console.log("aResult:", aResult)
-			
 			if(!aRoot){
 				aElement.trigger(Constants.EVENTS.onReady);
-				aElement.replace(container.content());					
+				aElement.replace(container.content());
 			}
-			
 			
 			return aResult;
 		})["catch"](function(aError){
@@ -44,17 +41,28 @@ const getTemplate = function(aElement){
 }
 
 const executeElements = function(theElements, aData, aRoot){
-	if(theElements.length != 0)
-		return Promise.resolve(theElements.shift())
-			.then(function(aElement){
-				if(aElement instanceof HTMLElement)					
-					return executeElement(aElement, aData, aRoot)
-						.then(function(){
-							return executeElements(theElements, aData, aRoot);
-						});
-				
-				return executeElements(theElements, aData, aRoot);
-			})
+//	if(theElements.length != 0)
+//		return Promise.resolve(theElements.shift())
+//			.then(function(aElement){
+//				if(aElement instanceof HTMLElement)					
+//					return executeElement(aElement, aData, aRoot)
+//						.then(function(){
+//							return executeElements(theElements, aData, aRoot);
+//						});
+//				
+//				return executeElements(theElements, aData, aRoot);
+//			})
+			
+			
+	const promises = [];
+	const length = theElements.length;
+	for(let i = 0; i < length; i++){
+		const element = theElements[i];		
+		if(element instanceof HTMLElement)					
+			promises.push(executeElement(element, aData, aRoot));
+	}
+	
+	return Promise.all(promises);
 };
 
 const execute = function(aElement, aData, aRoot){	
@@ -86,10 +94,14 @@ const Processor = {
 	getTaskchain : function(){
 		return taskchain;
 	},
-	execute : function(aElement, aData, aRoot){		
+	execute : function(aElement, aData, aRoot){
+		const start = !aRoot ? Date.now() : null;
 		return Promise.resolve(execute(aElement, aData, aRoot))
-			.then(function(){
-				return {element : aElement, data : aData, root : aRoot};
+			["finally"](function(){
+				if(!aRoot){
+					const end = Date.now();
+					console.log("Processor.execute runtime:", (end - start), "ms!");
+				}
 			});
 	}
 };

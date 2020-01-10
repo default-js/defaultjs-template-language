@@ -9,11 +9,11 @@ describe("Children Task Test", function() {
 	
 	
 	it("test", function(){
-		const container = find(CONTAINER_SELECTOR).first();
+		let container = find(CONTAINER_SELECTOR).first();
 		const data = { test : false };
 		return Processor.execute(container, data)
 		.then(function(){
-			
+			container = find(CONTAINER_SELECTOR).first();
 			let element = container.find(".result-1").first();
 			expect(element).toBeDefined();
 			element = container.find(".result-2").first();

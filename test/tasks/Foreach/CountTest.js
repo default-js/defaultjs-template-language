@@ -9,10 +9,11 @@ describe("Foreach Count Test", function() {
 	
 	
 	it("count test", function(){
-		const container = find(CONTAINER_SELECTOR).first();
+		let container = find(CONTAINER_SELECTOR).first();
 		const data = {};
 		return Processor.execute(container, data)
-		.then(function(){			
+		.then(function(){
+			container = find(CONTAINER_SELECTOR).first();
 			const elements = container.find("*");
 			expect(elements.length).toBe(10);	
 		});

@@ -34,10 +34,7 @@ const count = function(aVarname, aStatusname, aContext, aTemplate) {
 		        "count" : aResults[1],
 		        "context" : aContext.data
 		    };
-		    promises.push(Processor.execute(aTemplate.cloneNode(true), data, aContext.root)
-		    	.then(function(aResult){
-	    			return aResult.element;
-	    		}));
+		    promises.push(Processor.execute(aTemplate.cloneNode(true), data, aContext.root));
 	    }
 		
 		return Promise.all(promises);
@@ -145,9 +142,6 @@ const execute = function(anExpression, aVarname, aStatusname, aContext, aTemplat
 
 const Task = {
 	id : "foreach",
-	accept : function(aContext){
-		return ;
-	},
 	execute : function(aNextTask, aContext){
 		if(!aContext.element.is("[jstl-foreach]"))
 			return aNextTask();
@@ -159,26 +153,19 @@ const Task = {
 	    	const varname = element.attr(ATTRIBUTE.VARNAME) || "itemVar"; 
 		    const statusname = element.attr(ATTRIBUTE.STATUSVARNAME) || "statusVar";
 		    return Promise.resolve(execute(expression, varname, statusname, aContext, template))
-		    .then(function(aContent){
-		    	if(typeof aContent === "undefined")
-		    		return [];
-		    	
-		    	const result = [];
-	    		aContent.forEach(function(aItem){
-	    			if(typeof aItem !== "undefined")
-		    			aItem.forEach(function(aNode){
-		    				if(typeof aNode !== "undefined")
-		    					result.push(aNode);
-		    			});
-	    		});
-		    	
-		    	return result;
-		    }).then(function(aContent){
-		    	element.empty();
-		    	if(aContent != null)
-		    		element.append(aContent)		    		
-		    	
-		    })["catch"](console.error);
+		    	.then(function(aContent){
+			    	element.empty();
+			    	if(aContent){
+			    		if(aContent instanceof Array){
+			    			const content = aContent.flat();
+			    			content.forEach(aItem => {
+			    				if(aItem.element instanceof Node)
+			    					element.append(aItem.element);
+			    			});
+			    		} else if(aContent.element)
+			    			element.append(aContent.element);
+			    	}
+			    });
 	    }
 	}
 };

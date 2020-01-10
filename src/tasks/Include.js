@@ -32,25 +32,27 @@ const Task = {
 			const url = aData[1];
 			const option = ObjectUtils.isPojo(aData[2]) ? aData[2] : undefined;
 			
-			return fetch(url, option)			
-			.then(function(aResponse){
-				return aResponse.text();
-			}).then(function(aContent){
-				return create(aContent);
-			}).then(function(aContent){
-				return Processor.execute(aContent, aContext.data, aContext.root)
-				.then(function(){
+			return fetch(url, option)
+				.then(function(aResponse){
+					return aResponse.text();
+				}).then(function(aContent){
+					return create(aContent);
+				}).then(function(aContent){
+					return Processor.execute(aContent, aContext.data, aContext.root);
+				}).then(function(aResult){
+					return aResult.map(aItem => aItem.element);
+				}).then(function(aContent){
+					console.log("result", arguments)
 					if(mode == MODES.append)
 						aContext.element.append(aContent);
-					else if(mode == MODES.prepend)
-						aContext.element.prepend(aContent);
+//					else if(mode == MODES.prepend)
+//						aContext.element.prepend(aContent);
 					else if(mode == MODES.replace){
 						aContext.element.empty();
 						aContext.element.append(aContent);
 					} else
 						throw new Error("Include mode \"" + mode + "\" is not supported");
 				});
-			})
 		}).then(function(){
 			return aNextChain();
 		});

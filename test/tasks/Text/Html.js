@@ -10,10 +10,11 @@ describe("HTML Text Test", function() {
 	
 	it("single html content test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-1").first();		
+		let element = container.find(".test-case-1").first();		
 		const data = {html:"<div></div>"};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-1").first();
 			const content = element.find("*");
 			
 			expect(content.length).toBe(1);
@@ -23,7 +24,7 @@ describe("HTML Text Test", function() {
 	
 	it("multiple html contents from one textnode test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-2").first();		
+		let element = container.find(".test-case-2").first();		
 		const data = {
 			html1:"<b>html-1</b>",
 			html2:"<b>html-2</b>",
@@ -31,6 +32,7 @@ describe("HTML Text Test", function() {
 		};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-2").first();	
 			const content = element.content();
 			
 			expect(content.length).toBe(5);
@@ -44,12 +46,13 @@ describe("HTML Text Test", function() {
 	
 	it("single html contents with other sibling nodes test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-3").first();		
+		let element = container.find(".test-case-3").first();		
 		const data = {
 			html:"<div id=\"result\">html-1</div>"
 		};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-3").first();
 			const content = element.find("div");
 			const result = element.find("#result").first();
 			
@@ -66,6 +69,6 @@ describe("HTML Text Test", function() {
 	});
 	
 	afterAll(function() {
-		//find(CONTAINER_SELECTOR).remove();
+		find(CONTAINER_SELECTOR).remove();
 	});
 });

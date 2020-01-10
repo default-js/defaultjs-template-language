@@ -11,10 +11,11 @@ describe("Simplet Text Test", function() {
 	
 	it("single line text test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-1").first();		
+		let element = container.find(".test-case-1").first();		
 		const data = {text:"text"};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-1").first();	
 			expect(element.textContent).toBe("this is a text");
 		});
 	});	
@@ -22,7 +23,7 @@ describe("Simplet Text Test", function() {
 
 	it("single line text with multi values test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-2").first();		
+		let element = container.find(".test-case-2").first();		
 		const data = {
 			text1 : "text-1",
 			text2 : "text-2",
@@ -30,13 +31,14 @@ describe("Simplet Text Test", function() {
 		};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-2").first();
 			expect(element.textContent).toBe("this is a text-1, a text-2 and a text-3");
 		});
 	});	
 	
 	it("multi line text with multi values and tags between test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-3").first();		
+		let element = container.find(".test-case-3").first();		
 		const data = {
 			text1 : "text-1",
 			text2 : "text-2",
@@ -44,26 +46,29 @@ describe("Simplet Text Test", function() {
 		};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-3").first();
 			expect(element.textContent).toBe("this is a text-1, a text-2 and a text-3");
 		});
 	});
 	
 	it("add html tags as text test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-4").first();		
+		let element = container.find(".test-case-4").first();		
 		const data = {text:"<b>html-tag</b>"};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-4").first();
 			expect(element.textContent).toBe("this is a html tags as text: <b>html-tag</b>");
 		});
 	});
 	
 	it("prevent text format test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-5").first();		
+		let element = container.find(".test-case-5").first();		
 		const data = {text:"line\n\tline\n\tline\n\tline"};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-5").first();		
 			const content = element.content();
 			
 			expect(content.length).toBe(7);
@@ -83,20 +88,22 @@ describe("Simplet Text Test", function() {
 	
 	it("trim length text test", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-6").first();		
+		let element = container.find(".test-case-6").first();		
 		const data = {text:"this a text with more then ten chars at once."};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-6").first();		
 			expect(element.textContent).toBe(StringUtils.trimTextLength(data.text, 10));
 		});
 	});
 	
 	it("trim length text test, but text length is less then 10", function(){
 		const container = find(CONTAINER_SELECTOR).first();
-		const element = container.find(".test-case-7").first();		
+		let element = container.find(".test-case-7").first();		
 		const data = {text:"text"};
 		return Processor.execute(element, data)
 		.then(function(){
+			element = container.find(".test-case-7").first();
 			expect(element.textContent).toBe(StringUtils.trimTextLength(data.text, 10));
 		});
 	});
