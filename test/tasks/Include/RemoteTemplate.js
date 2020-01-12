@@ -40,9 +40,9 @@ describe("Include - remote template Task Test", function() {
 			test : "value" 
 		};
 		return Processor.execute(element, data)
-		.then(function(){
+		.then(function(aResult){
 			data.resultId++;
-			return Processor.execute(element, data);
+			return Processor.execute(aResult.element, data);
 		}).then(function(){
 			const elements = container.find(".test-case-4 .result");
 			expect(elements.length).toBe(2);

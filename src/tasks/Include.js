@@ -45,8 +45,8 @@ const Task = {
 					console.log("result", arguments)
 					if(mode == MODES.append)
 						aContext.element.append(aContent);
-//					else if(mode == MODES.prepend)
-//						aContext.element.prepend(aContent);
+					else if(mode == MODES.prepend)
+						aContext.element.prepend(aContent);
 					else if(mode == MODES.replace){
 						aContext.element.empty();
 						aContext.element.append(aContent);
