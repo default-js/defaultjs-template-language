@@ -8,14 +8,11 @@ describe("TaskChain Test", function() {
 	});
 	
 	
-	it("add one task without a phase", function(done){
+	it("add one task without a phase", function(){
 		const taskchain = new TaskChain();
 	
 		const task = {
-			title: "task 1",
-			accept : function(){
-				return Promise.resolve(true);
-			},
+			id: "task 1",
 			execute : function(aContext){
 				return Promise.resolve(aContext);
 			}
@@ -24,19 +21,14 @@ describe("TaskChain Test", function() {
 		taskchain.add(task);
 		
 		let chain = taskchain.chain;
-		expect(chain.task).toBe(task);
+		expect(chain.id).toBe(task.id);
 		expect(chain.phase).toBe(Constants.PHASE.FINISH);
-		
-		done();
 	});	
 	
-	it("add one task with a phase", function(done){
+	it("add one task with a phase", function(){
 		const taskchain = new TaskChain();
 		const task = {
 			id: "task 1",
-			accept : function(){
-				return Promise.resolve(true);
-			},
 			execute : function(aContext){
 				return Promise.resolve(aContext);
 			}
@@ -45,20 +37,15 @@ describe("TaskChain Test", function() {
 		taskchain.add(task, Constants.PHASE.INIT);
 		
 		let chain = taskchain.chain;
-		expect(chain.task).toBe(task);
+		expect(chain.id).toBe(task.id);
 		expect(chain.phase).toBe(Constants.PHASE.INIT);
-		
-		done();
 	});
 	
 	
-	it("add two tasks test", function(done){
+	it("add two tasks test", function(){
 		const taskchain = new TaskChain();
 		taskchain.add({
 			id: "task 1",
-			accept : function(){
-				return Promise.resolve(true);
-			},
 			execute : function(aContext){
 				return Promise.resolve(aContext);
 			}
@@ -66,20 +53,15 @@ describe("TaskChain Test", function() {
 		
 		taskchain.add({
 			id: "task 2",
-			accept : function(){
-				return Promise.resolve(true);
-			},
 			execute : function(aContext){
 				return Promise.resolve(aContext);
 			}
 		}, Constants.PHASE.INIT);
 		
 		let chain = taskchain.chain;
-		expect(chain.task.id).toBe("task 1");
+		expect(chain.id).toBe("task 1");
 		chain = chain.next;
-		expect(chain.task.id).toBe("task 2");
-		
-		done();
+		expect(chain.id).toBe("task 2");
 	});	
 	
 	it("add three tasks test", function(done){

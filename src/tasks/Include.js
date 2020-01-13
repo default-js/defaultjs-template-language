@@ -12,9 +12,6 @@ const MODES = {
 
 const Task = {
 	id : "include",
-	accept : function(aContext){
-		return aContext.element.is("[jstl-include]");
-	},
 	execute : function(aNextChain, aContext){
 		if(!aContext.element.is("[jstl-include]"))
 			return aNextChain();
@@ -42,7 +39,6 @@ const Task = {
 				}).then(function(aResult){
 					return aResult.map(aItem => aItem.element);
 				}).then(function(aContent){
-					console.log("result", arguments)
 					if(mode == MODES.append)
 						aContext.element.append(aContent);
 					else if(mode == MODES.prepend)

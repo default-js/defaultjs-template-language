@@ -1,4 +1,4 @@
 //import "./TaskChainTest";
-//import "./ProcessorTests";
+import "./ProcessorTests";
 import "./tasks";
-//import "./performance";
+import "./performance";

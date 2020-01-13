@@ -22,7 +22,7 @@ describe("Performance Test - deep element processing", function() {
 		};
 		const start = Date.now();
 		return Processor.execute(element, data)
-		.then(function(){			
+		.then(function(aResult){			
 			const elements = container.find(".test-case-1 *");
 			const end = Date.now();
 			console.log("deep process", elements.length, "elements at" , (end - start), "ms");

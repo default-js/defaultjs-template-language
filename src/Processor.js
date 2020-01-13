@@ -1,31 +1,33 @@
 import Constants from "./Constants";
 import TaskChain from "./TaskChain";
+import ObjectUtils from "@default-js/defaultjs-common-utils/src/ObjectUtils";
 
 
 const TEMPALTE_DATA_NAME = "defaultjs.tl.Processor.template";
 const taskchain = new TaskChain();
 
-const executeElement = function(aElement, aData, aRoot){
-	aElement.trigger(Constants.EVENTS.onExecute);
-	let container = null;
-	let template = aElement;
-	if(!aRoot){
+const executeElement = function(aData){
+	const element = aData.element;
+	element.trigger(Constants.EVENTS.onExecute);
+	let template = aData.template || element;
+	if(!aRoot && !aData.template)
 		template = getTemplate(aElement);
-		container = new DocumentFragment();
-		container.append(template);
-	}
 	
-	return taskchain.execute(template, aData, aRoot)
+	return taskchain.execute(template, aData.data, aData.aRoot)
 		.then(function(aResult){
 			if(!aRoot){
-				aElement.trigger(Constants.EVENTS.onReady);
-				aElement.replace(container.content());
-			}
-			
+				element.trigger(Constants.EVENTS.onReady);				
+				if(aData.mode == "append")
+					element.parent().append(container.content());
+				else if(aData.mode == "prepend")
+					element.parent.prepend(container.content());				
+				else				
+					element.replace(container.content());
+			}			
 			return aResult;
 		})["catch"](function(aError){
 			if(typeof aRoot === "undefined")
-				aElement.trigger(Constants.EVENTS.onFail);
+				element.trigger(Constants.EVENTS.onFail);
 			
 			throw aError;
 		});
@@ -40,41 +42,30 @@ const getTemplate = function(aElement){
 	return template.cloneNode(true);
 }
 
-const executeElements = function(theElements, aData, aRoot){
-//	if(theElements.length != 0)
-//		return Promise.resolve(theElements.shift())
-//			.then(function(aElement){
-//				if(aElement instanceof HTMLElement)					
-//					return executeElement(aElement, aData, aRoot)
-//						.then(function(){
-//							return executeElements(theElements, aData, aRoot);
-//						});
-//				
-//				return executeElements(theElements, aData, aRoot);
-//			})
-			
-			
+const executeElements = function(theElements, aData){
 	const promises = [];
 	const length = theElements.length;
 	for(let i = 0; i < length; i++){
 		const element = theElements[i];		
-		if(element instanceof HTMLElement)					
-			promises.push(executeElement(element, aData, aRoot));
+		if(element instanceof HTMLElement){
+			const data = ObjectUtils.merge({}, aData, {element : element});
+			promises.push(executeElement(data));
+		}
 	}
 	
 	return Promise.all(promises);
 };
 
-const execute = function(aElement, aData, aRoot){	
+const execute = function(aData){	
 	//@TODO load template data - is not the same as jstl-include
 	if(typeof aElement === "undefined" || aElement == null)
 		return Promise.reject(new Error("Parameter \"aElement\" is undefined!"));
 	else if(aElement instanceof NodeList || aElement instanceof Array || aElement instanceof HTMLCollection){
 		const elements = Array.from(aElement);
-		return executeElements(elements, aData, aRoot);
+		return executeElements(elements, aData);
 	}
 	else if(aElement instanceof HTMLElement)
-		return executeElement(aElement, aData, aRoot)
+		return executeElement(aData)
 	else
 		 return Promise.reject(new Error("Type of \"aElement\" - \"" + typeof aElement + "\" is not supported!"));
 };
@@ -94,15 +85,8 @@ const Processor = {
 	getTaskchain : function(){
 		return taskchain;
 	},
-	execute : function(aElement, aData, aRoot){
-		const start = !aRoot ? Date.now() : null;
-		return Promise.resolve(execute(aElement, aData, aRoot))
-			["finally"](function(){
-				if(!aRoot){
-					const end = Date.now();
-					console.log("Processor.execute runtime:", (end - start), "ms!");
-				}
-			});
+	execute : function(aData){
+		return Promise.resolve(execute(aData));
 	}
 };
 export default Processor;

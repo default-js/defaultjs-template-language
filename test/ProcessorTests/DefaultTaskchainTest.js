@@ -8,28 +8,25 @@ describe("Default Processor Taskchain Test", function() {
 	});
 	
 	
-	it("check chain", function(done){
-	
+	it("check chain", function(){	
 		let chain = Processor.getTaskchain().chain;
-		expect(chain.task.id).toBe("async");		
+		expect(chain.id).toBe("async");		
 		chain = chain.next;
-		expect(chain.task.id).toBe("if");
+		expect(chain.id).toBe("if");
 		chain = chain.next;
-		expect(chain.task.id).toBe("include");
+		expect(chain.id).toBe("include");
 		chain = chain.next;
-		expect(chain.task.id).toBe("data");
+		expect(chain.id).toBe("data");
 		chain = chain.next;
-		expect(chain.task.id).toBe("foreach");
+		expect(chain.id).toBe("foreach");
 		chain = chain.next;
-		expect(chain.task.id).toBe("choose");
+		expect(chain.id).toBe("choose");
 		chain = chain.next;
-		expect(chain.task.id).toBe("add-attribute");
+		expect(chain.id).toBe("add-attribute");
 		chain = chain.next;
-		expect(chain.task.id).toBe("text");
+		expect(chain.id).toBe("text");
 		chain = chain.next;
-		expect(chain.task.id).toBe("attribute");	
-		
-		done();
+		expect(chain.id).toBe("attribute");
 	});	
 	
 	afterAll(function() {
