@@ -6,10 +6,11 @@
   "scripts": {
     "build-only": "webpack --config webpack.prod.js && webpack --config webpack.dev.js",
     "build": "npm test && webpack --config webpack.prod.js && webpack --config webpack.dev.js",
-    "dev-server": "webpack-dev-server --open --config webpack.dev-server.js && npm run karma:live",
-    "karma:live": "karma start karma.live-dev.js",
-    "karma:integration": "karma start karma.integration.js",
-    "test": "npm run karma:integration"
+    "//dev:live": "webpack-dev-server --open --config webpack.dev-server.js && npm run test:live",
+    "dev:live": "webpack-dev-server --open --config webpack.dev-server.js",
+    "test:live": "karma start karma.live.js",
+    "test:integration": "karma start karma.integration.js",
+    "test": "karma start karma.test.js"
   },
   "keywords": [],
   "author": "Frank Schüler",
@@ -26,11 +27,11 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^4.0.2",
-    "puppeteer": "^2.0.0",
+    "puppeteer": "^2.1.1",
     "replace-in-file-webpack-plugin": "^1.0.6",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10",
-    "webpack-dev-server": "^3.10.1",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3",
     "webpack-merge": "^4.2.2"
   },
   "repository": {
@@ -42,9 +43,11 @@
   },
   "homepage": "https://github.com/default-js/defaultjs-template-language#readme",
   "dependencies": {
-    "@default-js/defaultjs-common-utils": "^0.3.0",
-    "@default-js/defaultjs-expression-language": "^1.0.0-beta.1",
-    "@default-js/defaultjs-extdom": "^1.0.0-beta.7"
+    "@default-js/defaultjs-common-utils": "^0.6.0",
+    "@default-js/defaultjs-expression-language": "^1.0.0-beta.2",
+    "@default-js/defaultjs-extdom": "^1.0.0-beta.11",
+    "awesome-typescript-loader": "^5.2.1",
+    "source-map-loader": "^0.2.4"
   },
   "directories": {
     "test": "test"

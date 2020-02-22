@@ -1,2 +1,0 @@
-import "./DirectModeTest";
-import "./RemoteModeTest";

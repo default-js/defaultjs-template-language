@@ -1,4 +1,2 @@
-//import "./TaskChainTest";
-import "./ProcessorTests";
-import "./tasks";
-import "./performance";
+import "@default-js/defaultjs-extdom";
+import "./tests";
