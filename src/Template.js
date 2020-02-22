@@ -10,7 +10,7 @@ const getKey = (template, cache, alias) => {
 	let key = null;
 	if(alias)
 		key = alias;	
-	else if(template instanceof String)
+	else if(typeof template === "string")
 		key = template;
 	else if(template instanceof URL)
 		key = template.toString();
@@ -26,7 +26,7 @@ const getKey = (template, cache, alias) => {
 const fromURL = async (url, cache, key) => {
 	const response = await fetch(url.toString());
 	const source = await response.text();
-	return fromSource(source, cache, name);
+	return fromSource(source, cache, key);
 };
 
 const fromSource = async (source, cache, key) => {
@@ -39,10 +39,10 @@ const fromElement = async (element, cache, key) => {
 		template = new Template(element);
 	else {
 		const content = template = document.createElement("template");
-		if(template instanceof Node)
-			template.append(element)
-		else if(template instanceof NodeList || template instanceof HTMLCollection)
-			template.append(element.map(i => i.clone(true)));
+		if(element instanceof Node)
+			template.append(element.cloneNode(true));
+		else if(element instanceof NodeList || element instanceof HTMLCollection)
+			template.append(element.map(i => i.cloneNode(true)));
 		else
 			throw new Error("Template type is not supported!");			
 		
@@ -50,7 +50,7 @@ const fromElement = async (element, cache, key) => {
 	}
 	
 	if(cache && key)
-		CACHE[key.hashcode] = template;
+		CACHE[key] = template;
 	
 	return template;
 };
@@ -74,7 +74,7 @@ export default class Template {
 			if(TEST_URL.test(template))
 				return fromURL(new URL(template, location.origin),cache, key);
 			
-			return fromSource(template, key);
+			return fromSource(template, cache, key);
 		}else if(template instanceof URL)
 			return fromURL(template, cache, key);
 		else if(template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)

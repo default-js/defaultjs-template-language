@@ -4,7 +4,7 @@ describe("Template Test - Template.load()", () => {
 	
 	beforeAll(() => {});	
 	
-	it("load form source code", async () => {
+	it("load from source code", async () => {
 		const source =	"<div>" +
 						"\t<div></div>" +
 						"\t<div></div>" +
@@ -17,7 +17,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form url string", async () => {		
+	it("load from url string", async () => {		
 		const result = await Template.load("/templates/TemplateTest/LoadFromURL.html", false);
 		expect(result).toBeDefined();
 		expect(result instanceof Template).toBe(true);
@@ -25,7 +25,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form url", async () => {		
+	it("load from url", async () => {		
 		const url = new URL("/templates/TemplateTest/LoadFromURL.html", location.origin);
 		const result = await Template.load(url.toString(), false);
 		expect(result).toBeDefined();
@@ -34,7 +34,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form HTMLTemplateElement", async () => {
+	it("load from HTMLTemplateElement", async () => {
 		const template = create("<div>" +
 								"\t<div></div>" +
 								"\t<div></div>" +
@@ -47,7 +47,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form Node", async () => {
+	it("load from Node", async () => {
 		const node = create("<div>" +
 								"\t<div></div>" +
 								"\t<div></div>" +
@@ -61,12 +61,12 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form NodeList", async () => {
+	it("load from NodeList", async () => {
 		const nodelist = create("<div>" +
 								"\t<div></div>" +
 								"\t<div></div>" +
 								"</div>");
-		debugger;
+
 		expect(nodelist instanceof NodeList).toBe(true);
 		const result = await Template.load(nodelist, false);
 		expect(result).toBeDefined();
@@ -75,7 +75,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 	});
 	
-	it("load form HTMLCollection", async () => {
+	it("load from HTMLCollection", async () => {
 		const htmlcollection = create("<div>" +
 								"\t<div></div>" +
 								"\t<div></div>" +
