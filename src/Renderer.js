@@ -1,3 +1,4 @@
+import "@default-js/defaultjs-extdom";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 import Template from "./Template.js";
 import Context from "./Context.js";
@@ -20,14 +21,15 @@ const traverse = async ({template, resolver, container, context}) => {
 				container: container,
 				context: context
 			});
-			
-			content.push(node);
+	
+			if(node)
+				content.push(node);
 		}	
 	}
 	return {content: content, context: context};
 };
 
-const renderNode = async ({resolver, template, container, context}) => {	
+const renderNode = async ({resolver, template, container, context}) => {
 	const nodeResolver = new ExpressionResolver({name:"node", context: {}, parent: resolver});
 	const result = await executeDirectives({ 
 		resolver: nodeResolver, 
@@ -36,29 +38,34 @@ const renderNode = async ({resolver, template, container, context}) => {
 		context: context
 	});
 		
-	const templateNodes = template.childNodes;
-	if(templateNodes && templateNodes.length > 0){
-		const {content} = await traverse({ 
-			resolver: nodeResolver, 
-			template: templateNodes, 
-			container: container,
-			context: context
-		});
-		result.node.append(content);
+	if(!result.node)
+		return result;
+	
+	if(!result.ignore){
+		const templateNodes = template.childNodes;
+		if(templateNodes && templateNodes.length > 0){
+			const {content} = await traverse({ 
+				resolver: nodeResolver, 
+				template: templateNodes, 
+				container: container,
+				context: context
+			});
+			result.node.append(content);
+		}
 	}
 	
-	return {node: result.node};	
+	return result;	
 };
 
 const executeDirectives = async ({resolver, template, container, context}) => {
 	const directives = Directive.directives;
-	const length = directives.length;	
-	let result = new DirectiveResult({node: template.cloneNode(false)});
+	const length = directives.length;
+	let result = new DirectiveResult();
 	for(let i = 0; i < length; i++){
 		const directive = directives[i];
-		const accept = await directive.accept({node: result.node, resolver: resolver, template: templateNodes, container: container, context: context});
+		const accept = await directive.accept({node: result.node, resolver: resolver, template: template, container: container, context: context});
 		if(accept){
-			result = await directive.accept({node: result.node, resolver: resolver, template: templateNodes, container: container, context: context, result: result});
+			result = await directive.execute({node: result.node, resolver: resolver, template: template, container: container, context: context});
 			if(result.stop)
 				return result;
 		}		
@@ -94,8 +101,14 @@ export default class Renderer {
 		if(!(template instanceof Template))
 			template = await Template.load(template, cache, container.selector());
 		
-		const rendererResolver = new ExpressionResolver({name:"render", context: {$root: container}, parent: this.resolver});
-		const resolver = new ExpressionResolver({name:"data", context: data, parent: rendererResolver});
+		let resolver = null;
+		if(data instanceof ExpressionResolver)
+			resolver = data;
+		else {
+			const rendererResolver = new ExpressionResolver({name:"render", context: {$root: container}, parent: this.resolver});
+			resolver = new ExpressionResolver({name:"data", context: data, parent: rendererResolver});
+		}
+		
 		const templateNodes = template.template.content.childNodes;
 		const {content, context} = await traverse({
 			template : templateNodes,
@@ -103,13 +116,14 @@ export default class Renderer {
 			container : container,
 			context : new Context(this, container)
 		});
-		
-		console.log("render:", content);
-		
+				
 		//@TODO implementing mode logic
-		container.empty();
-		container.append(content);
-		
+		if(mode == "replace" && target)
+			target.replace(content);
+		else {		
+			container.empty();
+			container.append(content);
+		}
 		//@TODO build Context Class
 		if(context.ready)
 			;

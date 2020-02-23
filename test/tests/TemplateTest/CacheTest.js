@@ -46,7 +46,6 @@ describe("Template Test - Template.load()", () => {
 								"\t<div></div>" +
 								"</div>").first();		
 		
-		debugger;
 		const expected = await Template.load(node);
 		const result = await Template.load(node);
 		expect(result).toBe(expected);

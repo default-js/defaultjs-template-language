@@ -15,10 +15,12 @@ const defineDirective = ({directive}) => {
 };
 
 export default class Directive {
-	static get name() {}
-	static get rank() {}
 	
 	constructor(){};
+	
+	get name() {}
+	get rank() {}
+	
 	
 	/**
 	 * need to be implemented
