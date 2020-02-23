@@ -1,31 +1,30 @@
 import Template from "./Template.js";
+import Context from "./Context.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 
 
 const applicationResolver = new ExpressionResolver({name:"application"});
 
-const traverse = async ({renderer, resolver, template, container, root, context}) => {
+const traverse = async ({template, resolver, container, context}) => {
 	const content = [];	
 	if(template && template.length > 0){
-		const containerResolver = new ExpressionResolver({name:"container", context: {$container: container ? container : root}, parent: resolver});
+		const containerResolver = new ExpressionResolver({name:"container", context: {$container: container}, parent: resolver});
 		const length = template.length;
 		for(let i = 0; i < length; i++){
-			const node = await renderNode({
-				renderer: renderer, 
+			const {node} = await renderNode({
 				resolver: containerResolver, 
 				template: template[i], 
-				container: container ? container : root, 
-				root: root, 
+				container: container,
 				context: context
 			});
 			
 			content.push(node);
 		}	
 	}
-	return {content: content};
+	return {content: content, context: context};
 };
 
-const renderNode = async ({renderer, resolver, template, container, root, context}) => {
+const renderNode = async ({resolver, template, container, context}) => {
 	const node = template.cloneNode(false);	
 	const nodeResolver = new ExpressionResolver({name:"node", context: {}, parent: resolver});
 	
@@ -33,17 +32,16 @@ const renderNode = async ({renderer, resolver, template, container, root, contex
 	
 	const templateNodes = template.childNodes;
 	if(templateNodes && templateNodes.length > 0){
-		const {content} = await traverse({renderer : renderer, 
+		const {content} = await traverse({ 
 			resolver: nodeResolver, 
 			template: templateNodes, 
-			container: container, 
-			root: root, 
+			container: container,
 			context: context
 		});
 		node.append(content);
 	}
 	
-	return node;	
+	return {node: node};	
 };
 
 export default class Renderer {	
@@ -74,17 +72,14 @@ export default class Renderer {
 		if(!(template instanceof Template))
 			template = await Template.load(template, cache, container.selector());
 		
-		const context = {};
 		const rendererResolver = new ExpressionResolver({name:"render", context: {$root: container}, parent: this.resolver});
 		const resolver = new ExpressionResolver({name:"data", context: data, parent: rendererResolver});
 		const templateNodes = template.template.content.childNodes;
-		const {content} = await traverse({
-			renderer : this, 
-			resolver: resolver, 
-			template: templateNodes, 
-			container: null, 
-			root: container, 
-			context: context
+		const {content, context} = await traverse({
+			template : templateNodes,
+			resolver : resolver,
+			container : container,
+			context : new Context(this, container)
 		});
 		
 		console.log("render:", content);
