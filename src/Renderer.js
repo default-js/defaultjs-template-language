@@ -1,7 +1,9 @@
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 import Template from "./Template.js";
 import Context from "./Context.js";
-import from "./directives";
+import Directive from "./Directive.js";
+import DirectiveResult from "./DirectiveResult.js";
+import "./directives";
 
 
 const applicationResolver = new ExpressionResolver({name:"application"});
@@ -25,12 +27,15 @@ const traverse = async ({template, resolver, container, context}) => {
 	return {content: content, context: context};
 };
 
-const renderNode = async ({resolver, template, container, context}) => {
-	const node = template.cloneNode(false);	
+const renderNode = async ({resolver, template, container, context}) => {	
 	const nodeResolver = new ExpressionResolver({name:"node", context: {}, parent: resolver});
-	
-	//@TODO implementing node process tasks
-	
+	const result = await executeDirectives({ 
+		resolver: nodeResolver, 
+		template: template, 
+		container: container,
+		context: context
+	});
+		
 	const templateNodes = template.childNodes;
 	if(templateNodes && templateNodes.length > 0){
 		const {content} = await traverse({ 
@@ -39,11 +44,27 @@ const renderNode = async ({resolver, template, container, context}) => {
 			container: container,
 			context: context
 		});
-		node.append(content);
+		result.node.append(content);
 	}
 	
-	return {node: node};	
+	return {node: result.node};	
 };
+
+const executeDirectives = async ({resolver, template, container, context}) => {
+	const directives = Directive.directives;
+	const length = directives.length;	
+	let result = new DirectiveResult({node: template.cloneNode(false)});
+	for(let i = 0; i < length; i++){
+		const directive = directives[i];
+		const accept = await directive.accept({node: result.node, resolver: resolver, template: templateNodes, container: container, context: context});
+		if(accept){
+			result = await directive.accept({node: result.node, resolver: resolver, template: templateNodes, container: container, context: context, result: result});
+			if(result.stop)
+				return result;
+		}		
+	}	
+	return result;
+}
 
 export default class Renderer {	
 	constructor({data, parent = null} = {}){

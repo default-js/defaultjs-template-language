@@ -1,3 +1,4 @@
+import DirectiveResult from "./DirectiveResult.js";
 const DEFINED_DIRECTIVES = [];
 
 const defineDirective = ({directive}) => {
@@ -7,35 +8,24 @@ const defineDirective = ({directive}) => {
 	if(directive.rank < 0)
 		throw new Error("The rank ofa directive must be positive(0 <= rank)!");
 	
-	DEFINED_DIRECTIVES.push(directive).sort((a,b) => {
+	DEFINED_DIRECTIVES.push(directive);
+	DEFINED_DIRECTIVES.sort((a,b) => {
 		return a.rank - b.rank;
 	});
 };
 
-export class DirectiveResult {
-	constructor({stop = false, remove = false, node = null, content = null}){
-		this.stop = stop;
-		this.remove = remove;	
-		this.node = node;
-		this.content = content;
-	}
-};
-
 export default class Directive {
-	constructor(name, rank){
-		this.name = name;
-		this.rank = rank;
-	};
+	static get name() {}
+	static get rank() {}
 	
-	set name(n){}
-	set rank(r){}
+	constructor(){};
 	
 	/**
 	 * need to be implemented
 	 * 
 	 * @return boolean
 	 */
-	async accept({node, template, resolver, container, context}){
+	async accept({node=null, template, resolver, container, context}){
 		return true;
 	}
 	
@@ -44,8 +34,8 @@ export default class Directive {
 	 * 
 	 * return DirectiveResult
 	 */
-	async execute({node, template, resolver, container, context}){
-		return new 
+	async execute({node=null, template, resolver, container, context}){
+		return new DirectiveResult({node});
 	}
 	
 	

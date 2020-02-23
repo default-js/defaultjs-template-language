@@ -3,10 +3,7 @@ export default class Context {
 		this.ready = [];		
 		this.renderer = renderer;
 		this.root = root;
-	}
-	
-	set renderer(r){}
-	set root(r){}
+	}	
 	
 	set ready(action){
 		if(typeof action === "function")
@@ -23,6 +20,6 @@ export default class Context {
 	}
 	
 	static clone(){
-		return new Context(this.renderer, this.root);
+		return new Context(this.renderer, this.root, this.directives);
 	}
 };
