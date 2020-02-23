@@ -1,6 +1,7 @@
+import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 import Template from "./Template.js";
 import Context from "./Context.js";
-import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
+import from "./directives";
 
 
 const applicationResolver = new ExpressionResolver({name:"application"});
