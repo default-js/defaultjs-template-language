@@ -1,4 +1,3 @@
-import Template from "@src/Template.js";
 import Renderer from "@src/Renderer.js";
 
 describe("Renderer Test - mode", () => {
@@ -13,9 +12,9 @@ describe("Renderer Test - mode", () => {
 			data: {}, 
 			template: "<div></div>"
 		};		
-		await new Renderer().render(option);		
+		await (new Renderer()).render(option);		
 		expect(container.children.length).toBe(1);
-		await new Renderer().render(option);
+		await (new Renderer()).render(option);
 		expect(container.children.length).toBe(1);
 	});
 	
@@ -28,14 +27,14 @@ describe("Renderer Test - mode", () => {
 			template: "<div></div>",
 			mode: "replace"
 		};		
-		await new Renderer().render(option);		
+		await (new Renderer()).render(option);		
 		expect(container.children.length).toBe(1);
-		await new Renderer().render(option);
+		await (new Renderer()).render(option);
 		expect(container.children.length).toBe(1);
 	});
 	
-	it("replace without target", async () => {
-		const container = create("<div><a><a></div>").first();
+	it("replace with target", async () => {
+		const container = create("<div><a></a></div>").first();
 		const target = container.find("a").first();
 		const option = {
 			container: container, 
@@ -46,7 +45,7 @@ describe("Renderer Test - mode", () => {
 		};
 		
 		debugger;
-		await new Renderer().render(option);		
+		await (new Renderer()).render(option);		
 		expect(container.children.length).toBe(1);
 		expect(container.children[0].tagName).toBe("DIV");
 	});

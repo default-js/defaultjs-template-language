@@ -1,16 +1,16 @@
-const webpackconf = require("./webpack.dev-server.js")
+const webpackconf = require("./webpack.dev.js")
 const merge = require('webpack-merge');
 const common = require('./karma.common.js');
 const puppeteer = require('puppeteer');
 process.env.CHROME_BIN = puppeteer.executablePath();
 
-module.exports = (config) => {
+module.exports = function(config) {
 	config.set(merge(common, {
 		webpack : webpackconf,
 		logLevel : config.LOG_INFO,
-		browsers : [ /*'Firefox',*/ 'Chrome'/*, 'Safari', 'ChromeHeadless'*/ ],
+		browsers : [ 'ChromeHeadless' ],
 		autoWatch : true,
-		singleRun : false,
+		singleRun : true,
 		concurrency : Infinity
 	}))
 }

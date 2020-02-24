@@ -14,7 +14,7 @@ const traverse = async ({template, resolver, container, context}) => {
 	if(template && template.length > 0){
 		const containerResolver = new ExpressionResolver({name:"container", context: {$container: container}, parent: resolver});
 		const length = template.length;
-		for(let i = 0; i < length; i++){
+		for(let i = 0; i < length; i++) {
 			const {node} = await renderNode({
 				resolver: containerResolver, 
 				template: template[i], 
@@ -73,6 +73,21 @@ const executeDirectives = async ({resolver, template, container, context}) => {
 	return result;
 }
 
+const MODEWORKER = {
+	"replace" : async ({container, target = null, content}) => {
+		if(target){
+			target.replace(content);
+		} else {
+			container.empty();
+			container.append(content);
+		}
+	},
+	"append" : async ({container, target = null, content}) => {
+		
+	},
+	"prepend" : async ({container, target = null, content}) => {}
+}
+
 export default class Renderer {	
 	constructor({data, parent = null} = {}){
 		this.parent = (parent instanceof Renderer ) ? parent : null;
@@ -118,12 +133,20 @@ export default class Renderer {
 		});
 				
 		//@TODO implementing mode logic
-		if(mode == "replace" && target)
-			target.replace(content);
-		else {		
-			container.empty();
-			container.append(content);
-		}
+		if(mode == "replace"){
+			if(target){				
+				console.log("target", target, "content", content);
+				target.replace(content);
+			} else {
+				container.empty();
+				container.append(content);
+			}
+		} else if (mode == "append"){
+			throw new Error("Not implemented!");
+		} else if (mode == "prepend"){
+			throw new Error("Not implemented!");
+		}	
+		
 		//@TODO build Context Class
 		if(context.ready)
 			;
