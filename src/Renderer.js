@@ -9,10 +9,11 @@ import "./directives";
 
 const applicationResolver = new ExpressionResolver({name:"application"});
 
+
 const traverse = async ({template, resolver, container, context}) => {
 	const content = [];	
 	if(template && template.length > 0){
-		const containerResolver = new ExpressionResolver({name:"container", context: {$container: container}, parent: resolver});
+		let containerResolver = resolver.name == "container" ? resolver : new ExpressionResolver({name:"container", context: {$container: container}, parent: resolver});
 		const length = template.length;
 		for(let i = 0; i < length; i++) {
 			const {node} = await renderNode({
@@ -45,7 +46,7 @@ const renderNode = async ({resolver, template, container, context}) => {
 		const templateNodes = template.childNodes;
 		if(templateNodes && templateNodes.length > 0){
 			const {content} = await traverse({ 
-				resolver: nodeResolver, 
+				resolver: resolver, 
 				template: templateNodes, 
 				container: container,
 				context: context
@@ -58,14 +59,16 @@ const renderNode = async ({resolver, template, container, context}) => {
 };
 
 const executeDirectives = async ({resolver, template, container, context}) => {
+	const directiveResolver = new ExpressionResolver({name:"directive", context: {}, parent: resolver});
+	console.log("resolver chain:", directiveResolver.fullname );
 	const directives = Directive.directives;
 	const length = directives.length;
 	let result = new DirectiveResult();
 	for(let i = 0; i < length; i++){
 		const directive = directives[i];
-		const accept = await directive.accept({node: result.node, resolver: resolver, template: template, container: container, context: context});
+		const accept = await directive.accept({node: result.node, resolver: directiveResolver, template: template, container: container, context: context});
 		if(accept){
-			result = await directive.execute({node: result.node, resolver: resolver, template: template, container: container, context: context});
+			result = await directive.execute({node: result.node, resolver: directiveResolver, template: template, container: container, context: context});
 			if(result.stop)
 				return result;
 		}		
@@ -82,10 +85,18 @@ const MODEWORKER = {
 			container.append(content);
 		}
 	},
-	"append" : async ({container, target = null, content}) => {
-		
+	"append" : async ({container, target = null, content}) => {		
+		if(target)
+			target.after(content);
+		else
+			container.append(content);
 	},
-	"prepend" : async ({container, target = null, content}) => {}
+	"prepend" : async ({container, target = null, content}) => {
+		if(target)
+			target.before(content);
+		else
+			container.prepend(content);
+	}
 }
 
 export default class Renderer {	
@@ -132,20 +143,7 @@ export default class Renderer {
 			context : new Context(this, container)
 		});
 				
-		//@TODO implementing mode logic
-		if(mode == "replace"){
-			if(target){				
-				console.log("target", target, "content", content);
-				target.replace(content);
-			} else {
-				container.empty();
-				container.append(content);
-			}
-		} else if (mode == "append"){
-			throw new Error("Not implemented!");
-		} else if (mode == "prepend"){
-			throw new Error("Not implemented!");
-		}	
+		MODEWORKER[mode]({container, target, content});	
 		
 		//@TODO build Context Class
 		if(context.ready)
