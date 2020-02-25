@@ -1,5 +1,6 @@
 {
-	"name": "defaultjs-template-language",
+	"name": "@default-js/defaultjs-template-language",
+	"buildname": "defaultjs-template-language",
 	"version": "1.0.0-beta.1",
 	"description": "",
 	"main": "./index.js",

@@ -1,4 +1,4 @@
-import pack, {Processor, Constants} from "./src";
+import Template from "./src/Template.js";
+import Renderer from "./src/Renderer.js";
 
-export default pack;
-export {Constants, Processor};
+export {Template, Renderer};

@@ -1,9 +1,9 @@
-import {Constants, Processor} from "./src"
+import GLOBAL from "@default-js/defaultjs-common-utils/src/Global.js";
+import {Template, Renderer} from "./index.js"
 
-const global = window || global || self || this || {};
-global.defaultjs = global.defaultjs || {};
-global.defaultjs.tl = global.defaultjs.tl || {
+GLOBAL.defaultjs = GLOBAL.defaultjs || {};
+GLOBAL.defaultjs.tl = GLOBAL.defaultjs.tl || {
 	VERSION : "${version}",
-	Constants : Constants,
-	Processor : Processor
+	Template: Template,
+	Renderer: Renderer
 };
