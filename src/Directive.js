@@ -26,7 +26,7 @@ export default class Directive {
 	 * 
 	 * @return boolean
 	 */
-	async accept({tempalte, context}){
+	async accept({template, context}){
 		return true;
 	}
 	
@@ -35,7 +35,7 @@ export default class Directive {
 	 * 
 	 * return DirectiveResult
 	 */
-	async execute({tempalte, context}){
+	async execute({template, context}){
 		return context;
 	}
 	

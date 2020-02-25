@@ -3,6 +3,7 @@ import ExpressionResolver from "@default-js/defaultjs-expression-language/src/Ex
 import Template from "./Template.js";
 import Context from "./Context.js";
 import Directive from "./Directive.js";
+import Element from "./Element.js";
 import "./directives";
 import "./elements";
 
@@ -42,7 +43,7 @@ const MODEWORKER = {
 }
 
 const loadTemplate = (template) => {
-	if(!template)
+	if (!template)
 		return null;
 	else if (template instanceof Template)
 		return template.template;
@@ -67,7 +68,7 @@ export default class Renderer {
 		else
 			this.resolver = APPLICATION_SCOPE_RESOLVER;
 	}
-	
+
 	get chain() {
 		return this.parent ? this.parent.chain + "/" + this.scope : "/" + this.scope
 	}
@@ -95,23 +96,19 @@ export default class Renderer {
 	 */
 	async render({ template = null, data = null, container, root, mode = "replace", target, context = null }) {
 		template = loadTemplate(template);
-		let renderer = null;
-		if(context){
+		let renderer = new Renderer({ data: data ? data : {}, scope: SCOPES.renderer, parent: this });
+		if (context) {
 			//not first call
-			renderer = this.scopeFilter(SCOPES.renderer);
 			context = context.clone({ renderer, container, root, target });
 		} else {
-			// first call
-			renderer = new Renderer({data: data ? data : {}, scope: SCOPES.renderer, parent: this });
+			// first call			
 			context = new Context({
-				renderer, 
-				container, 
-				root: root ? root : container, 
+				renderer,
+				container,
+				root: root ? root : container,
 				target
-			});		
+			});
 		};
-		
-
 
 		let result = null;
 		if (template instanceof Node)
@@ -123,7 +120,7 @@ export default class Renderer {
 			context = result;
 
 
-		if (mode) {
+		if (mode && context.content) {
 			const modeworker = MODEWORKER[mode];
 			if (!modeworker)
 				throw new Error("The \"" + mode + "\" is not supported!")
@@ -150,30 +147,36 @@ export default class Renderer {
 			const renderings = template.map(node => renderer.renderNode({ template: node, context }));
 
 			let content = await Promise.all(renderings);
-			content = content.filter(context => !!context.content).map(context => context.content);
-
-			if (content.length > 0) {
-				context.content = [];
-				content.forEach(result => {
-					if (result instanceof Array || result instanceof NodeList || result instanceof HTMLCollection)
-						context.content = context.content.concat(result);
-					else if (result instanceof Node)
-						context.content.push(result);
-				});
+			if(content){
+				content = content.filter(context => !!context.content).map(context => context.content);
+	
+				if (content.length > 0) {
+					context.content = [];
+					content.forEach(result => {
+						if (result instanceof Array || result instanceof NodeList || result instanceof HTMLCollection)
+							context.content = context.content.concat(result);
+						else if (result instanceof Node)
+							context.content.push(result);
+					});
+				}
 			}
 		}
 		return context;
 	}
 
 	async renderNode({ template, context }) {
+		template.normalize();
 		let renderer = new Renderer({ template, data: {}, scope: SCOPES.node, parent: context.renderer });
-		context = context.clone({ renderer })
-		const result = await this.executeDirectives({ template, context });
+		context = context.clone({ renderer });
+
+		let result = null;
+		if (template instanceof Element)
+			result = await template.execute({ template, context });
+		else
+			result = await this.executeDirectives({ template, context });
+
 		if (result instanceof Context)
 			context = context;
-
-		if (!context.content)
-			return null;
 
 		if (!context.ignore) {
 			const content = template.childNodes;
@@ -188,12 +191,12 @@ export default class Renderer {
 	}
 
 	async executeDirectives({ template, context }) {
-		console.log("scope chain:", context.renderer.chain, "resolver chain", context.renderer.resolver.fullname);
+		//console.log("scope chain:", context.renderer.chain, "resolver chain", context.renderer.resolver.fullname);
 		const directives = Directive.directives;
 		const length = directives.length;
-		for (let i = 0; i < length; i++) {
+		for (let i = 0; i < length && !context.stop; i++) {
 			const directive = directives[i];
-			const accept = await directive.accept({ template, context });
+			const accept = await directive.accept({ template, context });		
 			if (accept) {
 				const result = await directive.execute({ template, context });
 				if (result instanceof Context)
@@ -203,7 +206,7 @@ export default class Renderer {
 		return context;
 	}
 
-	clone ({ template, data, scope } = {}) {
+	clone({ template, data, scope } = {}) {
 		return new Renderer({
 			template: template ? template : this.template,
 			data: data ? data : {},

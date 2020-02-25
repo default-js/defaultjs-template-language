@@ -1,8 +1,8 @@
 import Directive from "../Directive.js";
-import ReplaceElement from "../elements/ReplaceElement" 
+import ReplaceElement from "../elements/Replace.js" 
 
 
-class InitialDirective extends Directive {	
+class Initial extends Directive {	
 	constructor(){
 		super();
 	}
@@ -11,15 +11,17 @@ class InitialDirective extends Directive {
 	get rank() {return 0}
 	
 	
-	async accept({tempalte, context}){
+	async accept({template, context}){
 		return true;
 	}
 	
 	async execute({template, context}){
-		if(!(template instanceof HTMLElement) && template instanceof Node)
+		if(template instanceof Text)
+			context.content = template.cloneNode(true);
+		else if(!(template instanceof HTMLElement) && template instanceof Node )
 			context.content = template.cloneNode(true);
 		else if(template.attr("jstl-async")){
-			context.content = new ReplaceElement();
+			context.content = new Replace();
 			const node = node.cloneNode(true);
 			node.attr("jstl-async", null);
 			setTimeout(async () =>{
@@ -39,4 +41,4 @@ class InitialDirective extends Directive {
 	}
 }
 
-Directive.define({directive: new InitialDirective()});
+Directive.define({directive: new Initial()});

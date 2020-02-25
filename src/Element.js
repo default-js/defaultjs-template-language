@@ -1,6 +1,7 @@
 export default class DirectiveElement extends HTMLElement{
 	constructor(){
 		super();
+		this.hidden = true;
 	}
 	
 	/**
@@ -8,7 +9,8 @@ export default class DirectiveElement extends HTMLElement{
 	 * 
 	 * @FIXME Just an idea
 	 */
-	async execute({tempalte, context}){
-		return template.cloneNode(true);
-	});	
+	async execute({template, context}){
+		context.content = template.cloneNode(true);
+		return context;
+	};	
 }

@@ -1,2 +1,2 @@
-import "./TraverseTest.js";
+import "./RenderTest.js";
 import "./RenderModeTest.js";
