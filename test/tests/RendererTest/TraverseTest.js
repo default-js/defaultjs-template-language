@@ -9,6 +9,7 @@ describe("Renderer Test - traverse tree", () => {
 		const container = create("<div></div>").first();
 		expect(container.children.length).toBe(0);
 		
+		debugger;
 		await new Renderer().render({
 			container: container, 
 			data: {}, 
@@ -16,9 +17,6 @@ describe("Renderer Test - traverse tree", () => {
 		});
 		
 		expect(container.children.length).toBe(1);
-		
-		
-		
 	});
 	
 	it("case 2", async () => {		

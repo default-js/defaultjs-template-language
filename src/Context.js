@@ -1,11 +1,16 @@
 export default class Context {	
-	constructor(renderer, node, container, root, parent = null) {
+	constructor({renderer, container, root, target = null, parent = null}) {
+		if(!renderer) throw new Error("Parameter \"renderer\" is required!");
+		if(!container) throw new Error("Parameter \"container\" is required!");
+		if(!root) throw new Error("Parameter \"root\" is required!");
+		
 		this.readyHandles = [];		
 		this.finallyHandles = [];
-		this.content = content;
+		this.content = null;
 		this.container = container;
 		this.renderer = renderer;
 		this.root = root;
+		this.target = target;
 		this.parent = parent;
 		
 		/* execution flags */
@@ -13,11 +18,7 @@ export default class Context {
 		this.ignore = false;		
 	}
 	
-	set container(c){};
-	set renderer(r){}
-	set root(r){}
-	set parent(p){};	
-	
+		
 	get finally(){
 		return this.finallyHandles;
 	}
@@ -42,12 +43,13 @@ export default class Context {
 			this.readyHandles.push(callback);
 	}
 
-	static clone({renderer, content, container, root}) {
-		return new Context(
-			renderer ? renderer : this.renderer,
-			content ? content : this.content,
-			container ? container : this.container,
-			root ? root : this.root, 
-			this);
+	clone({renderer, container, root, target} = {}) {
+		return new Context({
+			renderer: renderer ? renderer : this.renderer,			
+			container: container ? container : this.container,
+			root: root ? root : this.root, 
+			target: target ? target : this.target,
+			parent: this
+		});
 	}
 };

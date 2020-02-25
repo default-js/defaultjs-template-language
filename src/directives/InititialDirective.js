@@ -15,22 +15,25 @@ class InitialDirective extends Directive {
 		return true;
 	}
 	
-	async execute({tempalte, context}){
-		if(!(template instanceof HTMLElement))
-			context.node = template.cloneNode(true);
+	async execute({template, context}){
+		if(!(template instanceof HTMLElement) && template instanceof Node)
+			context.content = template.cloneNode(true);
 		else if(template.attr("jstl-async")){
-			context.node = new ReplaceElement();
+			context.content = new ReplaceElement();
 			const node = node.cloneNode(true);
 			node.attr("jstl-async", null);
 			setTimeout(async () =>{
-				await context.renderer.render({template: node, mode: "replace", target: context.node, context});
+				await context.renderer.render({template: node, mode: "replace", target: context.content, context: context.clone({target: context.content})});
 			},parseInt(template.attr("jstl-async") || "250") || 250);
 		}else if(template.attr("jstl-ignore")){
-			result.node = template.cloneNode(true);
-			result.stop = true;
-			result.ignore = true;
+			context.content = template.cloneNode(true);
+			context.stop = true;
+			context.ignore = true;
+		}else if(template instanceof HTMLElement){
+			context.content = template.cloneNode(false);
 		}else{
-			result.node = template.cloneNode(false);
+			context.stop = true;
+			context.ignore = true;
 		}
 		return context;
 	}

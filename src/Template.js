@@ -67,6 +67,9 @@ export default class Template {
 	};
 	
 	static async load(template, cache = true, alias = null){
+		if(template instanceof Template)
+			return template;
+		
 		const key = getKey(template,cache, alias);
 		if(key && CACHE[key])
 			return CACHE[key];
