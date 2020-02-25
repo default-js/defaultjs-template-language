@@ -1,4 +1,3 @@
-import DirectiveResult from "./DirectiveResult.js";
 const DEFINED_DIRECTIVES = [];
 
 const defineDirective = ({directive}) => {
@@ -27,7 +26,7 @@ export default class Directive {
 	 * 
 	 * @return boolean
 	 */
-	async accept({node=null, template, resolver, container, context}){
+	async accept({tempalte, context}){
 		return true;
 	}
 	
@@ -36,8 +35,8 @@ export default class Directive {
 	 * 
 	 * return DirectiveResult
 	 */
-	async execute({node=null, template, resolver, container, context}){
-		return new DirectiveResult({node});
+	async execute({tempalte, context}){
+		return context;
 	}
 	
 	

@@ -8,7 +8,7 @@ export default class DirectiveElement extends HTMLElement{
 	 * 
 	 * @FIXME Just an idea
 	 */
-	async execute({template, resolver, container, context}){
+	async execute({tempalte, context}){
 		return template.cloneNode(true);
 	});	
 }

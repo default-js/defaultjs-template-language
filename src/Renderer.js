@@ -3,137 +3,76 @@ import ExpressionResolver from "@default-js/defaultjs-expression-language/src/Ex
 import Template from "./Template.js";
 import Context from "./Context.js";
 import Directive from "./Directive.js";
-import DirectiveResult from "./DirectiveResult.js";
 import "./directives";
+import "./elements";
 
 
 export const SCOPES = {
-		application : "application",
-		renderer : "renderer",
-		data : "data",
-		container : "container",
-		node : "node",
-		directives : "directives" 
+	application: "application",
+	data: "data",
+	renderer: "renderer",
+	container: "container",
+	node: "node",
+	//directives : "directives" 
 };
 
-const applicationResolver = new ExpressionResolver({name:SCOPES.application});
-
-const filterResolver = (resolver, filter, last=false) => {
-	if(!resolver)
-		return null;
-	else if(last)		
-		return resolver.name == filter ? resolver : filterResolver(resolver.parent, filter, true);	
-	else{
-		const result = filterResolver(resolver.parent, filter);
-		return result ? result : (resolver.name == filter ? resolver : null);
-	}
-};
-
-
-const traverse = async ({template, resolver, container, context}) => {
-	const content = [];	
-	if(template && template.length > 0){
-		let containerResolver = filterResolver(resolver, SCOPES.container); 
-		if(!containerResolver)
-			containerResolver = new ExpressionResolver({name: SCOPES.container, context: {$container: container}, parent: resolver});
-		
-		const length = template.length;
-		for(let i = 0; i < length; i++) {
-			const {node} = await renderNode({
-				resolver: containerResolver, 
-				template: template[i], 
-				container: container,
-				context: context
-			});
-	
-			if(node)
-				content.push(node);
-		}	
-	}
-	return {content: content, context: context};
-};
-
-const renderNode = async ({resolver, template, container, context}) => {
-	const nodeResolver = new ExpressionResolver({name: SCOPES.node, context: {}, parent: resolver});
-	const result = await executeDirectives({ 
-		resolver: nodeResolver, 
-		template: template, 
-		container: container,
-		context: context
-	});
-		
-	if(!result.node)
-		return result;
-	
-	if(!result.ignore){
-		const templateNodes = template.childNodes;
-		if(templateNodes && templateNodes.length > 0){
-			const {content} = await traverse({ 
-				resolver: resolver, 
-				template: templateNodes, 
-				container: container,
-				context: context
-			});
-			result.node.append(content);
-		}
-	}
-	
-	return result;	
-};
-
-const executeDirectives = async ({resolver, template, container, context}) => {
-	const directiveResolver = new ExpressionResolver({name: SCOPES.directives, context: {}, parent: resolver});
-	console.log("resolver chain:", directiveResolver.fullname );
-	const directives = Directive.directives;
-	const length = directives.length;
-	let result = new DirectiveResult();
-	for(let i = 0; i < length; i++){
-		const directive = directives[i];
-		const accept = await directive.accept({node: result.node, resolver: directiveResolver, template: template, container: container, context: context});
-		if(accept){
-			result = await directive.execute({node: result.node, resolver: directiveResolver, template: template, container: container, context: context});
-			if(result.stop)
-				return result;
-		}		
-	}	
-	return result;
-}
+const APPLICATION_SCOPE_RESOLVER = new ExpressionResolver({ name: SCOPES.application });
 
 const MODEWORKER = {
-	"replace" : async ({container, target = null, content}) => {
-		if(target){
+	"replace": async ({ container, target = null, content }) => {
+		if (target) {
 			target.replace(content);
 		} else {
 			container.empty();
 			container.append(content);
 		}
 	},
-	"append" : async ({container, target = null, content}) => {		
-		if(target)
+	"append": async ({ container, target = null, content }) => {
+		if (target)
 			target.after(content);
 		else
 			container.append(content);
 	},
-	"prepend" : async ({container, target = null, content}) => {
-		if(target)
+	"prepend": async ({ container, target = null, content }) => {
+		if (target)
 			target.before(content);
 		else
 			container.prepend(content);
 	}
 }
 
-export default class Renderer {	
-	constructor({data, parent = null} = {}){
-		this.parent = (parent instanceof Renderer ) ? parent : null;
-		if(data instanceof ExpressionResolver)
-			this.resolver = data;
-		else if(data)
-			new ExpressionResolver({name: SCOPES.renderer, context: data, parent: applicationResolver});
-		else			
-			this.resolver = applicationResolver; 
+export default class Renderer {
+	constructor({ template, data, scope = SCOPES.renderer, parent = null } = {}) {
+		this.scope = scope;
+		if (template instanceof Template)
+			this.template = template.template;
+		else if (template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
+			this.template = template;
+		else if (typeof template === "string")
+			this.template = create(template);
+		else
+			this.template = null;
+
+		this.parent = (parent instanceof Renderer) ? parent : null;
+		if (data)
+			this.resolver = new ExpressionResolver({ name: scope ? scope : SCOPES.data, context: data, parent: parent ? parent.resolver : APPLICATION_SCOPE_RESOLVER });
+		else
+			this.resolver = new ExpressionResolver({ name: SCOPES.application });
 	}
-	
-	
+
+	get scopechain() {
+		return this.parent ? this.parent.scopechain + "/" + this.scope : this.scope
+	}
+
+	scopeFilter(scope, last = false) {
+		if (last)
+			return this.scope == scope ? this : this.parent.filterChain(scope, true);
+		else {
+			const result = this.parent ? this.parent.filterChain(scope) : null;
+			return result ? result : (this.scope == scope ? this : null);
+		}
+	}
+
 	/**
 	 * @param 
 	 * 		container HTMLElement -> target to render in
@@ -146,43 +85,99 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({container, data = null, template, cache = false, mode = "replace", target}){
-		if(!(template instanceof Template))
-			template = await Template.load(template, cache, container.selector());
-		
-		let resolver = null;
-		if(data instanceof ExpressionResolver)
-			resolver = data;
-		else {			
-			const dataResolver = new ExpressionResolver({name: SCOPES.data, context: data, parent: this.resolver});
-			resolver = new ExpressionResolver({name: SCOPES.renderer, context: {$root: container}, parent: dataResolver});
-		}
-		
-		const templateNodes = template.template.content.childNodes;
-		const {content, context} = await traverse({
-			template : templateNodes,
-			resolver : resolver,
-			container : container,
-			context : new Context(this, container)
-		});
-		
-		if(mode){
+	async render({ template = null, data = null, container, root, mode = "replace", target, context = null }) {
+
+		let renderer = this;
+		if (data || template)
+			renderer = new Renderer({ template: template ? template: this.template, data: data ? data : {}, scope: SCOPES.renderer, parent: this });
+			
+		context = context ? context : new Context(this, null, container, root ? root : container, null)
+		let content = null;
+		if (template instanceof Node) {
+			await renderer.renderNode({ template: (template ? template : this.template), context });
+			content = context.content;
+		} else
+			content = await renderer.renderContainer({ context })
+
+		if (mode) {
 			const modeworker = MODEWORKER[mode];
-			if(!modeworker)
+			if (!modeworker)
 				throw new Error("The \"" + mode + "\" is not supported!")
-					
-			await modeworker({container, target, content});
+
+			await modeworker({ container, target, content });
 		}
-		
-		//@TODO build Context Class
-		if(context.ready)
-			;
-		
+
+		if (!root || container == root)
+			await Promise.all(
+				context.ready.map(action =>
+					action({ renderer: this, container, context })
+				)
+			);
+
+
 		return content;
 	}
-	
-	static async render(option) {
-		const renderer = new Renderer();		
-		return await renderer.render(option);
-	}	
+
+
+	async renderContainer({ template = this.template, context }) {
+		if (template && template.length > 0) {
+			const length = template.length;
+			const renderer = new Renderer({ template, data: {}, scope: SCOPES.container, parent: context.renderer });
+			const renderings = [];
+			for (let i = 0; i < length; i++) {
+				renderings.push(renderer.renderNode({
+					template: template[i],
+					context: context.clone({ renderer: renderer })
+				}));
+			}
+
+			let content = await Promise.all(renderings);
+			return content.filter(node => !!node);
+		}
+		return context;
+	}
+
+	async renderNode({ template, context }) {
+		const renderer = new Renderer({ template, data: {}, scope: SCOPES.node, parent: context.renderer });
+		context = context.clone({ renderer: renderer })
+		const result = await this.executeDirectives({ template, context });
+		if (result instanceof Context)
+			context = context;
+
+		if (!context.content)
+			return null;
+
+		if (!context.ignore) {
+			const content = template.childNodes;
+			if (content && content.length > 0) {
+				const contentContext = context.clone({ container: context.content });
+				// @TODO await or fire and forget???
+				await context.renderer.render({ template: content, context: contentContext, mode: "replace" });
+			}
+		}
+
+		return result;
+	}
+
+	async executeDirectives({ template, context }) {
+		console.log("scope chain:", context.renderer.scopechain);
+		const directives = Directive.directives;
+		const length = directives.length;
+		for (let i = 0; i < length; i++) {
+			const directive = directives[i];
+			const accept = await directive.accept({ template, context });
+			if (accept) {
+				const result = await directive.execute({ template, context });
+				if (result instanceof Context)
+					context = result;
+			}
+		}
+		return result;
+	}
+
+
+	static async render({ container, data, template, mode, target }) {
+		const renderer = new Renderer({ template, data, scope: SCOPES.render });
+		return renderer.render({ container, mode, target });
+	}
 }

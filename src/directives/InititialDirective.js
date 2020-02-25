@@ -1,5 +1,5 @@
-import Directive from "@src/Directive.js";
-import DirectiveResult from "@src/DirectiveResult.js";
+import Directive from "../Directive.js";
+import ReplaceElement from "../elements/ReplaceElement" 
 
 
 class InitialDirective extends Directive {	
@@ -11,19 +11,19 @@ class InitialDirective extends Directive {
 	get rank() {return 0}
 	
 	
-	async accept({node=null, template, resolver, container, context}){
+	async accept({tempalte, context}){
 		return true;
 	}
 	
-	async execute({renderer, template, resolver, container, context}){
-		const result = new DirectiveResult();
+	async execute({tempalte, context}){
 		if(!(template instanceof HTMLElement))
-			result.node = template.cloneNode(true);
+			context.node = template.cloneNode(true);
 		else if(template.attr("jstl-async")){
-			result.node = template.cloneNode(false);
-			result.node.attr("jstl-async", null);
+			context.node = new ReplaceElement();
+			const node = node.cloneNode(true);
+			node.attr("jstl-async", null);
 			setTimeout(async () =>{
-				await context.renderer.render({data: resolver, template: node, container: container, mode: "replace", target: node});
+				await context.renderer.render({template: node, mode: "replace", target: context.node, context});
 			},parseInt(template.attr("jstl-async") || "250") || 250);
 		}else if(template.attr("jstl-ignore")){
 			result.node = template.cloneNode(true);
@@ -32,7 +32,7 @@ class InitialDirective extends Directive {
 		}else{
 			result.node = template.cloneNode(false);
 		}
-		return result;
+		return context;
 	}
 }
 
