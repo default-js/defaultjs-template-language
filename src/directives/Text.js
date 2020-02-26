@@ -14,8 +14,8 @@ class TextContent extends Directive {
 	}
 	
 	async execute({template, context}){		
-		const resolver = context.renderer.resolver;
-		console.log("text content:", template.textContent, " resolver chain:", resolver.chain);
+		const resolver = context.resolver;
+		console.log("resolver chain:", resolver.effectiveChain);
 		const node = context.content;					
 		node.textContent = await resolver.resolveText(template.textContent);
 				

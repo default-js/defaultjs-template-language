@@ -18,8 +18,7 @@ class If extends Directive {
 	
 	async execute({template, context}){
 		const expression = template.attr("jstl-if");
-		const resolver = context.renderer.resolver;
-		debugger;
+		const resolver = context.resolver;
 		const result = await resolver.resolve(expression, false);
 		if(!result){
 			context.content = null;

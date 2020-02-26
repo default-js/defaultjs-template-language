@@ -21,8 +21,7 @@ class Include extends Directive {
 		const expression = aContext.element.attr("jstl-include");
 		const option = aContext.element.attr("jstl-include-options");
 		
-		const resolver = context.renderer.resolver;
-		debugger;
+		const resolver = context.resolver;
 		const result = await resolver.resolve(expression, false);
 		if(!result){
 			context.content = null;

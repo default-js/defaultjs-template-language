@@ -1,4 +1,3 @@
-import Template from "@src/Template.js";
 import Renderer from "@src/Renderer.js";
 
 describe("Renderer Test - traverse tree", () => {
@@ -8,8 +7,6 @@ describe("Renderer Test - traverse tree", () => {
 	it("case 1", async () => {		
 		const container = create("<div></div>").first();
 		expect(container.children.length).toBe(0);
-		
-		debugger;
 		await new Renderer().render({
 			container: container, 
 			data: {}, 
@@ -38,7 +35,6 @@ describe("Renderer Test - traverse tree", () => {
 	it("case 3", async () => {		
 		const container = create("<div></div>").first();
 		expect(container.children.length).toBe(0);
-		
 		await new Renderer().render({
 			container: container, 
 			data: {}, 
@@ -50,7 +46,7 @@ describe("Renderer Test - traverse tree", () => {
 						"\t<div></div>" +
 						"</div>"
 		});
-		debugger;
+		
 		let element = container;
 		expect(element.children.length).toBe(1);
 		
@@ -58,7 +54,7 @@ describe("Renderer Test - traverse tree", () => {
 		expect(element.children.length).toBe(5);
 	});
 	
-	it("case 3", async () => {		
+	it("case 4", async () => {		
 		const container = create("<div></div>").first();
 		expect(container.children.length).toBe(0);
 		

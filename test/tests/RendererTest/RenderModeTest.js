@@ -43,8 +43,6 @@ describe("Renderer Test - mode", () => {
 			mode: "replace",
 			target: target
 		};
-		
-		debugger;
 		await (new Renderer()).render(option);		
 		expect(container.children.length).toBe(1);
 		expect(container.children[0].tagName).toBe("DIV");
