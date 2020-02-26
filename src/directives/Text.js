@@ -9,11 +9,12 @@ class TextContent extends Directive {
 	get rank() {return 10000}
 	
 	
-	async accept({template, context}){
-		return template instanceof Text && template.textContent.trim().length > 0;
-	}
-	
-	async execute({template, context}){		
+		
+	async execute(context){
+		const {template} = context;		
+		if(!(template instanceof Text) || template.textContent.trim().length == 0)
+			return context;
+		
 		const resolver = context.resolver;
 		console.log("resolver chain:", resolver.effectiveChain);
 		const node = context.content;					

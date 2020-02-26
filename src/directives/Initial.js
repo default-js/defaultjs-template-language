@@ -11,11 +11,9 @@ class Initial extends Directive {
 	get rank() {return 0}
 	
 	
-	async accept({template, context}){
-		return true;
-	}
-	
-	async execute({template, context}){
+	async execute(context){
+		const {template} = context;
+		
 		if(template instanceof Text)
 			context.content = template.cloneNode(true);
 		else if(!(template instanceof HTMLElement) && template instanceof Node )

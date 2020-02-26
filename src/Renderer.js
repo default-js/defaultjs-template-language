@@ -74,21 +74,21 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({ template = null, data = null, container, root, mode="replace", target, context = null }) {
+	async render({ template = this.template, data = null, container, root, mode="replace", target, context = null }) {
 		template = loadTemplate(template) || this.template;
 		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data , parent: context ? context.resolver : this.resolver });
 
 		let renderContext = context;
 		if (!renderContext)
-			renderContext = new Context({ resolver, renderer: this, container, root: root ? root : container, mode, target });
+			renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode, target });
 		else
-			renderContext = context.clone({ resolver, container, root, mode, target });
+			renderContext = context.clone({ resolver, template, container, root, mode, target });
 
 		let result = null;
 		if (template instanceof Node)
-			result = await this.renderNode({ template, context: renderContext });
+			result = await this.renderNode(renderContext);
 		else
-			result = await this.renderContainer({ template, context: renderContext })
+			result = await this.renderContainer(renderContext)
 
 		if (result instanceof Context)
 			renderContext = result;
@@ -111,12 +111,12 @@ export default class Renderer {
 	}
 
 
-	async renderContainer({ template, context }) {
-		if (template && template.length > 0) {
-			const renderings = template.map(node => {
+	async renderContainer(context) {
+		if (context.template && context.template.length > 0) {
+			const renderings = context.template.map(node => {
 				//separate node context from the current context
 				const resolver = new ExpressionResolver({ name: SCOPES.node, context: null, parent: context.resolver });
-				return this.renderNode({ template: node, context: context.clone({ resolver }) })
+				return this.renderNode(context.clone({ template: node, resolver }))
 			});
 			const result = await Promise.all(renderings);
 			if (!result)
@@ -139,20 +139,20 @@ export default class Renderer {
 		return context;
 	}
 
-	async renderNode({ template, context }) {
-		template.normalize();
+	async renderNode(context) {
+		context.template.normalize();
 
 		let result = null;
-		if (template instanceof Element)
-			result = await template.execute({ template, context });
+		if (context.template instanceof Element)
+			result = await context.template.execute(context);
 		else
-			result = await this.executeDirectives({ template, context });
+			result = await this.executeDirectives(context);
 
 		if (result instanceof Context)
 			context = result;
 
 		if (!context.ignore && context.content) {
-			const content = template.childNodes;
+			const content = context.template.childNodes;
 			if (content && content.length > 0) {
 				// @TODO await or fire and forget???
 				await context.renderer.render({ template: content, container: context.content, context });
@@ -162,29 +162,17 @@ export default class Renderer {
 		return context;
 	}
 
-	async executeDirectives({ template, context }) {
+	async executeDirectives( context ) {
 		//console.log("scope chain:", context.renderer.chain, "resolver chain", context.renderer.resolver.fullname);
 		const directives = Directive.directives;
 		const length = directives.length;
 		for (let i = 0; i < length && !context.stop; i++) {
 			const directive = directives[i];
-			const accept = await directive.accept({ template, context });
-			if (accept) {
-				const result = await directive.execute({ template, context });
-				if (result instanceof Context)
-					context = result;
-			}
+			const result = await directive.execute( context );
+			if (result instanceof Context)
+				context = result;
 		}
 		return context;
-	}
-
-	clone({ template, data, scope } = {}) {
-		return new Renderer({
-			template: template ? template : this.template,
-			data: data ? data : {},
-			scope: scope ? scope : this.scope,
-			parent: this.parent
-		});
 	}
 
 	static async render({ container, data, template, mode, target }) {

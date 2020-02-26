@@ -1,51 +1,71 @@
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
-import Replace from "../elements/Replace.js";
 
-const load = async (varname, url, template, context) => {
-	try{
-		let resolver = context.resolver;
-		const option = resolver.resolve(template.attr("jstl-data-option") || "{}");	
+const MODES = {
+	"remote": async ({ data, context }) => {		
+		const {resolver, template} = context;
+		data = await resolver.resolveText(data);
+		data = new URL(data, location.origin);
+		let option = await resolver.resolveText(template.attr("jstl-data-option") || "{}");
+		option = JSON.parse(option);
+
+		data = await fetch(data.toString(), option);
+		return data.json();
+	},
+	"direct": async ({ data, context }) => {
+		const {resolver} = context;
 		
-		let data = await fetch(url.toString(), option);
-		data = await data.json();
-		
-		context.resolver = new ExpressionResolver({context : data, name: "jstl-data", parent: resolver});
-		
-		return context;
-	}catch(e){
-		console.error(e);
-		return context;
+		data = await resolver.resolveText(data);
+		return JSON.parse(data);
 	}
 };
 
-class Data extends Directive {	
-	constructor(){
+const updateContext = ({ varname, data, scope, context }) => {
+	if (varname)
+		context.resolver.updateData(varname, data, scope);
+	else if (scope)
+		context.mergeContext(data, scope);
+	else
+		context.resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
+	
+		
+	return context;
+};
+
+
+
+class Data extends Directive {
+	constructor() {
 		super();
 	}
-	
-	get name() {return "data"}
-	get rank() {return 2000}	
-	
-	async accept({template, context}){
-		if(context.content instanceof HTMLElement)
-			return !!template.attr("jstl-data");
+
+	get name() { return "data" }
+	get rank() { return 2000 }
+
+	async execute(context) {
+		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
+			return context;
 			
-		return false;
-	}
-	
-	async execute({template, context}){
-		const expression = template.attr("jstl-data");
-		const varname = template.attr("jstl-data-var");	
-		let url = await context.resolver.resolveText(expression);
-		try{
-			url = new URL(url, location.origin);
-			return load(varname, url, template, context);							
-		}catch(e){}
-		
-		
-		return context;		
+		try {
+			debugger
+			const { template } = context;			
+			const mode = MODES[(template.attr("jstl-data-mode") || "remote")];
+			if (!mode)
+				throw new Error("The jstl-data-mode is unsupported!");
+
+			let data = template.attr("jstl-data");
+			data = await mode({ data, context });
+
+			const varname = template.attr("jstl-data-var");
+			const scope = template.attr("jstl-data-scope");
+			context = updateContext({ varname, data, scope, context });
+		} catch (e) {
+			console.error(e, template);
+		}
+
+		return context;
+
 	}
 }
 
-Directive.define({directive: new Data()});
+Directive.define({ directive: new Data() });

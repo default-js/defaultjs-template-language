@@ -18,24 +18,14 @@ export default class Directive {
 	constructor(){};
 	
 	get name() {}
-	get rank() {}
-	
-	
-	/**
-	 * need to be implemented
-	 * 
-	 * @return boolean
-	 */
-	async accept({template, context}){
-		return true;
-	}
+	get rank() {}	
 	
 	/**
 	 * need to be implemented
 	 * 
 	 * return DirectiveResult
 	 */
-	async execute({template, context}){
+	async execute( context ){
 		return context;
 	}
 	

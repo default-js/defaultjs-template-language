@@ -8,15 +8,11 @@ class If extends Directive {
 	get name() {return "if"}
 	get rank() {return 1000}
 	
-	
-	async accept({template, context}){
-		if(template instanceof HTMLElement)
-			return !!template.attr("jstl-if");
-			
-		return false;
-	}
-	
-	async execute({template, context}){
+	async execute(context){
+		const {template} = context;
+		if(!(template instanceof HTMLElement) || !template.attr("jstl-if"))
+			return context;
+		
 		const expression = template.attr("jstl-if");
 		const resolver = context.resolver;
 		const result = await resolver.resolve(expression, false);

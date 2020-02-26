@@ -38,7 +38,7 @@ const fromElement = async (element, cache, key) => {
 	if(element instanceof HTMLTemplateElement)			
 		template = new Template(element);
 	else {
-		const content = template = document.createElement("template");
+		template = document.createElement("template");
 		if(element instanceof Node)
 			template.append(element.cloneNode(true));
 		else if(element instanceof NodeList || element instanceof HTMLCollection)
@@ -46,7 +46,7 @@ const fromElement = async (element, cache, key) => {
 		else
 			throw new Error("Template type is not supported!");			
 		
-		template = new Template(content, key);
+		template = new Template(template, key);
 	}
 	
 	if(cache && key)
