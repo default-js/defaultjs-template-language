@@ -1,3 +1,4 @@
 import "./InitialTest";
-import "./IfTest"
-import "./DataTest"
+import "./IfTest";
+import "./DataTest";
+import "./IncludeTest";

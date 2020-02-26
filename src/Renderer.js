@@ -47,7 +47,7 @@ const loadTemplate = (template) => {
 	if (!template)
 		return null;
 	else if (template instanceof Template)
-		return template.template;
+		return template.importContent();
 	else if (template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
 		return template;
 	else if (typeof template === "string")

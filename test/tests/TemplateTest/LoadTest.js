@@ -18,11 +18,12 @@ describe("Template Test - Template.load()", () => {
 	});
 	
 	it("load from url string", async () => {		
-		const result = await Template.load("/templates/TemplateTest/LoadFromURL.html", false);
+		const result = await Template.load(new URL("/templates/TemplateTest/LoadFromURL.html", location.origin), false);
 		expect(result).toBeDefined();
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.template.content.children.length).toBe(5);
 	});
 	
 	it("load from url", async () => {		
@@ -35,16 +36,19 @@ describe("Template Test - Template.load()", () => {
 	});
 	
 	it("load from HTMLTemplateElement", async () => {
-		const template = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>", true);		
+		const template = create("<div></div>" +
+								"<div></div>" +
+								"<div></div>" +
+								"<div></div>" +
+								"<div></div>", true);		
 		
 		const result = await Template.load(template, false);
 		expect(result).toBeDefined();
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.template.content.childNodes.length).toBe(5);
 	});
 	
 	it("load from Node", async () => {

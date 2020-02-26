@@ -47,7 +47,6 @@ class Data extends Directive {
 			return context;
 			
 		try {
-			debugger
 			const { template } = context;			
 			const mode = MODES[(template.attr("jstl-data-mode") || "remote")];
 			if (!mode)

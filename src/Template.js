@@ -1,8 +1,6 @@
 import "@default-js/defaultjs-common-utils/src/javascript/String.js";
 
 const CACHE = {};
-const TEST_URL = /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
-
 const getKey = (template, cache, alias) => {
 	if(!cache)
 		return null;
@@ -61,6 +59,11 @@ export default class Template {
 		this.key = key;	
 	}
 	
+	importContent(){
+		let imported = document.importNode(this.template, true);
+		return imported.content.childNodes;
+	}
+	
 	remove() {
 		if(this.key && CACHE[this.key])
 			delete CACHE[this.key];		
@@ -74,12 +77,9 @@ export default class Template {
 		if(key && CACHE[key])
 			return CACHE[key];
 		else if(typeof template === "string"){
-			if(TEST_URL.test(template))
-				return fromURL(new URL(template, location.origin),cache, key);
-			
 			return fromSource(template, cache, key);
 		}else if(template instanceof URL)
-			return fromURL(template, cache, key);
+			return await fromURL(template, cache, key);
 		else if(template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
 			return fromElement(template, cache, key);
 		

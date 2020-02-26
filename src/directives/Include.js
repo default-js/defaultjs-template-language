@@ -15,12 +15,13 @@ class Include extends Directive {
 		try{
 			const {template, resolver, renderer} = context;		
 			let include = template.attr("jstl-include");
-			include = await resolver.resolveText(include);			
-			include = Template.load(include);
+			include = await resolver.resolveText(include);
+			include = new URL(include, location.origin);			
+			include = await Template.load(include);
 			
 			const mode = template.attr("jstl-include-mode") || "replace";
-			renderer.render({template:include, container: context.content,mode, context});
-					
+			await renderer.render({template:include, container: context.content, mode, context});
+			context.ignore;
 			return context;
 		}catch(e){
 			console.error(e, context.template);
