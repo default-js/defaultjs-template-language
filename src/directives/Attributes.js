@@ -1,10 +1,8 @@
 import Directive from "../Directive.js";
 
-const ATTRIBUTE_NAME = /([\?\+])?(jstl)?([^\?\+]+)/i;
+const ATTRIBUTE_NAME = /([\?\+])?(jstl|@)?([^\?\+]+)/i;
 
 const processAttribute = async ({ type, name, value, context }) => {
-	if(name == "attr")
-		debugger;
 	const { resolver, content, template } = context;
 	let boolean = type == "?" ? value : template.attr("?" + name);
 	let attribute = type == "+" ? value : template.attr("+" + name);

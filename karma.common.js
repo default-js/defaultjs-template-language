@@ -21,13 +21,13 @@ module.exports = {
 	},
 	// list of files / patterns to exclude
 	exclude : [
-		//"node_modules/*"
+		"node_modules/*"
 	],
 	// available preprocessors:
 	// https://npmjs.org/browse/keyword/karma-preprocessor
 	preprocessors : {
-		"src/**/*.js" : [ "webpack", "sourcemap", "coverage"],
-		"test/*.js" : [ "webpack", "sourcemap"],
+		"src/**/*.js" : [ "webpack", "coverage"],
+		"test/index.js" : [ "webpack", "sourcemap"],
 		"test/sites/**/*.html" : [ "html2js" ]
 	},
 	// test results reporter to use

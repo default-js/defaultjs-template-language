@@ -10,5 +10,4 @@ export default class ReplaceElement extends Element{
 		return context;
 	};		
 }
-
-customElements.define("jstl-replace", ReplaceElement);
+try{customElements.define("jstl-replace", ReplaceElement);}catch(e){}//ignore
