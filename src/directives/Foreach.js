@@ -11,25 +11,37 @@ const ATTRIBUTE = {
 	CONDITION: "jstl-foreach-condition"
 };
 
-const doCount = async (option, context) => {
-	let { data, start, step, count, varname, status, resolver} = option;
-}
+const doCount = async (option) => {
+	let { start, step, count, varname, status, resolver } = option;
+
+	count = await resolver.resolve(count);
+	const length = start + (count * step);
+	let stop = false;
+	for (let i = start; i < length && !stop; i = i + step)  {
+		const iteration = {}
+		iteration[varname] = i;
+		iteration[status] = {
+			index: i,
+			number: i + 1,
+			step,
+			count
+		};
+		stop = !(await iterate(iteration, option));
+	}
+};
 
 const doForeach = async (option) => {
-	let { data, start, step, count, varname, status, resolver} = option;
-	
+	let { data, start, step, count, varname, status, resolver } = option;
+
 	data = await resolver.resolve(data);
 	let array = data;
-	if(!(data instanceof Array))
+	if (!(data instanceof Array))
 		array = Object.getOwnPropertyNames(data);
-	
-	count = count != "" ? await resolver.resolve(count, 0) : null;	
-	const length = count ? Math.min(start + count, array.length): array.length;
-	 
-	
+
+	count = count != "" ? await resolver.resolve(count, 0) : null;
+	const length = count ? Math.min(start + count, array.length) : array.length;
 	let stop = false;
-	for(let i = start; i < length && !stop; i+step){
-		console.log("i:", i, "stop:", stop, "step:", step, "length:", length);
+	for (let i = start; i < length && !stop; i = i + step) {
 		const iteration = {}
 		iteration[varname] = data[i];
 		iteration[status] = {
@@ -37,26 +49,22 @@ const doForeach = async (option) => {
 			number: i + 1,
 			count: length,
 			data
-		}
-		
-		stop = !(await render(iteration, option));
-		console.log("i:", i, "stop:", stop, "step:", step, "length:", length);	
+		};
+		stop = !(await iterate(iteration, option));
 	}
-}
+};
 
-const render = async (data, option) => {
+const iterate = async (data, option) => {
 	let { template, resolver, renderer, container, condition, context } = option;
-	resolver = new ExpressionResolver({context:data, name: "jstl-foreach", parent: resolver});
-	
-	condition = condition ? resolver.resolve(condition, false) : false;	
-	if(condition)
+	resolver = new ExpressionResolver({ context: data, name: "jstl-foreach", parent: resolver });
+
+	condition = condition ? resolver.resolve(condition, false) : false;
+	if (condition)
 		return false;
-	
-	context = context.clone({resolver, container, template, mode: "append"});
-	await renderer.render(context);
-	
-	return true;	
-}
+
+	await renderer.render({ context: context.clone({ resolver, container, template, mode: "append" }) });
+	return true;
+};
 
 class Foreach extends Directive {
 	constructor() {
@@ -90,14 +98,14 @@ class Foreach extends Directive {
 			if ((!option.data || option.data == "") && option.count)
 				await doCount(option);
 			else
-				await doForeach(option);			
-			
-		} catch (e) {
-			console.error(e, template);
+				await doForeach(option);
+
+		} catch (error) {
+			console.error("error at jstl-foreach:", error);
 		}
 		return context;
 
 	}
-}
+};
 
 Directive.define({ directive: new Foreach() });

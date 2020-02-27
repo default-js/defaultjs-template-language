@@ -74,15 +74,15 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({ template = null, data = null, container, root, mode="replace", target, context = null }) {
+	async render({ template = null, data = null, container, root, mode, target, context = null }) {
 		template = template? loadTemplate(template) : (context? context.template : this.template);
 		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data , parent: context ? context.resolver : this.resolver });
 
 		let renderContext = context;
 		if (!renderContext)
-			renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode, target });
+			renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode: mode? mode : "replace", target });
 		else
-			renderContext = context.clone({ resolver, template, container, root, mode, target });
+			renderContext = renderContext.clone({ resolver, template, container, root, mode, target });
 
 		let result = null;
 		if (template instanceof Node)
