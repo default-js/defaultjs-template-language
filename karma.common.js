@@ -50,9 +50,13 @@ module.exports = {
 	colors : true,
 	autoWatch : true,
 	client : {
-		clearContext : true
+		clearContext : true,
+		//useIframe : false,
+		runInParent : false,
+		captureConsole: true		
 	},
 	singleRun : false,
 	concurrency : Infinity,
-	browserNoActivityTimeout: 600000
+	browserDisconnectTimeout: 60000,
+	browserNoActivityTimeout: 60000
 };

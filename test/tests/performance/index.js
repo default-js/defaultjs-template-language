@@ -30,7 +30,7 @@ describe("Performance Test - deep element processing", () => {
 	it("case 1 - depth=5000, count=1", async () => {
 		const depth = 5000;
 		const count = 1;
-		const html = build({depth, count});
+		const html = build({depth, count});		
 		const template = await Template.load(html, false);
 		const container = create("<div></div>").first();
 		document.body.append(container);
@@ -46,7 +46,6 @@ describe("Performance Test - deep element processing", () => {
 		const start = Date.now();
 		await renderer.render({ data, container });
 		const end = Date.now();
-		console.log("")
 		const elements = container.find(":scope *");		
 
 		console.log("many element process", elements.length, "elements at", (end - start), "ms");
@@ -54,10 +53,10 @@ describe("Performance Test - deep element processing", () => {
 		container.remove();
 	});
 	
-	it("case 2 - depth=15 count=3", async () => {
+	it("case 2 - depth=10 count=3", async () => {
 		const depth = 10;
 		const count = 3;
-		const html = build({depth, count, template:"<div>{content}</div>"});
+		const html = build({depth, count});		
 		const template = await Template.load(html, false);
 		const container = create("<div></div>").first();
 		document.body.append(container);
@@ -73,17 +72,16 @@ describe("Performance Test - deep element processing", () => {
 		const start = Date.now();
 		await renderer.render({ data, container });
 		const end = Date.now();
-		console.log("")
 		const elements = container.find(":scope *");		
 
 		console.log("many element process", elements.length, "elements at", (end - start), "ms");
 		container.remove();
 	});
 	
-	it("case 3 - depth=1 count=100000", async () => {
+	it("case 3 - depth=1 count=10000", async () => {
 		const depth = 1;
-		const count = 100000;
-		const html = build({depth, count, template:"<div>{content}</div>"});
+		const count = 10000;
+		const html = build({depth, count});		
 		const template = await Template.load(html, false);
 		const container = create("<div></div>").first();
 		document.body.append(container);
@@ -99,7 +97,6 @@ describe("Performance Test - deep element processing", () => {
 		const start = Date.now();
 		await renderer.render({ data, container });
 		const end = Date.now();
-		console.log("")
 		const elements = container.find(":scope *");		
 
 		console.log("many element process", elements.length, "elements at", (end - start), "ms");
