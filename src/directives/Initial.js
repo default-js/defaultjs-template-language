@@ -8,7 +8,7 @@ class Initial extends Directive {
 	}
 	
 	get name() {return "initial"}
-	get rank() {return 0}
+	get rank() {return Directive.MIN_RANK}
 	
 	
 	async execute(context){
@@ -17,11 +17,12 @@ class Initial extends Directive {
 			context.content = document.importNode(template,true);
 		else if(template.attr("jstl-async")){
 			context.content = new Replace();
-			const node = document.importNode(template, true);
-			node.attr("jstl-async", null);
+			template.attr("jstl-async", null);
 			setTimeout(async () =>{
-				await context.renderer.render({template: node, mode: "replace", target: context.content, context});
+				await context.renderer.render({mode: "replace", target: context.content, context});
 			},parseInt(template.attr("jstl-async") || "250") || 250);
+			context.stop = true;
+			context.ignore = true;
 		}else if(template.attr("jstl-ignore")){
 			context.content = document.importNode(template, true);
 			context.stop = true;

@@ -12,9 +12,9 @@ describe("Renderer Test - mode", () => {
 			data: {}, 
 			template: "<div></div>"
 		};		
-		await (new Renderer({template: "<div></div>"})).render(option);		
+		await (await Renderer.build({template: "<div></div>"})).render(option);		
 		expect(container.children.length).toBe(1);
-		await (new Renderer()).render(option);
+		await (await Renderer.build()).render(option);
 		expect(container.children.length).toBe(1);
 	});
 	
@@ -27,9 +27,9 @@ describe("Renderer Test - mode", () => {
 			template: "<div></div>",
 			mode: "replace"
 		};		
-		await (new Renderer()).render(option);		
+		await new Renderer().render(option);		
 		expect(container.children.length).toBe(1);
-		await (new Renderer()).render(option);
+		new Renderer().render(option);
 		expect(container.children.length).toBe(1);
 	});
 	
@@ -43,7 +43,7 @@ describe("Renderer Test - mode", () => {
 			mode: "replace",
 			target: target
 		};
-		await (new Renderer()).render(option);		
+		await new Renderer().render(option);		
 		expect(container.children.length).toBe(1);
 		expect(container.children[0].tagName).toBe("DIV");
 	});

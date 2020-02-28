@@ -6,7 +6,7 @@ describe("Foreach Test - ", () => {
 	
 	it("foreach=[1,2,3,4,5]", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div jstl-foreach=\"${list}\" jstl-foreach-var=\"item\" jstl-foreach-status=\"status\"><div>${item}-${status.index}</div></div>"});
+		const renderer = await Renderer.build({template: "<div jstl-foreach=\"${list}\" jstl-foreach-var=\"item\" jstl-foreach-status=\"status\"><div>${item}-${status.index}</div></div>"});
 		
 		await renderer.render({container, data : {list: [1,2,3,4,5]}});
 		let element = container.children[0];
@@ -19,7 +19,7 @@ describe("Foreach Test - ", () => {
 	
 	it("count=5", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div jstl-foreach-count=\"${count}\" jstl-foreach-var=\"item\" jstl-foreach-status=\"status\"><div>${item}-${status.index}</div></div>"});
+		const renderer = await Renderer.build({template: "<div jstl-foreach-count=\"${count}\" jstl-foreach-var=\"item\" jstl-foreach-status=\"status\"><div>${item}-${status.index}</div></div>"});
 		
 		await renderer.render({container, data : {count:5}});
 		let element = container.children[0];

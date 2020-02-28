@@ -12,27 +12,22 @@ class Choose extends Directive {
 		if(!(context.template instanceof HTMLElement) || !context.template.attr("jstl-choose") && context.template.children.length == 0)
 			return context;
 			
-		const {template, resolver} = context;		
-		context.template = template.cloneNode(false);
+		const {template, resolver} = context;
 		
-		const {template, resolver} = context;		
-		context.template = template.cloneNode(false);
-		
-		let otherwises = [];	
+		let otherwises = [];
+		let resolved = false;
 		template.childNodes.forEach(node => {
-			if(!node instanceof HTMLElement)
-				context.template.append(node.cloneNode(true));			
-			else if(node.attr("jstl-when") && resolver.resolve(node.attr("jstl-when"), false)){
-				context.template.append(node.cloneNode(true));
-				otherwises.forEach(node => node.remove());
-				return context;
-			}
-			else if(!otherwise && node.attr("jstl-otherwise")){
-				const otherwise = node.cloneNode(true);
-				otherwise.push(otherwise);
-				context.template.append(otherwise);
+			if(node instanceof HTMLElement){
+				if(resolved)
+					node.remove();
+				else if(node.attr("jstl-when") && resolver.resolve(node.attr("jstl-when"), false))
+					resolved = true
+				else if(node.attr("jstl-otherwise"))
+					otherwises.push(node);
 			}
 		});
+		if(resolved)
+			otherwises.forEach(node => node.remove());
 				
 		return context;		
 	}

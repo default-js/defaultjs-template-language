@@ -6,7 +6,7 @@ describe("Include Test - ", () => {
 	
 	it("load template from url", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div jstl-include=\"/templates/IncludeTest/LoadFromURL.tpl.html\"></div>"});
+		const renderer = await Renderer.build({template: "<div jstl-include=\"/templates/IncludeTest/LoadFromURL.tpl.html\"></div>"});
 		await renderer.render({container});		
 		let result = container;
 		expect(result.children.length).toBe(1);

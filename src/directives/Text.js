@@ -6,7 +6,7 @@ class TextContent extends Directive {
 	}
 	
 	get name() {return "text"}
-	get rank() {return Number.MAX_SAFE_INTEGER}
+	get rank() {return Directive.MAX_RANK}
 	
 	
 		

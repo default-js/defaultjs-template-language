@@ -6,7 +6,7 @@ describe("Attribute Test - ", () => {
 	
 	it("keep attributes from template", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\"></div>"});
+		const renderer = await Renderer.build({template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\"></div>"});
 		
 		await renderer.render({container});
 		let element = container.children[0];
@@ -18,7 +18,7 @@ describe("Attribute Test - ", () => {
 	
 	it("boolean attributes -> ?boolean=\"${boolean}\"", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div ?boolean=\"${boolean}\"></div>"});
+		const renderer = await Renderer.build({template: "<div ?boolean=\"${boolean}\"></div>"});
 		
 		await renderer.render({container, data: {boolean: true}});
 		let element = container.children[0];		
@@ -32,7 +32,7 @@ describe("Attribute Test - ", () => {
 	
 	it("append attributes -> +attr=\"${attr}\"", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div +attr=\"${attr}\"></div>"});
+		const renderer = await Renderer.build({template: "<div +attr=\"${attr}\"></div>"});
 		
 		await renderer.render({container, data: {attr: "attr"}});
 		let element = container.children[0];		
@@ -42,7 +42,7 @@ describe("Attribute Test - ", () => {
 	
 	it("append attributes with condition=true -> ?attr=\"${boolean}\" +attr=\"${attr}\"", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div ?attr=\"${boolean}\" +attr=\"${attr}\"></div>"});
+		const renderer = await Renderer.build({template: "<div ?attr=\"${boolean}\" +attr=\"${attr}\"></div>"});
 		
 		await renderer.render({container, data: {attr: "attr", boolean : true}});
 		let element = container.children[0];		
@@ -51,7 +51,7 @@ describe("Attribute Test - ", () => {
 	
 	it("append attributes with condition=false -> ?attr=\"${boolean}\" +attr=\"${attr}\"", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div ?attr=\"${boolean}\" +attr=\"${attr}\"></div>"});
+		const renderer = await Renderer.build({template: "<div ?attr=\"${boolean}\" +attr=\"${attr}\"></div>"});
 		
 		await renderer.render({container, data: {attr: "attr", boolean : false}});
 		let element = container.children[0];		
@@ -62,7 +62,7 @@ describe("Attribute Test - ", () => {
 	
 	it("attributes copied", async () => {		
 		const container = create("<div></div>").first();		
-		const renderer = new Renderer({template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\" ?data-test-2=\"true\" +data-test-2=\"data-test-2\" ?data-test-3=\"false\" +data-test-3=\"data-test-3\" +data-test-4=\"data-test-4\"></div>"});
+		const renderer = await Renderer.build({template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\" ?data-test-2=\"true\" +data-test-2=\"data-test-2\" ?data-test-3=\"false\" +data-test-3=\"data-test-3\" +data-test-4=\"data-test-4\"></div>"});
 		
 		await renderer.render({container});
 		let element = container.children[0];

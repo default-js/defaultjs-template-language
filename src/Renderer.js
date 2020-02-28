@@ -40,25 +40,27 @@ const MODEWORKER = {
 		else
 			container.prepend(content);
 	}
-}
+};
 
-const loadTemplate = (template) => {
-	//@TODO use more Template.load
-	if (!template)
-		return null;
-	else if (template instanceof Template)
+const loadTemplateContent = async (template, context, renderer) => {
+	if (template) {
+		template = await Template.load(template)
 		return template.importContent();
-	else if (template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
-		return template;
-	else if (typeof template === "string")
-		return create(template);
-	else
-		return null;
-}
+	} else if (context)
+		return context.template;
+	else if (renderer.template) {
+		return await renderer.template.importContent();
+	}
+
+	throw new Error("No content template specified!");
+};
 
 export default class Renderer {
 	constructor({ template, data } = {}) {
-		this.template = loadTemplate(template);
+		if (template && !(template instanceof Template))
+			throw new Error("template must be an instance of Template!");
+
+		this.template = template;
 		this.resolver = new ExpressionResolver({ name: SCOPES.data, context: data ? data : {}, parent: APPLICATION_SCOPE_RESOLVER });
 	}
 
@@ -74,13 +76,13 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({ template = null, data = null, container, root, mode, target, context = null }) {
-		template = template ? loadTemplate(template) : (context ? context.template : this.template);
-		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data , parent: context ? context.resolver : this.resolver });
-		
+	async render({ template=null, data=null, container, root, mode, target, context=null }) {
+		template = await loadTemplateContent(template, context, this);
+		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data, parent: context ? context.resolver : this.resolver });
+
 		let renderContext = context;
 		if (!renderContext)
-			renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode: mode? mode : "replace", target });
+			renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode: mode ? mode : "replace", target });
 		else
 			renderContext = renderContext.clone({ resolver, template, container, root, mode, target });
 
@@ -155,25 +157,33 @@ export default class Renderer {
 			const content = context.template.childNodes;
 			if (content && content.length > 0) {
 				// @TODO await or fire and forget???
-				await context.renderer.render({ template: content, container: context.content, context });
+				await context.renderer.render({ context : context.clone({template: content, container: context.content}) });
 			}
 		}
 
 		return context;
 	}
 
-	async executeDirectives( context ) {
+	async executeDirectives(context) {
 		//console.log("scope chain:", context.renderer.chain, "resolver chain", context.renderer.resolver.fullname);
 		const directives = Directive.directives;
 		const length = directives.length;
 		for (let i = 0; i < length && !context.stop; i++) {
 			const directive = directives[i];
-			const result = await directive.execute( context );
+			const result = await directive.execute(context);
 			if (result instanceof Context)
 				context = result;
 		}
 		return context;
 	}
+
+	static async build({ template, data } = {}) {
+		if (template && template instanceof Promise)
+			template = await template;
+
+		template = template ? await Template.load(template) : null;
+		return new Renderer({ template, data });
+	};
 
 	static async render({ container, data, template, mode, target }) {
 		const renderer = new Renderer({ template, data });

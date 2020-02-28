@@ -5,7 +5,7 @@ describe("InitialDirective Test - ", () => {
 	beforeAll(() => {});
 	
 	it("default case 1", async () => {
-		const renderer = new Renderer({template: "<div></div>"});
+		const renderer = await Renderer.build({template: "<div></div>"});
 		const container = create("<div></div>").first();		
 		await renderer.render({container});		
 		expect(container.children.length).toBe(1);

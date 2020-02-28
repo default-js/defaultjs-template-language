@@ -48,7 +48,7 @@ describe("Template Test - Template.load()", () => {
 		
 		const expected = await Template.load(node);
 		const result = await Template.load(node);
-		expect(result).toBe(expected);
+		expect(result).not.toBe(expected);
 	});
 	
 	it("load from NodeList", async () => {

@@ -37,15 +37,16 @@ const fromElement = async (element, cache, key) => {
 		template = new Template(element);
 	else {
 		template = document.createElement("template");
-		if(element instanceof Node)
-			template.append(element.cloneNode(true));
-		else if(element instanceof NodeList || element instanceof HTMLCollection)
-			template.append(element.map(i => i.cloneNode(true)));
+		if(element instanceof Node || element instanceof NodeList || element instanceof HTMLCollection || element instanceof Array)
+			template.append(element);
 		else
 			throw new Error("Template type is not supported!");			
 		
 		template = new Template(template, key);
 	}
+	
+	if(!template)
+		throw new Error("Template can't loaded!");
 	
 	if(cache && key)
 		CACHE[key] = template;
@@ -59,8 +60,8 @@ export default class Template {
 		this.key = key;	
 	}
 	
-	importContent(){
-		let imported = document.importNode(this.template, true);
+	importContent(doc=document){
+		let imported = doc.importNode(this.template, true);
 		return imported.content.childNodes;
 	}
 	
@@ -73,7 +74,7 @@ export default class Template {
 		if(template instanceof Template)
 			return template;
 		
-		const key = getKey(template,cache, alias);
+		const key = getKey(template, cache, alias);
 		if(key && CACHE[key])
 			return CACHE[key];
 		else if(typeof template === "string"){
@@ -83,6 +84,6 @@ export default class Template {
 		else if(template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
 			return fromElement(template, cache, key);
 		
-		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection] required!");
+		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
 	}	
 };
