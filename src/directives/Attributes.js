@@ -31,7 +31,7 @@ class Attribute extends Directive {
 	}
 
 	get name() { return "attribute" }
-	get rank() { return 10000 }
+	get rank() { return Number.MAX_SAFE_INTEGER - 1 }
 
 
 

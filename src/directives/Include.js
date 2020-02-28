@@ -7,7 +7,7 @@ class Include extends Directive {
 	}
 	
 	get name() {return "include"}
-	get rank() {return 3000}
+	get rank() {return 4000}
 		
 	async execute(context){
 		if(!(context.template instanceof HTMLElement) || !context.template.attr("jstl-include"))

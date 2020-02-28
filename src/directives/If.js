@@ -6,7 +6,7 @@ class If extends Directive {
 	}
 	
 	get name() {return "if"}
-	get rank() {return 1000}
+	get rank() {return 2000}
 	
 	async execute(context){
 		const {template} = context;

@@ -72,7 +72,7 @@ class Foreach extends Directive {
 	}
 
 	get name() { return "foreach" }
-	get rank() { return 4000 }
+	get rank() { return 5000 }
 
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || (!context.template.attr(ATTRIBUTE.DATA) && !context.template.attr(ATTRIBUTE.COUNT)))

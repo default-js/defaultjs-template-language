@@ -6,21 +6,33 @@ class Choose extends Directive {
 	}
 	
 	get name() {return "choose"}
-	get rank() {return 1000}
+	get rank() {return 3000}
 	
 	async execute(context){
-		const {template} = context;
-		if(!(template instanceof HTMLElement) || !template.attr("jstl-choose"))
+		if(!(context.template instanceof HTMLElement) || !context.template.attr("jstl-choose") && context.template.children.length == 0)
 			return context;
+			
+		const {template, resolver} = context;		
+		context.template = template.cloneNode(false);
 		
-		const expression = template.attr("jstl-choose");
-		const resolver = context.resolver;
-		const result = await resolver.resolve(expression, false);
-		if(!result){
-			context.content = null;
-			context.stop;
-			context.ignore;
-		}
+		const {template, resolver} = context;		
+		context.template = template.cloneNode(false);
+		
+		let otherwises = [];	
+		template.childNodes.forEach(node => {
+			if(!node instanceof HTMLElement)
+				context.template.append(node.cloneNode(true));			
+			else if(node.attr("jstl-when") && resolver.resolve(node.attr("jstl-when"), false)){
+				context.template.append(node.cloneNode(true));
+				otherwises.forEach(node => node.remove());
+				return context;
+			}
+			else if(!otherwise && node.attr("jstl-otherwise")){
+				const otherwise = node.cloneNode(true);
+				otherwise.push(otherwise);
+				context.template.append(otherwise);
+			}
+		});
 				
 		return context;		
 	}

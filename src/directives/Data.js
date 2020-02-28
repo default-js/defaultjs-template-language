@@ -40,7 +40,7 @@ class Data extends Directive {
 	}
 
 	get name() { return "data" }
-	get rank() { return 2000 }
+	get rank() { return 1000 }
 
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
