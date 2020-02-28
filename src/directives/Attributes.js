@@ -1,29 +1,64 @@
 import Directive from "../Directive.js";
 
-const ATTRIBUTE_NAME = /([\?\+])?(jstl|@)?([^\?\+]+)/i;
+const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
 
-const processAttribute = async ({ type, name, value, context }) => {
+const bindAttribute = async ({ condition, name, value, context }) => {
 	const { resolver, content, template } = context;
-	let boolean = type == "?" ? value : template.attr("?" + name);
-	let attribute = type == "+" ? value : template.attr("+" + name);
-
-	if (boolean && attribute) {
-		boolean = await resolver.resolve(boolean, false);
-		if (boolean === true)
-			content.attr(name, await resolver.resolveText(attribute));
-	} else if (boolean) {
-		boolean = await resolver.resolve(boolean, false);
-		if (boolean === true)
+		
+	let attribute = !condition ? value : template.attr(name);
+	condition = condition ? value : template.attr("?" + name);
+	
+	if (condition && attribute) {
+		condition = await resolver.resolve(condition, false);
+		if (condition === true)
+			content.attr(name, await resolver.resolveText(attribute, attribute));
+	} else if (condition) {
+		condition = await resolver.resolve(condition, false);
+		if (condition === true)
 			content.attr(name, true);
 	} else if (attribute) {
-		content.attr(name, await resolver.resolveText(attribute));
+		content.attr(name, await resolver.resolveText(attribute, attribute));
 	}
 };
 
-const appendAttribute = async ({ name, value, context }) => {
-	const { resolver, content } = context;
-	content.attr(name, await resolver.resolveText(value));
+const bindEvent = async ({ condition, name, value, context }) => {
+	const { resolver, template } = context;
+	
+	condition = condition ? value : template.attr("?@" + name);
+	let handle = !condition ? value : template.attr("@", name);
+
+	if (condition && handle && await resolver.resolve(condition, false) == true)
+		await binding({event: name, handle, context });
+	else if (handle)
+		await binding({event: name, handle, context });
 };
+
+const binding = async ({event, handle, context }) => {
+	const { resolver, content} = context;
+	
+	const eventhandle = await resolver.resolve(handle, handle);
+	
+	
+	if(!eventhandle)
+		console.error(new Error("Can't resolve \"" + handle + "\" to event handle!"))
+	else if(typeof eventhandle === "function")
+		content.on(event, eventhandle);
+	else if(typeof eventhandle === "string")
+		content.on(event, delegater(eventhandle));
+	else if(typeof eventhandle === "object"){	
+		const {capture=false, passive=false, once=false} = handle;		
+		content.on(event, eventhandle.eventHandle, {capture, passive, once});
+	};
+};
+
+const delegater = function(delegate) {
+	return function(event) {
+		event.preventDefault();
+		event.stopPropagation();	
+		event.target.trigger(delegate, event);
+	};
+};
+
 
 class Attribute extends Directive {
 	constructor() {
@@ -31,24 +66,25 @@ class Attribute extends Directive {
 	}
 
 	get name() { return "attribute" }
-	get rank() { return Directive.MAX_RANK - 1 }
-
+	get rank() { return Directive.MIN_RANK }
+	get phase() { return Directive.PHASE.content }
 
 
 	async execute(context) {
 		const { template } = context;
 		if (!(template instanceof HTMLElement))
 			return context;
-			
+
 		const processed = new Set();
 		for (const attribute of template.attributes) {
-			const [, type, jstl, name] = ATTRIBUTE_NAME.exec(attribute.name);
-			if (!jstl && !processed.has(name)) {				
+			const [, jstl, condition, event, name] = ATTRIBUTE_NAME.exec(attribute.name);
+			if (!jstl && !processed.has(name)) {
 				const value = attribute.value;
-				if (type )
-					await processAttribute({ type, name, value, context })
+								
+				if (event)
+					await bindEvent({ condition, event, name, value, context })
 				else
-					await appendAttribute({ name, value, context })
+					await bindAttribute({ condition, name, value, context })
 			}
 			processed.add(name);
 		}

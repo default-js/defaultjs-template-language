@@ -6,7 +6,8 @@ class TextContent extends Directive {
 	}
 	
 	get name() {return "text"}
-	get rank() {return Directive.MAX_RANK}
+	get rank() { return Directive.MIN_RANK + 1 }
+	get phase() { return Directive.PHASE.content }
 	
 	
 		

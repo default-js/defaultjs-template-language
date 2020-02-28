@@ -1,36 +1,35 @@
 import Directive from "../Directive.js";
 
-class Choose extends Directive {	
-	constructor(){
+class Choose extends Directive {
+	constructor() {
 		super();
 	}
-	
-	get name() {return "choose"}
-	get rank() {return 3000}
-	
-	async execute(context){
-		if(!(context.template instanceof HTMLElement) || !context.template.attr("jstl-choose") && context.template.children.length == 0)
+
+	get name() { return "choose" }
+	get rank() { return Directive.MIN_RANK + 1 }
+	get phase() { return Directive.PHASE.template }
+
+	async execute(context) {
+		if (!(context.template instanceof HTMLElement) || !context.template.hasAttribute("jstl-choose") || context.template.children.length == 0)
 			return context;
-			
-		const {template, resolver} = context;
-		
-		let otherwises = [];
+
+		const { template, resolver } = context;
 		let resolved = false;
-		template.childNodes.forEach(node => {
-			if(node instanceof HTMLElement){
-				if(resolved)
-					node.remove();
-				else if(node.attr("jstl-when") && resolver.resolve(node.attr("jstl-when"), false))
-					resolved = true
-				else if(node.attr("jstl-otherwise"))
-					otherwises.push(node);
-			}
-		});
-		if(resolved)
-			otherwises.forEach(node => node.remove());
-				
-		return context;		
+		const whens = template.find(":scope > [jstl-when]");
+		const length = whens.length;
+		for (let i = 0; i < length; i++) {
+			const node = whens[i];
+			if (!resolved && (await resolver.resolve(node.attr("jstl-when"), false)))
+				resolved = true;
+			else
+				node.remove();
+		}
+
+		if (resolved)
+			template.find(":scope > [jstl-otherwise]").remove();
+
+		return context;
 	}
 }
 
-Directive.define({directive: new Choose()});
+Directive.define({ directive: new Choose() });

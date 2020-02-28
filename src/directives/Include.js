@@ -7,7 +7,8 @@ class Include extends Directive {
 	}
 	
 	get name() {return "include"}
-	get rank() {return 4000}
+	get rank() {return Directive.MIN_RANK}
+	get phase(){return Directive.PHASE.template}
 		
 	async execute(context){
 		if(!(context.template instanceof HTMLElement) || !context.template.attr("jstl-include"))
@@ -22,6 +23,7 @@ class Include extends Directive {
 			const mode = template.attr("jstl-include-mode") || "replace";
 			await renderer.render({template:include, container: context.content, mode, context});
 			context.ignore;
+			
 			return context;
 		}catch(e){
 			console.error(e, context.template);

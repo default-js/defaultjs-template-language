@@ -9,6 +9,7 @@ class Initial extends Directive {
 	
 	get name() {return "initial"}
 	get rank() {return Directive.MIN_RANK}
+	get phase(){return Directive.PHASE.init}
 	
 	
 	async execute(context){

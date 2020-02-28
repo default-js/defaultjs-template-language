@@ -17,7 +17,7 @@ const doCount = async (option) => {
 	count = await resolver.resolve(count);
 	const length = start + (count * step);
 	let stop = false;
-	for (let i = start; i < length && !stop; i = i + step)  {
+	for (let i = start; i < length && !stop; i = i + step) {
 		const iteration = {}
 		iteration[varname] = i;
 		iteration[status] = {
@@ -72,7 +72,8 @@ class Foreach extends Directive {
 	}
 
 	get name() { return "foreach" }
-	get rank() { return 5000 }
+	get rank() { return Directive.MIN_RANK + 2 }
+	get phase() { return Directive.PHASE.template }
 
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || (!context.template.attr(ATTRIBUTE.DATA) && !context.template.attr(ATTRIBUTE.COUNT)))

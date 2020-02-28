@@ -35,7 +35,6 @@ describe("Renderer Test - traverse tree", () => {
 	it("case 3", async () => {		
 		const container = create("<div></div>").first();
 		expect(container.children.length).toBe(0);
-		debugger;
 		await new Renderer().render({
 			container: container, 
 			data: {}, 

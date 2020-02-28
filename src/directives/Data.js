@@ -41,6 +41,7 @@ class Data extends Directive {
 
 	get name() { return "data" }
 	get rank() { return 1000 }
+	get phase(){return Directive.PHASE.data}
 
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
