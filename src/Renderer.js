@@ -105,9 +105,9 @@ export default class Renderer {
 		}
 
 		if (!context)
-			await Promise.all(renderContext.ready.map(action => action({ renderContext })));
+			await renderContext.ready();
 		else
-			context.ready = renderContext.ready;
+			renderContext.ready();
 
 		return context;
 	}
@@ -133,7 +133,7 @@ export default class Renderer {
 					else if (node instanceof Node)
 						content.push(node);
 
-					context.ready = result.ready;
+					result.ready();
 					return content;
 				}, []);
 
@@ -143,15 +143,10 @@ export default class Renderer {
 
 	async renderNode(context) {
 		context.template.normalize();
-
-		let result = null;
 		if (context.template instanceof Element)
-			result = await context.template.execute(context);
+			await context.template.execute(context);
 		else
-			result = await this.executeDirectives(context);
-
-		if (result instanceof Context)
-			context = result;
+			await this.executeDirectives(context);
 
 		if (!context.ignore && context.content) {
 			const content = context.template.childNodes;
