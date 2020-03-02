@@ -15,7 +15,7 @@ describe("Choose Test - ", () => {
 			"</div>", false);
 		const container = create("<div></div>").first();		
 		const renderer = new Renderer({template});
-		debugger;
+		
 		await renderer.render({container, data: {usecase : 1}});
 		let element = container.children[0];		
 		expect(element.children.length).toBe(1);
