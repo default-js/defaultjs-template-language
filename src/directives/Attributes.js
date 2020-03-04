@@ -26,29 +26,37 @@ const bindEvent = async ({ condition, name, value, context }) => {
 	
 	condition = condition ? value : template.attr("?@" + name);
 	let handle = !condition ? value : template.attr("@", name);
+	let split = name.split(":");
+	const event = split.shift();
+	const type = split.shift() || "default";
+	
 
 	if (condition && handle && await resolver.resolve(condition, false) == true)
-		await binding({event: name, handle, context });
+		await binding({event, type, handle, context });
 	else if (handle)
-		await binding({event: name, handle, context });
+		await binding({event, type, handle, context });
 };
 
-const binding = async ({event, handle, context }) => {
+const binding = async ({event, type, handle, context }) => {
 	const { resolver, content} = context;
-	
-	const eventhandle = await resolver.resolve(handle, handle);
-	
-	
-	if(!eventhandle)
-		console.error(new Error("Can't resolve \"" + handle + "\" to event handle!"))
-	else if(typeof eventhandle === "function")
-		content.on(event, eventhandle);
-	else if(typeof eventhandle === "string")
+		
+	if(type == "delegate"){
+		const eventhandle = await resolver.resolveText(handle, handle);
 		content.on(event, delegater(eventhandle));
-	else if(typeof eventhandle === "object"){	
-		const {capture=false, passive=false, once=false} = handle;		
-		content.on(event, eventhandle.eventHandle, {capture, passive, once});
-	};
+	} else {		
+		const eventhandle = await resolver.resolve(handle, handle);
+	
+		if(!eventhandle)
+			console.error(new Error("Can't resolve \"" + handle + "\" to event handle!"))
+		else if(typeof eventhandle === "function")
+			content.on(event, eventhandle);
+		else if(typeof eventhandle === "string")
+			content.on(event, delegater(eventhandle));
+		else if(typeof eventhandle === "object"){	
+			const {capture=false, passive=false, once=false} = handle;		
+			content.on(event, eventhandle.eventHandle, {capture, passive, once});
+		}
+	}
 };
 
 const delegater = function(delegate) {
