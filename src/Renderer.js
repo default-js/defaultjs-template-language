@@ -130,6 +130,8 @@ export default class Renderer {
 					const node = result.content;
 					if (node instanceof Array)
 						content = content.concat(node);
+					if (node instanceof NodeList || node instanceof HTMLCollection)
+						content = content.concat(Array.from(node));
 					else if (node instanceof Node)
 						content.push(node);
 
@@ -153,8 +155,11 @@ export default class Renderer {
 			if (content && content.length > 0) {
 				// @TODO await or fire and forget???
 				await context.renderer.render({ context : context.clone({template: content, container: context.content}) });
-			}
-		}
+			}				
+		} 
+		
+		if(context.content && context.content.tagName && context.content.tagName == "JSTL")
+			context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
 
 		return context;
 	}

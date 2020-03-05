@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.0.0-beta.3",
+	"version": "1.0.0-beta.4",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {
@@ -26,7 +26,6 @@
 		"karma-html2js-preprocessor": "^1.1.0",
 		"karma-jasmine": "^2.0.1",
 		"karma-safari-launcher": "^1.0.0",
-		"karma-phantomjs-launcher": "^1.0.4",
 		"karma-sourcemap-loader": "^0.3.7",
 		"karma-webpack": "^4.0.2",
 		"puppeteer": "^2.1.1",
@@ -46,7 +45,7 @@
 	"homepage": "https://github.com/default-js/defaultjs-template-language#readme",
 	"dependencies": {
 		"@default-js/defaultjs-common-utils": "^0.6.0",
-		"@default-js/defaultjs-expression-language": "^1.0.0-beta.7",
+		"@default-js/defaultjs-expression-language": "^1.0.0-beta.9",
 		"@default-js/defaultjs-extdom": "^1.0.0-beta.14"
 	},
 	"directories": {
