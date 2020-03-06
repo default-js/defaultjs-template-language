@@ -19,8 +19,8 @@ class If extends Directive {
 		const result = await resolver.resolve(expression, false);
 		if (!result) {
 			context.content = null;
-			context.stop;
-			context.ignore;
+			context.stop = true;
+			context.ignore = true;
 		}
 
 		return context;
