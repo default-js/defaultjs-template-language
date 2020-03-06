@@ -25,7 +25,7 @@ const bindEvent = async ({ condition, name, value, context }) => {
 	const { resolver, template } = context;
 	
 	condition = condition ? value : template.attr("?@" + name);
-	let handle = !condition ? value : template.attr("@", name);
+	let handle = !condition ? value : template.attr("@"+ name);
 	let split = name.split(":");
 	const event = split.shift();
 	const type = split.shift() || "default";
