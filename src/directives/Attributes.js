@@ -62,8 +62,11 @@ const binding = async ({event, type, handle, context }) => {
 const delegater = function(delegate) {
 	return function(event) {
 		event.preventDefault();
-		event.stopPropagation();	
-		event.target.trigger(delegate, event);
+		event.stopPropagation();
+		if(event.currentTarget)	
+			event.currentTarget.trigger(delegate, event);
+		else
+			event.target.trigger(delegate, event);
 	};
 };
 
