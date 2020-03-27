@@ -76,7 +76,7 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({ template=null, data=null, container, root, mode, target, context=null }) {
+	async render({ template = null, data = null, container, root, mode, target, context = null }) {
 		template = await loadTemplateContent(template, context, this);
 		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data, parent: context ? context.resolver : this.resolver });
 
@@ -144,23 +144,27 @@ export default class Renderer {
 	}
 
 	async renderNode(context) {
-		context.template.normalize();
-		if (context.template instanceof Element)
-			await context.template.execute(context);
-		else
-			await this.executeDirectives(context);
+		try {
+			context.template.normalize();
+			if (context.template instanceof Element)
+				await context.template.execute(context);
+			else
+				await this.executeDirectives(context);
 
-		if (!context.ignore && context.content) {
-			const content = context.template.childNodes;
-			if (content && content.length > 0) {
-				// @TODO await or fire and forget???
-				await context.renderer.render({ context : context.clone({template: content, container: context.content}) });
-			}				
-		} 
-		
-		if(context.content && context.content.tagName && context.content.tagName == "JSTL")
-			context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
+			if (!context.ignore && context.content) {
+				const content = context.template.childNodes;
+				if (content && content.length > 0) {
+					// @TODO await or fire and forget???
+					await context.renderer.render({ context: context.clone({ template: content, container: context.content }) });
+				}
+			}
 
+			if (context.content && context.content.tagName && context.content.tagName == "JSTL")
+				context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
+				
+		} catch (e) {
+			console.error("error at render node:", e, context);
+		}
 		return context;
 	}
 
@@ -170,9 +174,13 @@ export default class Renderer {
 		const length = directives.length;
 		for (let i = 0; i < length && !context.stop; i++) {
 			const directive = directives[i];
-			const result = await directive.execute(context);
-			if (result instanceof Context)
-				context = result;
+			try {
+				const result = await directive.execute(context);
+				if (result instanceof Context)
+					context = result;
+			} catch (e) {
+				console.error("error at directive:", e, directive, context);
+			}
 		}
 		return context;
 	}

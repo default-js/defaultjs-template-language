@@ -58,7 +58,7 @@ const iterate = async (data, option) => {
 	let { template, resolver, renderer, container, condition, context } = option;
 	resolver = new ExpressionResolver({ context: data, name: "jstl-foreach", parent: resolver });
 
-	condition = condition ? resolver.resolve(condition, false) : false;
+	condition = condition ? await resolver.resolve(condition, false) : false;
 	if (condition)
 		return false;
 
