@@ -16,7 +16,7 @@ const MODES = {
 		const {resolver} = context;
 		
 		data = await resolver.resolveText(data);
-		return JSON.parse(data);
+		return data;
 	}
 };
 
@@ -24,7 +24,7 @@ const updateContext = ({ varname, data, scope, context }) => {
 	if (varname)
 		context.resolver.updateData(varname, data, scope);
 	else if (scope)
-		context.mergeContext(data, scope);
+		context.resolver.mergeContext(data, scope);
 	else
 		context.resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
 	
@@ -44,6 +44,7 @@ class Data extends Directive {
 	get phase(){return Directive.PHASE.data}
 
 	async execute(context) {
+		debugger;
 		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
 			return context;
 			
@@ -60,7 +61,7 @@ class Data extends Directive {
 			const scope = template.attr("jstl-data-scope");
 			context = updateContext({ varname, data, scope, context });
 		} catch (e) {
-			console.error(e, template);
+			console.error(e, context.template);
 		}
 
 		return context;
