@@ -52,20 +52,18 @@ export default class Context {
 			//wait of all sub context to be closed with an maximum amount of time
 
 			if (this.readyHandles.length > 0) {
-				const error = new Error("timeout");
 				try {
 					await Promise.race([
 						Promise.all(this.readyHandles.map(handle => handle instanceof Promise ? handle : handle(this))),
-						new Promise((r, e) => {
+						new Promise((reject, error) => {
 							setTimeout(() => {
-								e(error);
+								error(new Error("timeout"));
 							}, 2000)
 						})
 					]);
 				} catch (e) {
-					console.log(e);
-					console.log(new Error("timeout"));
-					debugger;
+					console.error(e);			
+					throw e
 				}
 			}
 
