@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.0.0-beta.11",
+	"version": "1.0.0-beta.12",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {
@@ -43,7 +43,7 @@
 	"homepage": "https://github.com/default-js/defaultjs-template-language#readme",
 	"dependencies": {
 		"@default-js/defaultjs-common-utils": "^0.6.0",
-		"@default-js/defaultjs-expression-language": "^1.0.0-beta.11",
+		"@default-js/defaultjs-expression-language": "^1.0.0-beta.12",
 		"@default-js/defaultjs-extdom": "^1.0.0-beta.21"
 	},
 	"directories": {
