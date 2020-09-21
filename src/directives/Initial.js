@@ -1,0 +1,41 @@
+import Directive from "../Directive.js";
+import Replace from "../elements/Replace.js" 
+
+
+class Initial extends Directive {	
+	constructor(){
+		super();
+	}
+	
+	get name() {return "initial"}
+	get rank() {return Directive.MIN_RANK}
+	get phase(){return Directive.PHASE.init}
+	
+	
+	async execute(context){
+		const {template} = context;		
+		if(template instanceof Text)
+			context.content = document.importNode(template,true);
+		else if(template.attr("jstl-async")){
+			context.content = new Replace();
+			template.attr("jstl-async", null);
+			setTimeout(async () =>{
+				await context.renderer.render({mode: "replace", target: context.content, context});
+			},parseInt(template.attr("jstl-async") || "250") || 250);
+			context.stop = true;
+			context.ignore = true;
+		}else if(template.attr("jstl-ignore")){
+			context.content = document.importNode(template, true);
+			context.stop = true;
+			context.ignore = true;
+		}else if(template.tagName){
+			context.content = document.createElement(template.tagName);
+		}else{
+			context.stop = true;
+			context.ignore = true;
+		}
+		return context;
+	}
+}
+
+Directive.define({directive: new Initial()});
