@@ -44,7 +44,6 @@ class Data extends Directive {
 	get phase(){return Directive.PHASE.data}
 
 	async execute(context) {
-		debugger;
 		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
 			return context;
 			
