@@ -81,7 +81,7 @@ export default class Template {
 			return fromSource(template, cache, key);
 		}else if(template instanceof URL)
 			return await fromURL(template, cache, key);
-		else if(template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection)
+		else if(template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection || template instanceof HTMLTemplateElement)
 			return fromElement(template, cache, key);
 		
 		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
