@@ -3,4 +3,4 @@ import "./RendererTest";
 import "./directives";
 
 
-import "./performance";
+//import "./performance";

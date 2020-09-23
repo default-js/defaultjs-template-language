@@ -31,8 +31,10 @@ const bindEvent = async ({ condition, name, value, context }) => {
 	const type = split.shift() || "default";
 	
 
-	if (condition && handle && await resolver.resolve(condition, false) == true)
-		await binding({event, type, handle, context });
+	if (condition && handle){
+		if(await resolver.resolve(condition, false) == true)
+			await binding({event, type, handle, context });
+	}
 	else if (handle)
 		await binding({event, type, handle, context });
 };

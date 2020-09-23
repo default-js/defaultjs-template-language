@@ -175,6 +175,27 @@ describe("Attribute Test - ", () => {
 		return promise;
 	});
 
+	it("event bind:delegate - with condition", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template: "<div ?@click:delegate=\"${boolean}\" @click:delegate=\"${action}\"></div>" });
+
+
+		let handle = null
+		const promise = new Promise((r) => {
+			handle = (e) => {
+				throw new Error();
+			};
+		});
+
+		await renderer.render({ container, data: { action: "event-delegate-test", boolean: false } });
+		container.children[0].on("event-delegate-test", handle);
+		setTimeout(() => container.children[0].trigger("click"), 1);
+
+		return Promise.race([promise, new Promise((r) => {
+			setTimeout(r, 100);
+		})]);
+	});
+
 
 
 	it("attributes copied", async () => {
