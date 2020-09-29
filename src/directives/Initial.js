@@ -13,15 +13,24 @@ class Initial extends Directive {
 
 
 	async execute(context) {
-		const { template } = context;
+		const { template, renderer } = context;
 		if (template instanceof Text)
-			context.content = document.importNode(template, true);
-		else if (template instanceof HTMLElement) {
+			context.content = document.importNode(template, true);		
+		else if(template instanceof HTMLTemplateElement){
+			context.content = document.createElement(template.tagName);
+			const subcontext = context.subContext({
+				template: template.content.childNodes,
+				container: context.content.content
+			});
+			renderer.render({ context: subcontext });
+			context.stop = true;
+			context.ignore = true;
+		} else if (template instanceof HTMLElement) {
 			if (template.attr("jstl-async")) {
 				context.content = new Replace();
 				template.attr("jstl-async", null);
 				setTimeout(async () => {
-					await context.renderer.render({ mode: "replace", target: context.content, context });
+					await renderer.render({ mode: "replace", target: context.content, context });
 				}, parseInt(template.attr("jstl-async") || "250") || 250);
 				context.stop = true;
 				context.ignore = true;

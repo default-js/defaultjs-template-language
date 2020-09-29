@@ -1,15 +1,34 @@
 import Renderer from "@src/Renderer.js";
 
 describe("InitialDirective Test - ", () => {
-	
-	beforeAll(() => {});
-	
+
+	beforeAll(() => { });
+
 	it("default case 1", async () => {
-		const renderer = await Renderer.build({template: "<div></div>"});
-		const container = create("<div></div>").first();		
-		await renderer.render({container});		
+		const renderer = await Renderer.build({ template: "<div></div>" });
+		const container = create("<div></div>").first();
+		await renderer.render({ container });
 		expect(container.children.length).toBe(1);
 	});
-	
-	afterAll(() => {});
+
+
+	it("process HTMLTemlateElement", async () => {
+		const renderer = await Renderer.build({ template: "<div><template><div></div></template></div>" });
+		const container = create("<div></div>").first();
+		await renderer.render({ container });
+		console.log(container.html())
+
+		expect(container.children.length).toBe(1);
+		let element = container.children[0];
+		expect(element.children.length).toBe(1);
+		element = element.children[0];
+		expect(element instanceof HTMLTemplateElement).toBe(true);
+		element = element.content;
+		expect(element instanceof DocumentFragment).toBe(true);
+		expect(element.children.length).toBe(1);
+
+		console.log({ container });
+	});
+
+	afterAll(() => { });
 });
