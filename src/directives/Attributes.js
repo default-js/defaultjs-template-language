@@ -7,8 +7,9 @@ const bindAttribute = async ({ condition, name, value, context }) => {
 		
 	let attribute = !condition ? value : template.attr(name);
 	condition = condition ? value : template.attr("?" + name);
+	const hasValue = isValue(attribute);
 	
-	if (condition && attribute) {
+	if (condition && hasValue) {
 		condition = await resolver.resolve(condition, false);
 		if (condition === true)
 			content.attr(name, await resolver.resolveText(attribute, attribute));
@@ -16,9 +17,13 @@ const bindAttribute = async ({ condition, name, value, context }) => {
 		condition = await resolver.resolve(condition, false);
 		if (condition === true)
 			content.attr(name, true);
-	} else if (attribute) {
+	} else if (hasValue) {
 		content.attr(name, await resolver.resolveText(attribute, attribute));
 	}
+};
+
+const isValue = (value) => {
+	return value != null && typeof value !== "undefined";	
 };
 
 const bindEvent = async ({ condition, name, value, context }) => {

@@ -38,6 +38,15 @@ describe("Attribute Test - ", () => {
 		let element = container.children[0];
 		expect(element.attr("attr")).toBe("attr");
 	});
+	
+	it("append attributes -> attr=\"\"", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template: "<div attr=\"\"></div>" });
+
+		await renderer.render({ container, data: { attr: "attr" } });
+		let element = container.children[0];
+		expect(element.attr("attr")).toBe("");
+	});
 
 
 	it("append attributes with condition=true -> ?attr=\"${boolean}\" attr=\"${attr}\"", async () => {
