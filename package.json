@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.0.0-beta.19",
+	"version": "1.0.0-beta.20",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {

@@ -22,5 +22,14 @@ describe("Data Test - ", () => {
 		expect(container.children[0].textContent).toBe("value-1");
 	});
 	
+	it("copy data into variable - set mode", async () => {		
+		const container = create("<div></div>").first();		
+		const renderer = await Renderer.build({template: "<div jstl-data=\"${test}\" jstl-data-var=\"test1\" jstl-data-mode=\"set\">${test1.data}</div>", data: {test: {data:"value-1"}}});
+		
+		await renderer.render({container});		
+		expect(container.children.length).toBe(1);
+		expect(container.children[0].textContent).toBe("value-1");
+	});
+	
 	afterAll(() => {});
 });

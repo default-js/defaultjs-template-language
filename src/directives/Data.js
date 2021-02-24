@@ -11,6 +11,12 @@ const MODES = {
 
 		data = await fetch(data.toString(), option);
 		return data.json();
+	},	
+	"set": async ({ data, context }) => {
+		const {resolver} = context;
+		
+		data = await resolver.resolve(data);
+		return data;
 	},
 	"direct": async ({ data, context }) => {
 		const {resolver} = context;
