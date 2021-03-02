@@ -14,9 +14,8 @@ class Initial extends Directive {
 
 	async execute(context) {
 		const { template, renderer } = context;
-		if (template instanceof Text)
+		if (!(template instanceof Element))
 			context.content = document.importNode(template, true);
-
 		else if (template.attr("jstl-async")) {
 			context.content = new Replace();
 			template.attr("jstl-async", null);

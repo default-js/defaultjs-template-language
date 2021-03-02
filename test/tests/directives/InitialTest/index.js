@@ -29,6 +29,22 @@ describe("InitialDirective Test - ", () => {
 
 		console.log({ container });
 	});
+	
+	
+	it("process template with comments", async () => {
+		const renderer = await Renderer.build({ template: "<div><!-- test --></div>" });
+		const container = create("<div></div>").first();
+		await renderer.render({ container });
+		console.log(container.html())
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element.childNodes.length).toBe(1);
+		element = element.childNodes[0];
+		expect(element instanceof Comment).toBe(true);
+
+		console.log({ container });
+	});
 
 	afterAll(() => { });
 });
