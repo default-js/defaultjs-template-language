@@ -69,6 +69,15 @@ export default class Template {
 		if(this.key && CACHE[this.key])
 			delete CACHE[this.key];		
 	};
+
+	static async fetch(url, cache = true, alias = null){
+		if(typeof url === "string"){
+			return Template.load(new URL(url, loaction), cache, alias);
+		}else if(url instanceof URL)
+			return Template.load(url, cache, alias);
+
+		new Error("The url isn't a allowed type! -> [String|URL] required!");
+	}
 	
 	static async load(template, cache = true, alias = null){
 		if(template instanceof Template)
@@ -85,5 +94,5 @@ export default class Template {
 			return fromElement(template, cache, key);
 		
 		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
-	}	
+	}
 };
