@@ -37,9 +37,14 @@ class Initial extends Directive {
 			renderer.render({ context: subcontext });
 			context.stop = true;
 			context.ignore = true;
-		} else if (template.tagName)
-			context.content = document.createElement(template.tagName);
-		else {
+		} else if (template.tagName){
+			let {tagName} = template;
+			if(template.hasAttribute("jstl-tagname")){
+				const name = template.attr("jstl-tagname").trim();
+				tagName = name.length > 0 ? name : tagName;
+			}			
+			context.content = document.createElement(tagName);
+		}else {
 			context.content = document.importNode(template, true);
 			context.stop = true;
 			context.ignore = true;

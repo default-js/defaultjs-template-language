@@ -16,7 +16,6 @@ describe("InitialDirective Test - ", () => {
 		const renderer = await Renderer.build({ template: "<div><template><div></div></template></div>" });
 		const container = create("<div></div>").first();
 		await renderer.render({ container });
-		console.log(container.html())
 
 		expect(container.children.length).toBe(1);
 		let element = container.children[0];
@@ -26,8 +25,6 @@ describe("InitialDirective Test - ", () => {
 		element = element.content;
 		expect(element instanceof DocumentFragment).toBe(true);
 		expect(element.children.length).toBe(1);
-
-		console.log({ container });
 	});
 	
 	
@@ -35,15 +32,46 @@ describe("InitialDirective Test - ", () => {
 		const renderer = await Renderer.build({ template: "<div><!-- test --></div>" });
 		const container = create("<div></div>").first();
 		await renderer.render({ container });
-		console.log(container.html())
 
 		expect(container.childNodes.length).toBe(1);
 		let element = container.childNodes[0];
 		expect(element.childNodes.length).toBe(1);
 		element = element.childNodes[0];
 		expect(element instanceof Comment).toBe(true);
+	});
 
-		console.log({ container });
+
+	it("change tagname div -> span", async () => {
+		const renderer = await Renderer.build({ template: `<div jstl-tagname="span" test-attr="attr">
+			<span></span>
+			<span></span>
+			<span></span>
+		</div>` });
+		const container = create("<div></div>").first();
+		await renderer.render({ container });
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element instanceof HTMLSpanElement).toBe(true);
+		expect(element.attr("test-attr")).toBe("attr");
+		expect(element.children.length).toBe(3);
+	});
+
+	
+	it("change tagname jstl -> div", async () => {
+		const renderer = await Renderer.build({ template: `<jstl jstl-tagname="span" test-attr="attr">
+			<span></span>
+			<span></span>
+			<span></span>
+		</jstl>` });
+		const container = create("<div></div>").first();
+		await renderer.render({ container });
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element instanceof HTMLSpanElement).toBe(true);
+		expect(element.attr("test-attr")).toBe("attr");
+		expect(element.children.length).toBe(3);
 	});
 
 	afterAll(() => { });
