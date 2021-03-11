@@ -58,7 +58,7 @@ describe("InitialDirective Test - ", () => {
 	});
 
 	
-	it("change tagname jstl -> div", async () => {
+	it("change tagname jstl -> span", async () => {
 		const renderer = await Renderer.build({ template: `<jstl jstl-tagname="span" test-attr="attr">
 			<span></span>
 			<span></span>
@@ -66,6 +66,22 @@ describe("InitialDirective Test - ", () => {
 		</jstl>` });
 		const container = create("<div></div>").first();
 		await renderer.render({ container });
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element instanceof HTMLSpanElement).toBe(true);
+		expect(element.attr("test-attr")).toBe("attr");
+		expect(element.children.length).toBe(3);
+	});
+
+	it("change tagname with dynamic value", async () => {
+		const renderer = await Renderer.build({ template: `<jstl jstl-tagname="\${tagname}" test-attr="attr">
+			<span></span>
+			<span></span>
+			<span></span>
+		</jstl>` });
+		const container = create("<div></div>").first();
+		await renderer.render({ container , data : {tagname: "span"}});
 
 		expect(container.childNodes.length).toBe(1);
 		let element = container.childNodes[0];

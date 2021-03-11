@@ -1,22 +1,26 @@
 import Directive from "../Directive.js";
-import Replace from "../elements/Replace.js"
-
+import Replace from "../elements/Replace.js";
 
 class Initial extends Directive {
 	constructor() {
 		super();
 	}
 
-	get name() { return "initial" }
-	get rank() { return Directive.MIN_RANK }
-	get phase() { return Directive.PHASE.init }
-
+	get name() {
+		return "initial";
+	}
+	get rank() {
+		return Directive.MIN_RANK;
+	}
+	get phase() {
+		return Directive.PHASE.init;
+	}
 
 	async execute(context) {
-		const { template, renderer } = context;
-		if (!(template instanceof Element))
+		const { template, renderer, resolver } = context;
+		if (!(template instanceof Element)){
 			context.content = document.importNode(template, true);
-		else if (template.attr("jstl-async")) {
+		} else if (template.attr("jstl-async")) {
 			context.content = new Replace();
 			template.attr("jstl-async", null);
 			setTimeout(async () => {
@@ -32,19 +36,23 @@ class Initial extends Directive {
 			context.content = document.createElement(template.tagName);
 			const subcontext = context.subContext({
 				template: template.content.childNodes,
-				container: context.content.content
+				container: context.content.content,
 			});
 			renderer.render({ context: subcontext });
 			context.stop = true;
 			context.ignore = true;
-		} else if (template.tagName){
-			let {tagName} = template;
-			if(template.hasAttribute("jstl-tagname")){
-				const name = template.attr("jstl-tagname").trim();
-				tagName = name.length > 0 ? name : tagName;
-			}			
-			context.content = document.createElement(tagName);
-		}else {
+		} else if (template.hasAttribute("jstl-tagname")) {
+			let tagname = template.attr("jstl-tagname").trim();
+			if(tagname.length > 0)
+				context.content = document.createElement(await resolver.resolveText(template.attr("jstl-tagname")));
+			else {
+				context.content = document.importNode(template, true);
+				context.stop = true;
+				context.ignore = true;	
+			}
+		} else if (template.tagName) {
+			context.content = document.createElement(template.tagName);
+		} else {
 			context.content = document.importNode(template, true);
 			context.stop = true;
 			context.ignore = true;
