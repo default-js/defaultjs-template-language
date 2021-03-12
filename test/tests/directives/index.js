@@ -5,5 +5,6 @@ import "./DataTest";
 import "./IncludeTest";
 import "./AttributeTest";
 import "./ForeachTest";
+import "./RepeatTest";
 import "./ChooseTest";
 import "./TextTest";

@@ -1,13 +1,11 @@
 export default (object) => {
-	let finished = null;
+	let resolving = null;
 	const wait =  new Promise((resolve) => {
-		finished = resolve;
+		resolving = resolve;
 	});
-	wait.object = object;
-	
-	wait.finished = async () => {
-		await finished();
-	};
+
+	wait.object = object;	
+	wait.finished = resolving;
 	
 	return wait;
 };

@@ -12,7 +12,8 @@ describe("If Test - ", () => {
 			"data",
 			"include",
 			"choose",
-			"foreach",			
+			"foreach",
+			"jstl-repeat",		
 			"attribute",
 			"text"
 		];
