@@ -42,9 +42,9 @@
 	},
 	"homepage": "https://github.com/default-js/defaultjs-template-language#readme",
 	"dependencies": {
-		"@default-js/defaultjs-common-utils": "^0.6.0",
+		"@default-js/defaultjs-common-utils": "^0.12.0",
 		"@default-js/defaultjs-expression-language": "^1.0.0-beta.14",
-		"@default-js/defaultjs-extdom": "^1.0.0-beta.25"
+		"@default-js/defaultjs-extdom": "^1.0.0"
 	},
 	"directories": {
 		"test": "test"

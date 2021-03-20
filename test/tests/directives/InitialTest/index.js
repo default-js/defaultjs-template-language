@@ -89,6 +89,7 @@ describe("InitialDirective Test - ", () => {
 		expect(element.attr("test-attr")).toBe("attr");
 		expect(element.children.length).toBe(3);
 	});
+	
 
 	afterAll(() => { });
 });
