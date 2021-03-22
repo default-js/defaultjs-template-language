@@ -61,8 +61,9 @@ const iterate = async (data, option) => {
 	condition = condition ? await resolver.resolve(condition, false) : false;
 	if (condition)
 		return false;
-
-	await renderer.render({ context: context.clone({ resolver, container, template, mode: "append" }) });
+	const itemContext = context.subContext({ resolver, container, template, mode: "append" });
+	await renderer.render(itemContext);
+	await itemContext.ready();
 	return true;
 };
 

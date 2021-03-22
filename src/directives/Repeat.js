@@ -56,12 +56,16 @@ const doRepeat = async (option) => {
 };
 
 const iterate = async (data, option) => {
-	let { resolver, renderer, condition, context } = option;
+	let { template, resolver, renderer, condition, context } = option;
 	resolver = new ExpressionResolver({ context: data, name: DIRECTIVENAME, parent: resolver });
 
 	condition = condition ? await resolver.resolve(condition, false) : false;
-	if (condition) return false;	
-	const result = await renderer.render({ context: context.subContext({ resolver, mode: "append", ignoreDirective: IGNOREDIRECTIVE }) });
+	if (condition) return false;
+
+	const itemContext =  context.subContext({ resolver, template, mode: "append", ignoreDirective: IGNOREDIRECTIVE })
+	await renderer.render(itemContext);
+	await itemContext.ready();
+
 	return true;
 };
 

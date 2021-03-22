@@ -23,8 +23,9 @@ class Initial extends Directive {
 		} else if (template.attr("jstl-async")) {
 			context.content = new Replace();
 			template.attr("jstl-async", null);
+			const renderOption = context.toRenderOption({ mode: "replace", target: context.content });
 			setTimeout(() => {
-				renderer.render({ mode: "replace", target: context.content, context });
+				renderer.render(renderOption);
 			}, parseInt(template.attr("jstl-async") || "250") || 250);
 			context.stop = true;
 			context.ignore = true;
@@ -33,13 +34,9 @@ class Initial extends Directive {
 			context.stop = true;
 			context.ignore = true;
 		} else if (template instanceof HTMLTemplateElement) {
-			context.content = document.createElement(template.tagName);;
-			await renderer.render({
-				context: context.subContext({
-					template: template.content.childNodes,
-					container: context.content.content
-				})
-			});
+			context.content = document.createElement(template.tagName);
+			const subContext = context.subContext({ template: template.content.childNodes, container: context.content.content });
+			await renderer.render(subContext);			
 			context.stop = true;
 			context.ignore = true;
 		} else if (template.hasAttribute("jstl-tagname")) {

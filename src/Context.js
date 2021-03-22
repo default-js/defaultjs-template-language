@@ -1,6 +1,12 @@
 import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils";
 import { defGet, defValue } from "@default-js/defaultjs-common-utils/src/ObjectUtils";
+import { privateProperty } from "@default-js/defaultjs-common-utils/src/PrivateProperty";
 import Directive from "./Directive";
+import Template from "./Template";
+
+const PRIVATE_WAIT = "wait";
+const PRIVATE_CALLBACKS = "callbacks";
+const PRIVATE_IGNOREDIRECTIVES = "ignoreDirectives";
 
 const CONTEXTCLONE = new Set();
 const CONTEXTS = new Map();
@@ -17,24 +23,27 @@ const runObserver = () => {
 		observerTimeout = setTimeout(() => {
 			observerTimeout = null;
 			const time = Date.now();
-			CONTEXTS.forEach((createTime, context ) => {
+			CONTEXTS.forEach((createTime, context) => {
 				const delta = time - createTime;
 				if (context.closed) CONTEXTS.delete(context);
-				else{
+				else {
 					if (delta > CRITICALTIME) {
 						console.error("context lives longer then 10s", delta / 1000, context);
 					} else if (delta > WARNTIME) {
 						console.warn("context lives longer then 1s", delta / 1000, context);
 					}
-
-					if(CONTEXTCLONE.has(context.id))
-						console.log("is clone:", )
 				}
 			});
 			console.log("open context:", CONTEXTS.size);
 			if (CONTEXTS.size > 0) runObserver();
 		}, 1000);
 	}
+};
+
+const toTemplate = (template) => {
+	if (template instanceof Template) return template.importContent();
+	else if (typeof template === String) return create(template);
+	return template;
 };
 
 let id = 0;
@@ -48,16 +57,16 @@ export default class Context {
 
 		defValue(this, "id", parent ? `${parent.id}->${id++}` : `root::${id++}`);
 		defValue(this, "depth", parent ? parent.depth + 1 : 0);
-		defValue(this, "wait", lazyPromise());
 		defValue(this, "parent", parent);
 		defValue(this, "resolver", resolver);
 		defValue(this, "renderer", renderer);
 		defValue(this, "root", root);
-		defValue(this, "template", template);
+		defValue(this, "template", toTemplate(template));
 		defValue(this, "mode", mode);
-		defValue(this, "ignoreDirective", ignoreDirective instanceof Set ? ignoreDirective : new Set());
-		defValue(this, "__callbacks", []);
-		defGet(this, "closed", () => this.wait.resolved);
+		const wait = lazyPromise();
+		privateProperty(this, PRIVATE_IGNOREDIRECTIVES, ignoreDirective instanceof Set ? ignoreDirective : new Set());
+		privateProperty(this, PRIVATE_WAIT, wait);
+		privateProperty(this, PRIVATE_CALLBACKS, []);
 
 		this.content = null;
 		this.container = container;
@@ -68,14 +77,24 @@ export default class Context {
 		this.ignore = false;
 		//console.log(`context={"depth":${this.depth} }, "id": ${this.id}`);
 		this.createtAt = new Error();
-		if(parent)
-			parent.ready(this.wait);
+
+		if (parent) parent.ready(wait);
+	}
+
+	get closed() {
+		return privateProperty(this, PRIVATE_WAIT).resolved;
+	}
+
+	ignoreDirective(directive) {
+		const ignoreDirectives = privateProperty(this, PRIVATE_IGNOREDIRECTIVES);
+		directive instanceof Directive ? ignoreDirectives.add(directive.name) : ignoreDirectives.add(directive);
 	}
 
 	acceptDirective(directive) {
-		if (directive instanceof Directive) return !(this.ignoreDirective.has(directive.name) || this.ignoreDirective.has(directive));
+		const ignoreDirectives = privateProperty(this, PRIVATE_IGNOREDIRECTIVES);
+		if (directive instanceof Directive) return !(ignoreDirectives.has(directive.name) || ignoreDirectives.has(directive));
 
-		return !this.ignoreDirective.has(directive);
+		return !ignoreDirectives.has(directive);
 	}
 
 	finished(callback) {
@@ -83,26 +102,32 @@ export default class Context {
 		else this.ready(callback);
 	}
 
-	ready(callback) {
+	async ready(callback) {
+		const callbacks = privateProperty(this, PRIVATE_CALLBACKS);
 		if (callback) {
 			if (callback instanceof Array) callback.forEach((callback) => this.wait.then(callback));
-			else if (callback instanceof Promise) this.__callbacks.push(async () => await callback);
-			else if (typeof callback === "function") this.__callbacks.push(callback);
+			else if (callback instanceof Promise) callbacks.push(async () => await callback);
+			else if (typeof callback === "function") callbacks.push(callback);
 		} else {
-			return (async () => {
-				if (!this.wait.resolved && !this.ignore) for (let callback of this.__callbacks) await callback();
+			const wait = privateProperty(this, PRIVATE_WAIT);
+			if (!wait.resolved) {
+				if (!this.ignore) for (let callback of callbacks) await callback(this);
+				wait.resolve(this);
+			}
 
-				this.wait.resolve();
-				return this.wait;
-			})();
+			return wait;
 		}
 	}
 
 	subContext({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
 		return new Context({ resolver, renderer, template, container, mode, root, target, parent: this, ignoreDirective });
 	}
-	/*
-	clone({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = this.ignoreDirective } = {}) {
-		return new Context({ resolver, renderer, template, container, mode, root, target, parent: this, ignoreDirective });
-	}*/
-};
+
+	clone({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
+		return new Context({ resolver, renderer, template, container, mode, root, target, parent: null, ignoreDirective });
+	}
+
+	toRenderOption({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
+		return { resolver, renderer, template, container, mode, root, target, parent: null, ignoreDirective };
+	}
+}

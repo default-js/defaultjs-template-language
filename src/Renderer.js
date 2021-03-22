@@ -37,16 +37,83 @@ const MODEWORKER = {
 	},
 };
 
-const loadTemplateContent = async (template, context, renderer) => {
+const loadTemplateContent = async (template, renderer) => {
 	if (template) {
 		template = await Template.load(template);
 		return template.importContent();
-	} else if (context) return context.template;
-	else if (renderer.template) {
+	} else if (renderer.template) {
 		return await renderer.template.importContent();
 	}
 
 	throw new Error("No content template specified!");
+};
+
+const addContent = async (context) => {
+	if (context.content) {
+		const modeworker = MODEWORKER[context.mode];
+		if (!modeworker) throw new Error('The "' + context.mode + '" is not supported!');
+		await modeworker(context);
+	}
+};
+
+const renderContainer = async (context) => {
+	let { template, resolver } = context;
+	if (!template || template.length == 0) return context;
+
+	let content = [];
+	for (let nodeTemplate of template) {
+		nodeTemplate.normalize();
+		const nodeResolver = new ExpressionResolver({ name: SCOPES.node, context: null, parent: resolver });
+		const nodeContext = await renderNode(context.subContext({ template: nodeTemplate, resolver: nodeResolver }));
+		await nodeContext.ready();
+		const node = nodeContext.content;
+		if (node) {
+			if (node instanceof Array) content = content.concat(node);
+			if (node instanceof NodeList || node instanceof HTMLCollection) content = content.concat(Array.from(node));
+			else if (node instanceof Node) content.push(node);
+		}
+	}
+
+	context.content = content.length != 0 ? content : null;
+	return context;
+};
+
+const renderNode = async (context) => {
+	try {
+		const { template, resolver, renderer } = context;
+		if (template instanceof Element) await template.execute(context);
+		else await executeDirectives(context);
+
+		const { ignore, content } = context;
+
+		if (!ignore && content) {
+			const subTemplate = context.template.childNodes;
+			if (subTemplate && subTemplate.length > 0) {
+				const containerResolver = new ExpressionResolver({ name: SCOPES.container, context: null, parent: resolver });
+				const subContext = await renderer.render(context.subContext({ container: content, template: subTemplate, resolver: containerResolver }));
+				await subContext.ready();
+			}
+		}
+
+		if (context.content && context.content.tagName && context.content.tagName == "JSTL") context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
+	} catch (e) {
+		console.error("error at render node:", e, context);
+	}
+	return context;
+};
+
+const executeDirectives = async (context) => {
+	const directives = Directive.directives;
+	const length = directives.length;
+	for (let i = 0; i < length && !context.stop; i++) {
+		const directive = directives[i];
+		try {
+			if (context.acceptDirective(directive)) await directive.execute(context);
+		} catch (e) {
+			console.error("error at directive:", e, directive, context);
+		}
+	}
+	return context;
 };
 
 export default class Renderer {
@@ -69,97 +136,24 @@ export default class Renderer {
 	 * @param
 	 * 		target
 	 */
-	async render({ template = null, data = null, container, root, mode, target, context = null }) {
-		template = await loadTemplateContent(template, context, this);
-		let resolver = new ExpressionResolver({ name: SCOPES.render, context: data, parent: context ? context.resolver : this.resolver });
+	async render(context) {
+		const calledWithContext = context instanceof Context;
+		if (!calledWithContext) {
+			let { template = null, data = null, container, root, mode, target } = context;
+			template = await loadTemplateContent(template, this);
+			const resolver = new ExpressionResolver({ name: SCOPES.render, context: data, parent: this.resolver });
+			context = new Context({ resolver, renderer: this, template: template, container, root: root ? root : container, mode: mode ? mode : "replace", target });
+		} else if (context.closed) throw new Error("calling with closed context", context);
 
-		let renderContext = context;
-		if (!renderContext) renderContext = new Context({ resolver, renderer: this, template, container, root: root ? root : container, mode: mode ? mode : "replace", target });
-		else renderContext = renderContext.clone({ resolver, template, container, root, mode, target });
+		const template = context.template;
+		if (template instanceof Node) await renderNode(context);
+		else await renderContainer(context);
+		
+		await addContent(context);
 
-		let result = null;
-		if (template instanceof Node) result = await this.renderNode(renderContext);
-		else result = await this.renderContainer(renderContext);
+		if (!calledWithContext)
+			await context.ready();
 
-		if (result instanceof Context) renderContext = result;
-
-		if (renderContext.content && renderContext.mode) {
-			const modeworker = MODEWORKER[renderContext.mode];
-			if (!modeworker) throw new Error('The "' + renderContext.mode + '" is not supported!');
-
-			await modeworker(renderContext);
-		}
-
-		if (!context) await renderContext.ready();
-		else renderContext.ready();
-
-		return context;
-	}
-
-	async renderContainer(context) {
-		if (context.template && context.template.length > 0) {
-			const renderings = context.template.map((node) => {
-				//separate node context from the current context
-				const resolver = new ExpressionResolver({ name: SCOPES.node, context: null, parent: context.resolver });
-				return this.renderNode(context.clone({ template: node, resolver }));
-			});
-			const result = await Promise.all(renderings);
-			if (!result) return context;
-
-			context.content = result
-				.filter((result) => !!result)
-				.reduce((content, result) => {
-					const node = result.content;
-					if (node) {
-						if (!content) content = [];
-
-						if (node instanceof Array) content = content.concat(node);
-						if (node instanceof NodeList || node instanceof HTMLCollection) content = content.concat(Array.from(node));
-						else if (node instanceof Node) content.push(node);
-					}
-					result.ready();
-					return content;
-				}, null);
-		}
-		return context;
-	}
-
-	async renderNode(context) {
-		try {
-			context.template.normalize();
-			if (context.template instanceof Element) await context.template.execute(context);
-			else await this.executeDirectives(context);
-
-			if (!context.ignore && context.content) {
-				const content = context.template.childNodes;
-				if (content && content.length > 0) {
-					// @TODO await or fire and forget???
-					await context.renderer.render({ context: context.subContext({ template: content, container: context.content }) });
-				}
-			}
-
-			if (context.content && context.content.tagName && context.content.tagName == "JSTL") context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
-		} catch (e) {
-			console.error("error at render node:", e, context);
-		}
-		return context;
-	}
-
-	async executeDirectives(context) {
-		//console.log("scope chain:", context.renderer.chain, "resolver chain", context.renderer.resolver.fullname);
-		const directives = Directive.directives;
-		const length = directives.length;
-		for (let i = 0; i < length && !context.stop; i++) {
-			const directive = directives[i];
-			try {
-				if (context.acceptDirective(directive)) {
-					const result = await directive.execute(context);
-					if (result instanceof Context) context = result;
-				}
-			} catch (e) {
-				console.error("error at directive:", e, directive, context);
-			}
-		}
 		return context;
 	}
 
