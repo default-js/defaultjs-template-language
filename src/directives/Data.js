@@ -31,8 +31,10 @@ const updateContext = ({ varname, data, scope, context }) => {
 		context.resolver.updateData(varname, data, scope);
 	else if (scope)
 		context.resolver.mergeContext(data, scope);
-	else
-		context.resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
+	else{
+		const resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
+		context = context.subContext({resolver});
+	}
 	
 		
 	return context;

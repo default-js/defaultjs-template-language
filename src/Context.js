@@ -63,6 +63,7 @@ export default class Context {
 		defValue(this, "root", root);
 		defValue(this, "template", toTemplate(template));
 		defValue(this, "mode", mode);
+		defValue(this, "subcontexts", new Set());
 		const wait = lazyPromise();
 		privateProperty(this, PRIVATE_IGNOREDIRECTIVES, ignoreDirective instanceof Set ? ignoreDirective : new Set());
 		privateProperty(this, PRIVATE_WAIT, wait);
@@ -76,9 +77,11 @@ export default class Context {
 		this.stop = false;
 		this.ignore = false;
 		//console.log(`context={"depth":${this.depth} }, "id": ${this.id}`);
-		this.createtAt = new Error();
+		//this.createtAt = new Error();
 
-		if (parent) parent.ready(wait);
+		if (parent) {
+			parent.subcontexts.add(this);
+		}
 	}
 
 	get closed() {
@@ -112,6 +115,11 @@ export default class Context {
 			const wait = privateProperty(this, PRIVATE_WAIT);
 			if (!wait.resolved) {
 				if (!this.ignore) for (let callback of callbacks) await callback(this);
+
+				for (let child of this.subcontexts) await child.ready();
+
+				if (this.parent) this.parent.subcontexts.delete(this);
+
 				wait.resolve(this);
 			}
 
