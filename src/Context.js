@@ -58,7 +58,7 @@ export default class Context {
 		defValue(this, "id", parent ? `${parent.id}->${id++}` : `root::${id++}`);
 		defValue(this, "depth", parent ? parent.depth + 1 : 0);
 		defValue(this, "parent", parent);
-		defValue(this, "resolver", resolver);
+		//defValue(this, "resolver", resolver);
 		defValue(this, "renderer", renderer);
 		defValue(this, "root", root);
 		defValue(this, "template", toTemplate(template));
@@ -72,6 +72,7 @@ export default class Context {
 		this.content = null;
 		this.container = container;
 		this.target = target;
+		this.resolver = resolver;
 
 		/* execution flags */
 		this.stop = false;

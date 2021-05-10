@@ -80,13 +80,14 @@ const renderContainer = async (context) => {
 
 const renderNode = async (context) => {
 	try {
-		const { template, resolver, renderer } = context;
+		let { template, renderer } = context;
 		if (template instanceof Element) await template.execute(context);
 		else await executeDirectives(context);
 
 		const { ignore, content } = context;
 
 		if (!ignore && content) {
+			let { resolver } = context;
 			const subTemplate = context.template.childNodes;
 			if (subTemplate && subTemplate.length > 0) {
 				const containerResolver = new ExpressionResolver({ name: SCOPES.container, context: null, parent: resolver });
