@@ -1,6 +1,6 @@
 import Template from "@src/Template.js";
 
-describe("Template Test - Template.load()", () => {
+describe("Template Cache Test - Template.load()", () => {
 	
 	beforeAll(() => {});	
 	
@@ -46,8 +46,8 @@ describe("Template Test - Template.load()", () => {
 								"\t<div></div>" +
 								"</div>").first();		
 		
-		const expected = await Template.load(node);
-		const result = await Template.load(node);
+		const expected = await Template.load(node, false);
+		const result = await Template.load(node, false);
 		expect(result).not.toBe(expected);
 	});
 	
@@ -57,8 +57,8 @@ describe("Template Test - Template.load()", () => {
 								"\t<div></div>" +
 								"</div>");
 		
-		const expected = await Template.load(nodelist);
-		const result = await Template.load(nodelist);
+		const expected = await Template.load(nodelist, false);
+		const result = await Template.load(nodelist, false);
 		expect(result).not.toBe(expected);
 	});
 	

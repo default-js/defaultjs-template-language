@@ -52,10 +52,7 @@ describe("Template Test - Template.load()", () => {
 	});
 	
 	it("load from Node", async () => {
-		const node = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>").first();		
+		const node = create(`<div><div></div><div></div></div>`).first();		
 		
 		expect(node instanceof Node).toBe(true);
 		const result = await Template.load(node, false);
@@ -63,6 +60,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.importContent().length).toBe(1);
 	});
 	
 	it("load from NodeList", async () => {
