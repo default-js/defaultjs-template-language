@@ -1,0 +1,1 @@
+import "./bug-1.js"

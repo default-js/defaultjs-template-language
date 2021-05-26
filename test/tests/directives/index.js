@@ -8,3 +8,4 @@ import "./ForeachTest";
 import "./RepeatTest";
 import "./ChooseTest";
 import "./TextTest";
+import "./OnFinished";

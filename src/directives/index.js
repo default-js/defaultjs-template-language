@@ -7,3 +7,4 @@ import "./Foreach.js";
 import "./Repeat.js";
 import "./Text.js";
 import "./Attributes.js";
+import "./OnFinished.js";

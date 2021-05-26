@@ -1,7 +1,7 @@
 import Directive from "@src/Directive.js";
 import "@src/directives";
 
-describe("If Test - ", () => {
+describe("Test directive chain - ", () => {
 	
 	beforeAll(() => {});
 	
@@ -15,7 +15,8 @@ describe("If Test - ", () => {
 			"foreach",
 			"jstl-repeat",		
 			"attribute",
-			"text"
+			"text",
+			"on-finished"
 		];
 		
 		const directive = Directive.directives.map(d => d.name);		

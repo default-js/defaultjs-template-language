@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.0.4",
+	"version": "1.1.4",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {
@@ -44,7 +44,7 @@
 	"dependencies": {
 		"@default-js/defaultjs-common-utils": "^0.13.1",
 		"@default-js/defaultjs-expression-language": "^1.0.0-beta.14",
-		"@default-js/defaultjs-extdom": "^1.0.0"
+		"@default-js/defaultjs-extdom": "^1.0.3"
 	},
 	"directories": {
 		"test": "test"
