@@ -18,21 +18,23 @@ describe("Template Test - Template.load()", () => {
 	});
 	
 	it("load from url string", async () => {		
-		const result = await Template.load(new URL("/templates/TemplateTest/LoadFromURL.html", location.origin), false);
+		const result = await Template.load(new URL("/templates/TemplateTest/LoadFromURL.html", location), false);
 		expect(result).toBeDefined();
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 		expect(result.template.content.children.length).toBe(5);
+		expect(result.key).toBeDefined();
 	});
 	
 	it("load from url", async () => {		
-		const url = new URL("/templates/TemplateTest/LoadFromURL.html", location.origin);
+		const url = new URL("/templates/TemplateTest/LoadFromURL.html", location);
 		const result = await Template.load(url.toString(), false);
 		expect(result).toBeDefined();
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.key).toBeDefined();
 	});
 	
 	it("load from HTMLTemplateElement", async () => {
@@ -49,6 +51,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 		expect(result.template.content.childNodes.length).toBe(5);
+		expect(result.key).toBeDefined();
 	});
 	
 	it("load from Node", async () => {
@@ -61,6 +64,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
 		expect(result.importContent().length).toBe(1);
+		expect(result.key).toBeDefined();
 	});
 	
 	it("load from NodeList", async () => {
@@ -75,6 +79,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.key).toBeDefined();
 	});
 	
 	it("load from HTMLCollection", async () => {
@@ -89,6 +94,7 @@ describe("Template Test - Template.load()", () => {
 		expect(result instanceof Template).toBe(true);
 		expect(result.template).toBeDefined();
 		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result.key).toBeDefined();
 	});
 	
 	afterAll(() => {});
