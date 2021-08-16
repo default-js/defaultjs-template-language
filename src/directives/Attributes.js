@@ -2,107 +2,124 @@ import Directive from "../Directive.js";
 
 const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
 
+const DEFAULT_EVENT_FUNCTION = "default";
+const EVENTFUNCTIONS = {
+	delegate: async (event, handle, setting, type, resolver, content, options, context) => {
+		const eventhandle = await resolver.resolveText(handle, handle);
+		content.on(event, delegater(eventhandle, setting));
+	},
+	toggleclass: async (event, handle, setting, type, resolver, content, options, context) => {
+		const clazz = options.shift();
+		const selector = await resolver.resolveText(handle, handle);		
+		content.on(event, (event) => {
+			event.preventDefault();
+			content.closests(selector).toggleClass(clazz);
+		});
+	},
+	toggleattribute: async (event, handle, setting, type, resolver, content, options, context) => {
+		const attribute = options.shift();
+		const selector = await resolver.resolveText(handle, handle);		
+		content.on(event, (event) => {
+			event.preventDefault();
+			content.closests(selector).forEach(element => {
+				element.toggleAttribute(attribute)				
+			});
+		});
+	},
+	[DEFAULT_EVENT_FUNCTION]: async (event, handle, setting, type, resolver, content, options, context) => {
+		const eventhandle = await resolver.resolve(handle, handle);
+
+		if (!eventhandle) console.error(new Error("Can't resolve \"" + handle + '" to event handle!'));
+		else if (typeof eventhandle === "function") content.on(event, eventhandle);
+		else if (typeof eventhandle === "string") content.on(event, delegater(eventhandle, setting));
+		else if (typeof eventhandle === "object") {
+			const { capture = false, passive = false, once = false } = eventhandle;
+			content.on(event, eventhandle.eventHandle, { capture, passive, once });
+		}
+	},
+};
+
 const bindAttribute = async ({ condition, name, value, context }) => {
 	const { resolver, content, template } = context;
-		
+
 	let attribute = !condition ? value : template.attr(name);
 	condition = condition ? value : template.attr("?" + name);
 	const hasValue = isValue(attribute);
-	
+
 	if (condition && hasValue) {
 		condition = await resolver.resolve(condition, false);
-		if (condition === true)
-			content.attr(name, await resolver.resolveText(attribute, attribute));
+		if (condition === true) content.attr(name, await resolver.resolveText(attribute, attribute));
 	} else if (condition) {
 		condition = await resolver.resolve(condition, false);
-		if (condition === true)
-			content.attr(name, true);
+		if (condition === true) content.attr(name, true);
 	} else if (hasValue) {
 		content.attr(name, await resolver.resolveText(attribute, attribute));
 	}
 };
 
 const isValue = (value) => {
-	return value != null && typeof value !== "undefined";	
+	return value != null && typeof value !== "undefined";
 };
 
 const bindEvent = async ({ condition, name, value, context }) => {
-	const { resolver, template } = context;
-	
+	const { resolver, template, content } = context;
+
 	condition = condition ? value : template.attr("?@" + name);
-	let handle = !condition ? value : template.attr("@"+ name);
+	let handle = !condition ? value : template.attr("@" + name);
 	let split = name.split(":");
 	const event = split.shift();
-	const type = split.shift() || "default";
-	
+	const type = (split.shift() || DEFAULT_EVENT_FUNCTION).toLowerCase();
 
-	if (condition && handle){
-		if(await resolver.resolve(condition, false) == true)
-			await binding({event, type, handle, context });
-	}
-	else if (handle)
-		await binding({event, type, handle, context });
+	const setting = {
+		bubble: false,
+	};
+
+	if (condition && handle) {
+		if ((await resolver.resolve(condition, false)) == true) await binding(event, handle, setting, type, resolver, content, split, context);
+	} else if (handle) await binding(event, handle, setting, type, resolver, content, split, context);
 };
 
-const binding = async ({event, type, handle, context }) => {
-	const { resolver, content} = context;
-		
-	if(type == "delegate"){
-		const eventhandle = await resolver.resolveText(handle, handle);
-		content.on(event, delegater(eventhandle));
-	} else {		
-		const eventhandle = await resolver.resolve(handle, handle);
-	
-		if(!eventhandle)
-			console.error(new Error("Can't resolve \"" + handle + "\" to event handle!"))
-		else if(typeof eventhandle === "function")
-			content.on(event, eventhandle);
-		else if(typeof eventhandle === "string")
-			content.on(event, delegater(eventhandle));
-		else if(typeof eventhandle === "object"){	
-			const {capture=false, passive=false, once=false} = handle;		
-			content.on(event, eventhandle.eventHandle, {capture, passive, once});
-		}
-	}
+const binding = async (event, handle, setting, type, resolver, content, options, context) => {
+	const binder = EVENTFUNCTIONS[type];
+	if (binder) return binder(event, handle, setting, type, resolver, content, options, context);
 };
 
-const delegater = function(delegate) {
-	return function(event) {
+const delegater = function (delegate, setting) {
+	return function (event) {
 		event.preventDefault();
 		event.stopPropagation();
-		if(event.currentTarget)	
-			event.currentTarget.trigger(delegate, event);
-		else
-			event.target.trigger(delegate, event);
+		if (event.currentTarget) event.currentTarget.trigger(delegate, event);
+		else event.target.trigger(delegate, event);
 	};
 };
-
 
 class Attribute extends Directive {
 	constructor() {
 		super();
 	}
 
-	get name() { return "attribute" }
-	get rank() { return Directive.MIN_RANK }
-	get phase() { return Directive.PHASE.content }
-
+	get name() {
+		return "attribute";
+	}
+	get rank() {
+		return Directive.MIN_RANK;
+	}
+	get phase() {
+		return Directive.PHASE.content;
+	}
 
 	async execute(context) {
 		const { template } = context;
-		if (!(template instanceof HTMLElement))
-			return context;
+		if (!(template instanceof HTMLElement)) return context;
 
 		const processed = new Set();
 		for (const attribute of template.attributes) {
 			const [, jstl, condition, event, name] = ATTRIBUTE_NAME.exec(attribute.name);
 			if (!jstl && !processed.has(name)) {
 				const value = attribute.value;
-								
-				if (event)
-					await bindEvent({ condition, event, name, value, context })
-				else
-					await bindAttribute({ condition, name, value, context })
+
+				if (event) await bindEvent({ condition, event, name, value, context });
+				else await bindAttribute({ condition, name, value, context });
 			}
 			processed.add(name);
 		}

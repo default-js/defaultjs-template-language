@@ -21,6 +21,7 @@ module.exports = {
 	files : [
 		//"src/**/*.js",
 		"test/index.js",
+		//"test/**/*Test.js",
 		"test/sites/**/*.html",
 		{pattern: "test/data/**/*", included: false, served: true, watched: false, nocache: false},
 		{pattern: "test/templates/**/*", included: false, served: true, watched: true, nocache: false}	
@@ -38,6 +39,7 @@ module.exports = {
 	preprocessors : {
 		"src/**/*.js" : [ "webpack", "coverage"],
 		"test/index.js" : [ "webpack", "sourcemap"],
+		//"test/**/*Test.js" : [ "webpack", "sourcemap"],
 		"test/sites/**/*.html" : [ "html2js" ]
 	},
 	// test results reporter to use

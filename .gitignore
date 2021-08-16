@@ -1,7 +1,6 @@
-/.settings/
-/.project
-/node_modules/
-
+# build folder
+runtime
+target
 
 # Logs
 logs
@@ -67,3 +66,5 @@ typings/
 
 # eclipse
 .project
+.settings
+node_modules

@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.1.5",
+	"version": "1.2.5",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {
@@ -30,7 +30,7 @@
 		"replace-in-file-webpack-plugin": "^1.0.6",
 		"webpack": "^5.40.0",
 		"webpack-cli": "^4.7.2",
-		"webpack-dev-server": "^3.11.2",
+		"webpack-dev-server": "^1.16.5",
 		"webpack-merge": "^5.8.0"
 	},
 	"repository": {
