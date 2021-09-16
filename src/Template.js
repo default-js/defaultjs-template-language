@@ -1,5 +1,6 @@
 import "@default-js/defaultjs-common-utils/src/javascript/String.js";
 
+export const NODE_ATTRIBUTE_TEMPLATE = "template";
 const CACHE = {};
 const getKey = (template, cache, alias) => {
 	if (!cache) return null;
@@ -43,6 +44,19 @@ const fromElement = async (element, cache, key) => {
 	return template;
 };
 
+const getTemplate = (node) => {
+	let template = node.find(":scope > template").first();
+	if (!!template) return template;
+	const value = node.attr(NODE_ATTRIBUTE_TEMPLATE);
+	if (!value) return null;
+	try {
+		template = find(value).first();
+		if (!!template) return template;
+	} catch (e) { }
+	return new URL(value, location);
+};
+
+
 export default class Template {
 	constructor(template, key) {
 		this.template = template;
@@ -78,4 +92,16 @@ export default class Template {
 
 		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
 	}
-}
+
+	static async loadNodeTemplate(node, defaultTemplate, cache, alias) {
+		try{
+			const template = getTemplate(node);
+			if (template)
+				return Template.load(template, cache, alias);
+		}catch(e){
+			console.warn("Can't load template from node!", node, e);
+		}
+
+		return defaultTemplate;
+	};
+};

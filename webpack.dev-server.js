@@ -13,13 +13,12 @@ module.exports = merge(common, {
 	devtool: "inline-source-map",
 	watch: true,
 	devServer: {
-		contentBase: "./WebContent",
+		static: ["WebContent"],
 		hot: true,
-		quiet: true,
 		port: 80,
 	},
 	output: {
-		filename: project.buildname + ".js",
+		filename: "[name]-" + project.buildname + ".js",
 		path: path.resolve(__dirname, "dist"),
 	},
 	plugins: [new webpack.HotModuleReplacementPlugin()],

@@ -12,7 +12,7 @@ module.exports = merge(common, {
 	},
 	devtool: "source-map",
 	output: {
-		filename: project.buildname + ".min.js",
+		filename: "[name]-" + project.buildname + ".min.js",
 		path: path.resolve(__dirname, "dist"),
 	},
 	plugins: [
