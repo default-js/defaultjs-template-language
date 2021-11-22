@@ -18,12 +18,10 @@
     - [4.3. Renderer Dom Events](#43-renderer-dom-events)
     - [4.4. Custom Directives](#44-custom-directives)
     - [4.5. Custom Tags](#45-custom-tags)
-  - [Links / References](#links--references)
-  - [[defaultjs-expression-language] https://github.com/default-js/defaultjs-expression-language](#defaultjs-expression-language-httpsgithubcomdefault-jsdefaultjs-expression-language)
 
 ## 0. Introduction
 
-The defaultjs-template-language, or simplified `J`ava`S`cript `T`emplate `L`anguage -> short `jstl`,  is a reimplementation of [de.titus.jstl][1]. The new version no longer uses jquery. Only dependencies from the `@default-js` ecosystem are used. there are no third party libs used at runtime.
+The defaultjs-template-language, or simplified `J`ava`S`cript `T`emplate `L`anguage -> short `jstl`,  is a reimplementation of [de.titus.jstl](https://github.com/TwilightTitus/de.titus.jstl). The new version no longer uses jquery. Only dependencies from the `@default-js` ecosystem are used. there are no third party libs used at runtime.
 
 The reimplementation has two goals:
 
@@ -112,7 +110,8 @@ ${ await fn() }
 
 ```
 
-The execution engine is implemented with [defaultjs-expression-language]
+The execution engine is implemented with [defaultjs-expression-language](https://github.com/default-js/defaultjs-expression-language
+)
 
 
 ---
@@ -192,10 +191,3 @@ The execution engine is implemented with [defaultjs-expression-language]
 
 ### 4.5. Custom Tags
 
-
----
-## Links / References
-
-[1] https://github.com/TwilightTitus/de.titus.jstl
-[defaultjs-expression-language] https://github.com/default-js/defaultjs-expression-language
----
