@@ -5,6 +5,12 @@
   - [1. Basic usage](#1-basic-usage)
   - [2. Template File](#2-template-file)
   - [3. Template functionality](#3-template-functionality)
+    - [3.1. Expressions](#31-expressions)
+    - [Text content](#text-content)
+    - [jstl-if](#jstl-if)
+    - [jstl-choose](#jstl-choose)
+    - [jstl-foreach](#jstl-foreach)
+    - [jstl-repeat](#jstl-repeat)
   - [3. Special Tags](#3-special-tags)
   - [4. Javascript API](#4-javascript-api)
     - [4.1. Template](#41-template)
@@ -13,6 +19,7 @@
     - [4.4. Custom Directives](#44-custom-directives)
     - [4.5. Custom Tags](#45-custom-tags)
   - [Links / References](#links--references)
+  - [[defaultjs-expression-language] https://github.com/default-js/defaultjs-expression-language](#defaultjs-expression-language-httpsgithubcomdefault-jsdefaultjs-expression-language)
 
 ## 0. Introduction
 
@@ -77,20 +84,74 @@ Renderer.render({container, template, data: {}});
 
 ## 3. Template functionality
 
----
-**Text content**
+### 3.1. Expressions
+
+The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
+
+**Basic syntax**
+```javascript
+${varname|javascript}
+```
+
+**Examples**
+```javascript
+/*
+const data = {
+    text : "hello",
+    fn : async () => {return "hello world";}
+};
+... call renderer ...
+*/
+
+${text}
+//output: hello
+${text + "world"}
+//output: hello world
+${ await fn() } 
+//output: hello world
+
+```
+
+The execution engine is implemented with [defaultjs-expression-language]
+
 
 ---
-**jstl-if**
+### Text content
+
+
+
+
+```html
+<!--
+    data: {
+        hello: "hello",
+        world: "world",
+        html: "<b>hello world</b><script type=\"application/javascript\">alert(\"unsecure\")</script>",
+        longText: "this is an long\nlong\nlong\ntext"
+    }
+-->
+
+<div>${hallo} ${world}</div>
+<div jstl-text-content-type="text">${html}</div>
+<div jstl-text-content-type="html">${html}</div>
+<div jstl-text-content-type="html" jstl-text-unsecure>${html}</div>
+<div jstl-text-trim-length="15">${longText}</div>
+
+```
+
+
 
 ---
-**jstl-choose**
+### jstl-if
 
 ---
-**jstl-foreach**
+### jstl-choose
 
 ---
-**jstl-repeat**
+### jstl-foreach
+
+---
+### jstl-repeat
 
 ---
 **jstl-data**
@@ -136,5 +197,5 @@ Renderer.render({container, template, data: {}});
 ## Links / References
 
 [1] https://github.com/TwilightTitus/de.titus.jstl
-
+[defaultjs-expression-language] https://github.com/default-js/defaultjs-expression-language
 ---
