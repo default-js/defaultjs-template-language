@@ -117,29 +117,61 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 ---
 ### Text content
 
+**Data context used by following examples**
+```javascript
+{
+    hello: "hello",
+    world: "world",
+    html: "<b>hello world</b><script type=\"application/javascript\">alert(\"unsecure\")</script>",
+    longText: "this is an long\nlong\nlong\ntext"
+}
+```
 
-
-
+**Example: simple text**
 ```html
-<!--
-    data: {
-        hello: "hello",
-        world: "world",
-        html: "<b>hello world</b><script type=\"application/javascript\">alert(\"unsecure\")</script>",
-        longText: "this is an long\nlong\nlong\ntext"
-    }
--->
-
+<!--template-->
 <div>${hallo} ${world}</div>
-<div jstl-text-content-type="text">${html}</div>
-<div jstl-text-content-type="html">${html}</div>
-<div jstl-text-content-type="html" jstl-text-unsecure>${html}</div>
-<div jstl-text-trim-length="15">${longText}</div>
 
+<!--output-->
+<div>hello world</div>
 ```
 
 
+**Example: long text with trim length**
+```html
+<!--template-->
+<div jstl-text-trim-length="15">${longText}</div>
 
+<!--output-->
+<div>this is an long...</div>
+```
+
+**Example: html as text**
+```html
+<!--template-->
+<div jstl-text-content-type="text">${html}</div>
+
+<!--output-->
+<div>&gt;b&lt;hello world&gt;/b&lt;&gt;script type="application/javascript"&lt;alert("unsecure")&gt;/script&lt;</div>
+```
+
+**Example: html with secure filter (default)**
+```html
+<!--template-->
+<div jstl-text-content-type="html">${html}</div>
+
+<!--output: script tag is filtered-->
+<div><b>hello world</b>/div>
+```
+
+**Example: html with unsecure filter**
+```html
+<!--template-->
+<div jstl-text-content-type="html" jstl-text-unsecure>${html}</div>
+
+<!--output-->
+<div><b>hello world</b><script type="application/javascript">alert("unsecure")</script>/div>
+```
 ---
 ### jstl-if
 
