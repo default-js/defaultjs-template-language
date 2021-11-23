@@ -10,17 +10,25 @@ defaultjs-template-language (`alias: jstl`)
   - [jstl-if](#jstl-if)
   - [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
   - [jstl-foreach](#jstl-foreach)
-  - [jstl-repeat](#jstl-repeat)
-  - [jstl-data](#jstl-data)
-  - [jstl-include](#jstl-include)
-  - [Attribute manipulation](#attribute-manipulation)
-  - [Event handler](#event-handler)
-  - [jstl-async](#jstl-async)
-  - [jstl-tagname](#jstl-tagname)
-  - [jstl-ignore](#jstl-ignore)
-  - [jstl-on-finished](#jstl-on-finished)
-- [3. Special Tags](#3-special-tags)
-- [4. Javascript API](#4-javascript-api)
+  - [## jstl-repeat](#-jstl-repeat)
+  - [## jstl-data](#-jstl-data)
+    - [`jstl-data-mode="remote"`](#jstl-data-moderemote)
+    - [`jstl-data-mode="set"`](#jstl-data-modeset)
+    - [`jstl-data-mode="direct"`](#jstl-data-modedirect)
+  - [## jstl-include](#-jstl-include)
+    - [Additional option](#additional-option)
+  - [## Attribute manipulation](#-attribute-manipulation)
+  - [## Event handler](#-event-handler)
+    - [simple event handler](#simple-event-handler)
+    - [delegate events](#delegate-events)
+    - [toggle attribute by event](#toggle-attribute-by-event)
+    - [toggle class by event](#toggle-class-by-event)
+  - [## jstl-async](#-jstl-async)
+  - [## jstl-tagname](#-jstl-tagname)
+  - [## jstl-ignore](#-jstl-ignore)
+  - [## jstl-on-finished](#-jstl-on-finished)
+- [Special Tags](#special-tags)
+- [Javascript API](#javascript-api)
   - [Template](#template)
   - [Renderer](#renderer)
   - [Renderer Dom Events](#renderer-dom-events)
@@ -188,7 +196,7 @@ It is recommended to use `jstl-text-unsecure` only, if the content save.
 <div jstl-text-content-type="html" jstl-text-unsecure>${html}</div>
 
 <!--output-->
-<div><b>hello world</b><script type="application/javascript">alert("unsecure")</script>/div>
+<div><b>hello world</b><script type="application/javascript">alert("unsecure")</script></div>
 ```
 
 
@@ -219,7 +227,7 @@ This is the equivalent of `if - if else - else` structure. The direct content of
 ## jstl-foreach
 
 ---
-This provide the capabillity to loop over an array. The content of would be repeated and rendered with every element of array.
+This provide the capabillity to loop over an array. The content of element would be repeated and rendered with every element of array.
 
 ```javascript
 //data used for example
@@ -263,45 +271,210 @@ Set a varname for a meta data and state of the current iteration. The default va
 
 ```javascript
 {
-			index, // item index (zero based)
-			number, // item number (one based)
-			count, // length of array,
-			data // full array
-		}
+    index: 0, // item index (zero based)
+    number: 1, // item number (one based)
+    count: 10, // length of array,
+    data: [] // full array
+}
+```
+
+## jstl-repeat
+---
+
+This provide the capabillity to loop over an array. The difference between `jstl-foreach` and `jstl-repeat` is, `jstl-repeat` use the element self as template to be render items of array.
+
+```javascript
+//data used for example
+{
+    array : [
+        {name: "item-1"},
+        {name: "item-2"},
+        {name: "item-3"}
+    ]
+}
+```
+
+```html
+<div jstl-repeat="${array}" jstl-repeat-var="item">${item.name}</div>
+
+<!-- output -->
+<div>item-1</div>
+<div>item-2</div>
+<div>item-3</div>
+```
+
+**additional parameter**
+
+**`jstl-repeat-var`**
+
+Set a varname to be used as referrence for the loop element. The default varname is `item`.
+
+```html
+<div jstl-repeat="${array}" jstl-foreach-var="element">${element}</div>
+```
+
+**`jstl-repeat-status`**
+
+Set a varname for a meta data and state of the current iteration. The default varname is `status`.
+
+```javascript
+{
+    index: 0, // item index (zero based)
+    number: 1, // item number (one based)
+    count: 10, // length of array,
+    data: [] // full array
+}
+```
+
+## jstl-data
+---
+
+`jstl-data` provides the capability to load and manipulate the data at current data context. The different capabilities are activated by `jstl-data-mode` and one of these values `remote`, `set`, `direct`.
+
+### `jstl-data-mode="remote"`
+
+The `remote` mode can be used to load a remote json data into data context.
+
+```json
+//content of json file
+{
+    "name" : "value"
+}
+```
+
+```html
+<!-- load data direct into context-->
+<div jstl-data="/path/to/json/file" jstl-data-mode="remote">${name}</div>
+<!-- load data with varname into context-->
+<div jstl-data="/path/to/json/file" jstl-data-mode="remote" jstl-data-var="file">${file.name}</div>
+```
+
+### `jstl-data-mode="set"`
+
+The `set` can be used extract data from data context into a new var.
+
+```json
+//render data context
+{
+    "data" : "value"
+}
+```
+
+```html
+<!-- load data direct into context-->
+<div jstl-data="${data}" jstl-data-mode="set" jstl-data-var="newData">${newData}</div>
+```
+
+### `jstl-data-mode="direct"`
+
+The `direct` are used to define a static value.
+
+```html
+<!-- load data direct into context-->
+<div jstl-data="hello world" jstl-data-mode="direct" jstl-data-var="data">${data}</div>
+
+<!-- output-->
+<div>hello world</div>
+```
+
+## jstl-include
+---
+
+With `jstl-include` it is possible to load a template and execute the template as content of current tag. The url of template can be static or evaluated by an expression.
+
+```html
+<div jstl-include="/url/to/template.tpl.html"></div>
+<div jstl-include="${url.to.template}"></div>
+```
+
+### Additional option
+
+`jstl-include-mode`
+
+> |value||
+> |-|-|
+> |replace|replacing the content of current tag|
+> |append|appending the template as content of current tag|
+> |prepand|prepending the template as content of current tag|
+
+## Attribute manipulation
+---
+
+The `JSTL` provide the functionality to manipulate the attributes of a tag.
+
+> To define a condition for an attribute, prefix the attribute name by `?` and include this new attribute with an expression.
+
+```html
+<!-- set value of attribute by an expression-->
+<div attribute="${value}"></div>
+
+<!-- check if attribute including-->
+<div ?attribute="${value}" attrbute="value"></div>
+
+<!-- check if attribute including and set value by an expression-->
+<div ?attribute="${value}" attrbute="${value}"></div>
+```
+
+## Event handler
+---
+
+To make the content interactive by user, it is possible to define event handler. Event handler can be global function, function of current render context or fetch one event and delegate the event by a new event.
+
+> it is possible to add an event handler under a condition. Prefix the event handler definition with `?` and with an expression value. 
+
+### simple event handler
+
+>syntax: @[event]="[action]"
+
+```html
+<div @click="alert('click')"></div>
+<div ?@click="${condition}" @click="alert('click')"></div>
+```
+
+### delegate events
+
+>syntax: @[event]:delegate="[target event name]"
+
+```html
+<div @click:delegate="my-custom-event"></div>
+<div ?@click:delegate="${condition}" @click:delegate="my-custom-event"></div>
+```
+### toggle attribute by event
+
+>syntax: @[event]:toggleAttribute:[attribute name]="[selector of target element]"
+
+```html
+<div @click:toggleAttribute:test-attribute="#id-of-target-element"></div>
+<div ?@click:toggleAttribute:test-attribute="${condition}" @click:toggleAttribute:test-attribute="#id-of-target-element"></div>
+```
+
+### toggle class by event
+
+>syntax: @[event]:toggleClass:[class name]="[selector of target element]"
+
+```html
+<div @click:toggleAttribute:test-class="#id-of-target-element"></div>
+<div ?@click:toggleAttribute:test-class="${condition}" @click:toggleAttribute:test-class="#id-of-target-element"></div>
 ```
 
 
 
-## jstl-repeat
-
----
-## jstl-data
-
----
-## jstl-include
-
----
-## Attribute manipulation
-
----
-## Event handler
-
----
 ## jstl-async
-
 ---
+
 ## jstl-tagname
-
 ---
+
 ## jstl-ignore
-
 ---
+
 ## jstl-on-finished
+---
 
 
-# 3. Special Tags
+# Special Tags
 
-# 4. Javascript API
+# Javascript API
 
 ## Template
 
