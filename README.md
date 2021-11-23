@@ -5,19 +5,27 @@
   - [1. Basic usage](#1-basic-usage)
   - [2. Template File](#2-template-file)
   - [3. Template functionality](#3-template-functionality)
-    - [3.1. Expressions](#31-expressions)
+    - [Expressions](#expressions)
     - [Text content](#text-content)
     - [jstl-if](#jstl-if)
-    - [jstl-choose](#jstl-choose)
+    - [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
     - [jstl-foreach](#jstl-foreach)
     - [jstl-repeat](#jstl-repeat)
+    - [jstl-data](#jstl-data)
+    - [jstl-include](#jstl-include)
+    - [Attributes](#attributes)
+    - [Event Handler](#event-handler)
+    - [jstl-async](#jstl-async)
+    - [jstl-tagname](#jstl-tagname)
+    - [jstl-ignore](#jstl-ignore)
+    - [jstl-on-finished](#jstl-on-finished)
   - [3. Special Tags](#3-special-tags)
   - [4. Javascript API](#4-javascript-api)
-    - [4.1. Template](#41-template)
-    - [4.2. Renderer](#42-renderer)
-    - [4.3. Renderer Dom Events](#43-renderer-dom-events)
-    - [4.4. Custom Directives](#44-custom-directives)
-    - [4.5. Custom Tags](#45-custom-tags)
+    - [Template](#template)
+    - [Renderer](#renderer)
+    - [Renderer Dom Events](#renderer-dom-events)
+    - [Custom Directives](#custom-directives)
+    - [Custom Tags](#custom-tags)
 
 ## 0. Introduction
 
@@ -82,8 +90,9 @@ Renderer.render({container, template, data: {}});
 
 ## 3. Template functionality
 
-### 3.1. Expressions
+### Expressions
 
+---
 The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
 
 **Basic syntax**
@@ -114,9 +123,9 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 )
 
 
----
 ### Text content
 
+---
 **Data context used by following examples**
 ```javascript
 {
@@ -147,15 +156,21 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 ```
 
 **Example: html as text**
+
+Including html as text, all tags are escaped.
+
 ```html
 <!--template-->
-<div jstl-text-content-type="text">${html}</div>
+<div>${html}</div>
 
 <!--output-->
 <div>&gt;b&lt;hello world&gt;/b&lt;&gt;script type="application/javascript"&lt;alert("unsecure")&gt;/script&lt;</div>
 ```
 
 **Example: html with secure filter (default)**
+
+By including html content, the default behavore is to remove unsecure tags. Unsecure tags are: `script, style, body, html, head, object, link`
+
 ```html
 <!--template-->
 <div jstl-text-content-type="html">${html}</div>
@@ -165,6 +180,9 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 ```
 
 **Example: html with unsecure filter**
+
+It is recommended to use `jstl-text-unsecure` only, if the content save.
+
 ```html
 <!--template-->
 <div jstl-text-content-type="html" jstl-text-unsecure>${html}</div>
@@ -172,54 +190,126 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 <!--output-->
 <div><b>hello world</b><script type="application/javascript">alert("unsecure")</script>/div>
 ```
----
+
+
+
 ### jstl-if
 
 ---
-### jstl-choose
+The `jstl-if` directive evaluate an expression to a boolean value. If the expression value evaluated to `true` the tag with content would be included at result. By `false` the tag would not be rendered.
+
+```html
+<div jstl-if="${false}">not included</div>
+<div jstl-if="${true}">included</div>
+```
+
+### jstl-choose - jstl-when - jstl-otherwise
 
 ---
+This is the equivalent of `if - if else - else` structure. The direct content of a tag marked by `jstl-choose` (selector: `[jstl-choose] > *`) readed. The first tag with `jstl-when`, with an expression evaluated to `true`, would be rendered. Every else are removed. If the expression value of all `jstl-when` evaluated to be `false`, in this case the a tag with `jstl-otherwise` are rendered, if available.
+
+```html
+<div jstl-choose>
+    <div jstl-when="${expression}">case 1</div>
+    <div jstl-when="${expression}">case 2</div>
+    <div jstl-otherwise>if nothing matches</div>
+</div>
+```
+
 ### jstl-foreach
 
 ---
+This provide the capabillity to loop over an array. The content of would be repeated and rendered with every element of array.
+
+```javascript
+//data used for example
+{
+    array : [
+        {name: "item-1"},
+        {name: "item-2"},
+        {name: "item-3"}
+    ]
+}
+```
+
+```html
+<div jstl-foreach="${array}" jstl-foreach-var="item">
+    <div>${item.name}</div>
+</div>
+
+<!-- output -->
+<div>
+    <div>item-1</div>
+    <div>item-2</div>
+    <div>item-3</div>
+</div>
+```
+
+**additional parameter**
+
+**`jstl-foreach-var`**
+
+Set a varname to be used as referrence for the loop element. The default varname is `item`.
+
+```html
+<div jstl-foreach="${array}" jstl-foreach-var="element">
+    <div>${element}</div>
+</div>
+```
+
+**`jstl-foreach-status`**
+
+Set a varname for a meta data and state of the current iteration. The default varname is `status`.
+
+```javascript
+{
+			index, // item index (zero based)
+			number, // item number (one based)
+			count, // length of array,
+			data // full array
+		}
+```
+
+
+
 ### jstl-repeat
 
 ---
-**jstl-data**
+### jstl-data
 
 ---
-**jstl-include**
+### jstl-include
 
 ---
-**Attributes**
+### Attributes
 
 ---
-**Event Handler**
+### Event Handler
 
 ---
-**jstl-async**
+### jstl-async
 
 ---
-**jstl-tagname**
+### jstl-tagname
 
 ---
-**jstl-ignore**
+### jstl-ignore
 
 ---
-**jstl-on-finished**
+### jstl-on-finished
 
 
 ## 3. Special Tags
 
 ## 4. Javascript API
 
-### 4.1. Template
+### Template
 
-### 4.2. Renderer
+### Renderer
 
-### 4.3. Renderer Dom Events
+### Renderer Dom Events
 
-### 4.4. Custom Directives
+### Custom Directives
 
-### 4.5. Custom Tags
+### Custom Tags
 
