@@ -2,19 +2,19 @@ defaultjs-template-language (`alias: jstl`)
 ===
 
 - [defaultjs-template-language (`alias: jstl`)](#defaultjs-template-language-alias-jstl)
-- [1. Basic usage](#1-basic-usage)
-- [2. Template File](#2-template-file)
-- [3. Template functionality](#3-template-functionality)
-- [Expressions](#expressions)
-- [Text content](#text-content)
-- [jstl-if](#jstl-if)
-- [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
-- [jstl-foreach](#jstl-foreach)
-- [jstl-repeat](#jstl-repeat)
-- [jstl-data](#jstl-data)
-- [jstl-include](#jstl-include)
-- [Attributes](#attributes)
-  - [Event Handler](#event-handler)
+- [Basic usage](#basic-usage)
+- [Use Template File](#use-template-file)
+- [Template functionality](#template-functionality)
+  - [Expressions](#expressions)
+  - [Text content](#text-content)
+  - [jstl-if](#jstl-if)
+  - [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
+  - [jstl-foreach](#jstl-foreach)
+  - [jstl-repeat](#jstl-repeat)
+  - [jstl-data](#jstl-data)
+  - [jstl-include](#jstl-include)
+  - [Attribute manipulation](#attribute-manipulation)
+  - [Event handler](#event-handler)
   - [jstl-async](#jstl-async)
   - [jstl-tagname](#jstl-tagname)
   - [jstl-ignore](#jstl-ignore)
@@ -39,7 +39,7 @@ The reimplementation has two goals:
 *Both goals has been fully achieved.*
 
 
-# 1. Basic usage
+# Basic usage
 
 **NPM**
 
@@ -84,13 +84,13 @@ Renderer.render({container, template, data: {}});
 </html>
 ```
 
-# 2. Template File
+# Use Template File
 
 
 
-# 3. Template functionality
+# Template functionality
 
-# Expressions
+## Expressions
 
 ---
 The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
@@ -123,7 +123,7 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 )
 
 
-# Text content
+## Text content
 
 ---
 **Data context used by following examples**
@@ -193,7 +193,7 @@ It is recommended to use `jstl-text-unsecure` only, if the content save.
 
 
 
-# jstl-if
+## jstl-if
 
 ---
 The `jstl-if` directive evaluate an expression to a boolean value. If the expression value evaluated to `true` the tag with content would be included at result. By `false` the tag would not be rendered.
@@ -203,7 +203,7 @@ The `jstl-if` directive evaluate an expression to a boolean value. If the expres
 <div jstl-if="${true}">included</div>
 ```
 
-# jstl-choose - jstl-when - jstl-otherwise
+## jstl-choose - jstl-when - jstl-otherwise
 
 ---
 This is the equivalent of `if - if else - else` structure. The direct content of a tag marked by `jstl-choose` (selector: `[jstl-choose] > *`) readed. The first tag with `jstl-when`, with an expression evaluated to `true`, would be rendered. Every else are removed. If the expression value of all `jstl-when` evaluated to be `false`, in this case the a tag with `jstl-otherwise` are rendered, if available.
@@ -216,7 +216,7 @@ This is the equivalent of `if - if else - else` structure. The direct content of
 </div>
 ```
 
-# jstl-foreach
+## jstl-foreach
 
 ---
 This provide the capabillity to loop over an array. The content of would be repeated and rendered with every element of array.
@@ -272,19 +272,19 @@ Set a varname for a meta data and state of the current iteration. The default va
 
 
 
-# jstl-repeat
+## jstl-repeat
 
 ---
-# jstl-data
+## jstl-data
 
 ---
-# jstl-include
+## jstl-include
 
 ---
-# Attributes
+## Attribute manipulation
 
 ---
-## Event Handler
+## Event handler
 
 ---
 ## jstl-async
