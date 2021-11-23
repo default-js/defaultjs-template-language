@@ -10,23 +10,23 @@ defaultjs-template-language (`alias: jstl`)
   - [jstl-if](#jstl-if)
   - [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
   - [jstl-foreach](#jstl-foreach)
-  - [## jstl-repeat](#-jstl-repeat)
-  - [## jstl-data](#-jstl-data)
+  - [jstl-repeat](#jstl-repeat)
+  - [jstl-data](#jstl-data)
     - [`jstl-data-mode="remote"`](#jstl-data-moderemote)
     - [`jstl-data-mode="set"`](#jstl-data-modeset)
     - [`jstl-data-mode="direct"`](#jstl-data-modedirect)
-  - [## jstl-include](#-jstl-include)
+  - [jstl-include](#jstl-include)
     - [Additional option](#additional-option)
-  - [## Attribute manipulation](#-attribute-manipulation)
-  - [## Event handler](#-event-handler)
+  - [Attribute manipulation](#attribute-manipulation)
+  - [Event handler](#event-handler)
     - [simple event handler](#simple-event-handler)
     - [delegate events](#delegate-events)
     - [toggle attribute by event](#toggle-attribute-by-event)
     - [toggle class by event](#toggle-class-by-event)
-  - [## jstl-async](#-jstl-async)
-  - [## jstl-tagname](#-jstl-tagname)
-  - [## jstl-ignore](#-jstl-ignore)
-  - [## jstl-on-finished](#-jstl-on-finished)
+  - [jstl-async](#jstl-async)
+  - [jstl-tagname](#jstl-tagname)
+  - [jstl-ignore](#jstl-ignore)
+  - [jstl-on-finished](#jstl-on-finished)
 - [Special Tags](#special-tags)
 - [Javascript API](#javascript-api)
   - [Template](#template)
@@ -279,6 +279,7 @@ Set a varname for a meta data and state of the current iteration. The default va
 ```
 
 ## jstl-repeat
+
 ---
 
 This provide the capabillity to loop over an array. The difference between `jstl-foreach` and `jstl-repeat` is, `jstl-repeat` use the element self as template to be render items of array.
@@ -327,6 +328,7 @@ Set a varname for a meta data and state of the current iteration. The default va
 ```
 
 ## jstl-data
+
 ---
 
 `jstl-data` provides the capability to load and manipulate the data at current data context. The different capabilities are activated by `jstl-data-mode` and one of these values `remote`, `set`, `direct`.
@@ -378,6 +380,7 @@ The `direct` are used to define a static value.
 ```
 
 ## jstl-include
+
 ---
 
 With `jstl-include` it is possible to load a template and execute the template as content of current tag. The url of template can be static or evaluated by an expression.
@@ -398,6 +401,7 @@ With `jstl-include` it is possible to load a template and execute the template a
 > |prepand|prepending the template as content of current tag|
 
 ## Attribute manipulation
+
 ---
 
 The `JSTL` provide the functionality to manipulate the attributes of a tag.
@@ -416,6 +420,7 @@ The `JSTL` provide the functionality to manipulate the attributes of a tag.
 ```
 
 ## Event handler
+
 ---
 
 To make the content interactive by user, it is possible to define event handler. Event handler can be global function, function of current render context or fetch one event and delegate the event by a new event.
@@ -460,15 +465,19 @@ To make the content interactive by user, it is possible to define event handler.
 
 
 ## jstl-async
+
 ---
 
 ## jstl-tagname
+
 ---
 
 ## jstl-ignore
+
 ---
 
 ## jstl-on-finished
+
 ---
 
 
