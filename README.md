@@ -6,9 +6,9 @@ defaultjs-template-language (`alias: jstl`)
 - [Use Template File](#use-template-file)
 - [Template functionality](#template-functionality)
   - [Expressions](#expressions)
-  - [Text content](#text-content)
+  - [Text content manipulation](#text-content-manipulation)
   - [jstl-if](#jstl-if)
-  - [jstl-choose - jstl-when - jstl-otherwise](#jstl-choose---jstl-when---jstl-otherwise)
+  - [jstl-choose](#jstl-choose)
   - [jstl-foreach](#jstl-foreach)
   - [jstl-repeat](#jstl-repeat)
   - [jstl-data](#jstl-data)
@@ -100,7 +100,6 @@ Renderer.render({container, template, data: {}});
 
 ## Expressions
 
----
 The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
 
 **Basic syntax**
@@ -131,9 +130,8 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 )
 
 
-## Text content
+## Text content manipulation
 
----
 **Data context used by following examples**
 ```javascript
 {
@@ -203,7 +201,6 @@ It is recommended to use `jstl-text-unsecure` only, if the content save.
 
 ## jstl-if
 
----
 The `jstl-if` directive evaluate an expression to a boolean value. If the expression value evaluated to `true` the tag with content would be included at result. By `false` the tag would not be rendered.
 
 ```html
@@ -211,9 +208,8 @@ The `jstl-if` directive evaluate an expression to a boolean value. If the expres
 <div jstl-if="${true}">included</div>
 ```
 
-## jstl-choose - jstl-when - jstl-otherwise
+## jstl-choose
 
----
 This is the equivalent of `if - if else - else` structure. The direct content of a tag marked by `jstl-choose` (selector: `[jstl-choose] > *`) readed. The first tag with `jstl-when`, with an expression evaluated to `true`, would be rendered. Every else are removed. If the expression value of all `jstl-when` evaluated to be `false`, in this case the a tag with `jstl-otherwise` are rendered, if available.
 
 ```html
@@ -226,7 +222,6 @@ This is the equivalent of `if - if else - else` structure. The direct content of
 
 ## jstl-foreach
 
----
 This provide the capabillity to loop over an array. The content of element would be repeated and rendered with every element of array.
 
 ```javascript
@@ -280,8 +275,6 @@ Set a varname for a meta data and state of the current iteration. The default va
 
 ## jstl-repeat
 
----
-
 This provide the capabillity to loop over an array. The difference between `jstl-foreach` and `jstl-repeat` is, `jstl-repeat` use the element self as template to be render items of array.
 
 ```javascript
@@ -328,8 +321,6 @@ Set a varname for a meta data and state of the current iteration. The default va
 ```
 
 ## jstl-data
-
----
 
 `jstl-data` provides the capability to load and manipulate the data at current data context. The different capabilities are activated by `jstl-data-mode` and one of these values `remote`, `set`, `direct`.
 
@@ -381,8 +372,6 @@ The `direct` are used to define a static value.
 
 ## jstl-include
 
----
-
 With `jstl-include` it is possible to load a template and execute the template as content of current tag. The url of template can be static or evaluated by an expression.
 
 ```html
@@ -402,8 +391,6 @@ With `jstl-include` it is possible to load a template and execute the template a
 
 ## Attribute manipulation
 
----
-
 The `JSTL` provide the functionality to manipulate the attributes of a tag.
 
 > To define a condition for an attribute, prefix the attribute name by `?` and include this new attribute with an expression.
@@ -420,8 +407,6 @@ The `JSTL` provide the functionality to manipulate the attributes of a tag.
 ```
 
 ## Event handler
-
----
 
 To make the content interactive by user, it is possible to define event handler. Event handler can be global function, function of current render context or fetch one event and delegate the event by a new event.
 
@@ -466,20 +451,11 @@ To make the content interactive by user, it is possible to define event handler.
 
 ## jstl-async
 
----
-
 ## jstl-tagname
-
----
 
 ## jstl-ignore
 
----
-
 ## jstl-on-finished
-
----
-
 
 # Special Tags
 
