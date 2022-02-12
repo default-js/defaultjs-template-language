@@ -19,7 +19,7 @@ defaultjs-template-language (`alias: jstl`)
     - [Additional option](#additional-option)
   - [Attribute manipulation](#attribute-manipulation)
   - [Event handler](#event-handler)
-    - [simple event handler](#simple-event-handler)
+    - [add event handler](#add-event-handler)
     - [delegate events](#delegate-events)
     - [toggle attribute by event](#toggle-attribute-by-event)
     - [toggle class by event](#toggle-class-by-event)
@@ -28,10 +28,10 @@ defaultjs-template-language (`alias: jstl`)
   - [jstl-ignore](#jstl-ignore)
   - [jstl-on-finished](#jstl-on-finished)
 - [Special Tags](#special-tags)
+  - [Tag `jstl`](#tag-jstl)
 - [Javascript API](#javascript-api)
   - [Template](#template)
   - [Renderer](#renderer)
-  - [Renderer Dom Events](#renderer-dom-events)
   - [Custom Directives](#custom-directives)
   - [Custom Tags](#custom-tags)
 
@@ -45,7 +45,6 @@ The reimplementation has two goals:
 2. **Secondary goal** is to improve the performence.
 
 *Both goals has been fully achieved.*
-
 
 # Basic usage
 
@@ -63,9 +62,7 @@ const template = await Template.load(new URL("/path/to/a/template.tpl.html", loc
 Renderer.render({container, template, data: {}});
 ```
 
-
 **Script Tag**
-
 
 ```html
 <html>
@@ -94,8 +91,6 @@ Renderer.render({container, template, data: {}});
 
 # Use Template File
 
-
-
 # Template functionality
 
 ## Expressions
@@ -103,11 +98,13 @@ Renderer.render({container, template, data: {}});
 The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
 
 **Basic syntax**
+
 ```javascript
 ${varname|javascript}
 ```
 
 **Examples**
+
 ```javascript
 /*
 const data = {
@@ -129,10 +126,10 @@ ${ await fn() }
 The execution engine is implemented with [defaultjs-expression-language](https://github.com/default-js/defaultjs-expression-language
 )
 
-
 ## Text content manipulation
 
 **Data context used by following examples**
+
 ```javascript
 {
     hello: "hello",
@@ -143,6 +140,7 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 ```
 
 **Example: simple text**
+
 ```html
 <!--template-->
 <div>${hallo} ${world}</div>
@@ -151,8 +149,8 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 <div>hello world</div>
 ```
 
-
 **Example: long text with trim length**
+
 ```html
 <!--template-->
 <div jstl-text-trim-length="15">${longText}</div>
@@ -196,8 +194,6 @@ It is recommended to use `jstl-text-unsecure` only, if the content save.
 <!--output-->
 <div><b>hello world</b><script type="application/javascript">alert("unsecure")</script></div>
 ```
-
-
 
 ## jstl-if
 
@@ -410,9 +406,9 @@ The `JSTL` provide the functionality to manipulate the attributes of a tag.
 
 To make the content interactive by user, it is possible to define event handler. Event handler can be global function, function of current render context or fetch one event and delegate the event by a new event.
 
-> it is possible to add an event handler under a condition. Prefix the event handler definition with `?` and with an expression value. 
+> it is possible to add an event handler under a condition. Prefix the event handler definition with `?` and with an expression value.
 
-### simple event handler
+### add event handler
 
 >syntax: @[event]="[action]"
 
@@ -429,6 +425,7 @@ To make the content interactive by user, it is possible to define event handler.
 <div @click:delegate="my-custom-event"></div>
 <div ?@click:delegate="${condition}" @click:delegate="my-custom-event"></div>
 ```
+
 ### toggle attribute by event
 
 >syntax: @[event]:toggleAttribute:[attribute name]="[selector of target element]"
@@ -447,17 +444,118 @@ To make the content interactive by user, it is possible to define event handler.
 <div ?@click:toggleAttribute:test-class="${condition}" @click:toggleAttribute:test-class="#id-of-target-element"></div>
 ```
 
-
-
 ## jstl-async
+
+`jstl-async` provide the capability to decouple a subtree of rendering path.
+
+```html
+    <div jstl-async><!-- at this point, its starts a new renderer and decoupling from the previous renderer -->
+    </div>
+```
 
 ## jstl-tagname
 
+The `jstl-tagname` is useful to dynamiclly creates a tag or change the tagname by using expressions.
+
+```html
+<!--
+    render context: {
+        tagname: "span",
+        content: "some content"
+    }
+-->
+
+<jstl jstl-tagname="${tagname}">${content}</jstl>
+<div jstl-tagname="${tagname}">${content}</div>
+
+<!-- output -->
+<span>some content</span>
+<span>some content</span>
+
+```
+
 ## jstl-ignore
+
+`jstl-ignore` flag a subtree to be ignored by renderer. The renderer includes the subtree unprocessed directly into the rendering result.
+
+```html
+<!--
+    render context: {
+        text1: "some text",
+        text2: "another text"
+    }
+-->
+<div>
+    ${text1}
+    <div jstl-ignore>${text2}</div>
+</div>
+
+<!-- output -->
+<div>
+    some text
+    <div>${text2}</div>
+</div>
+
+```
 
 ## jstl-on-finished
 
+>experimentelle feature
+
 # Special Tags
+
+## Tag `jstl`
+
+The tag `jstl` to use rendering functicality without visual dom structures. The `jstl` tag would be replaces by the content of the render result. If no content avalilable, the tag would be removed.
+
+```html
+<!--
+    render context: {
+        text1: "some text",
+        text2: "another text"
+        array: [
+            {text: "text 1"},
+            {text: "text 2"},
+            {text: "text 3"}
+        ]
+    }
+-->
+<div>
+    <!-- case 1 -->
+    <jstl>
+        ${text1}
+        <div>${text2}</div>
+    </jstl>
+
+    <!-- case 2 -->
+    <jstl jstl-foreach="${array}" jstl-foreach-var="item">
+        <div>${item.text}</div>
+    </jstl>
+
+    <!-- case 3 -->
+    <jstl jstl-data="${ text1 + ', ' + text2}" jstl-data-mode="set" jstl-data-var="result">
+        ${result}
+    </jstl>
+
+</div>
+
+
+<!-- output -->
+<div>
+    <!-- case 1 -->
+    some text
+    <div>another text</div>
+
+    <!-- case 2 -->
+    <div>text 1</div>
+    <div>text 2</div>
+    <div>text 3</div>
+
+    <!-- case 3 -->
+    some text, another text
+</div>
+
+```
 
 # Javascript API
 
@@ -465,9 +563,6 @@ To make the content interactive by user, it is possible to define event handler.
 
 ## Renderer
 
-## Renderer Dom Events
-
 ## Custom Directives
 
 ## Custom Tags
-
