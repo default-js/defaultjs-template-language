@@ -52,13 +52,19 @@ const getTemplate = (node) => {
 	try {
 		template = find(value).first();
 		if (!!template) return template;
-	} catch (e) { }
+	} catch (e) {}
 	return new URL(value, location);
 };
 
-
 export default class Template {
-	constructor(template, key) {
+
+	/**
+	 * Create an instance of template.
+	 * 
+	 * @param template type of HTMLTemplateElement. Not null.
+	 * @param key identifier at cache, if template to be cached.
+	 */
+	constructor(/** @type {HTMLTemplateElement} */ template,/** @type {string} */ key) {
 		this.template = template;
 		this.key = key;
 	}
@@ -94,14 +100,13 @@ export default class Template {
 	}
 
 	static async loadNodeTemplate(node, defaultTemplate, cache, alias) {
-		try{
+		try {
 			const template = getTemplate(node);
-			if (template)
-				return Template.load(template, cache, alias);
-		}catch(e){
+			if (template) return Template.load(template, cache, alias);
+		} catch (e) {
 			console.warn("Can't load template from node!", node, e);
 		}
 
 		return defaultTemplate;
-	};
-};
+	}
+}

@@ -31,7 +31,13 @@ defaultjs-template-language (`alias: jstl`)
   - [Tag `jstl`](#tag-jstl)
 - [Javascript API](#javascript-api)
   - [Template](#template)
+    - [`new Tempate(template)`](#new-tempatetemplate)
+    - [`load(template, cache, alias)` ⇒ `Template`](#loadtemplate-cache-alias--template)
+    - [`fetch(url, cache, alias)` ⇒ `Template`](#fetchurl-cache-alias--template)
+    - [`loadNodeTemplate(node, defaultTemplate, cache, alias)` ⇒ `Template`](#loadnodetemplatenode-defaulttemplate-cache-alias--template)
   - [Renderer](#renderer)
+    - [`new Renderer(template, data)`](#new-renderertemplate-data)
+    - [`render(option)`](#renderoption)
   - [Custom Directives](#custom-directives)
   - [Custom Tags](#custom-tags)
 
@@ -73,7 +79,7 @@ Renderer.render({container, template, data: {}});
         //script file is located at dist directory
         <script type="application/javascript" src="/path/to/defaultjs-template-languange.min.js" />
         <script type="application/javascript">
-        const {Template, Renderer} = defaultjs.jstl;
+        const {Template, Renderer} = defaultjs.tl;
         const container = document.getElementById("MyContainterToRenderInto");
 
         const render = async () {
@@ -561,7 +567,103 @@ The tag `jstl` to use rendering functicality without visual dom structures. The 
 
 ## Template
 
+```javascript
+// import the template class
+import { Template } from "@default-js/defauljs-template-language";
+```
+
+### `new Tempate(template)`
+
+Create a instance of `Template`.
+
+**Kind**: constructor
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| template  | `HTMLTemplateElement` | template definition - `required` | |
+| key | `string` | identifire at cache - `optional` | `null` |
+
+Additional to the constructor, the template class provide some static methods to create template instance.
+
+### `load(template, cache, alias)` ⇒ `Template`
+
+Create a instance of `Template` by `string`, `URL`, `Node`, `NodeList`, `HTMLCollection` or `Template`.
+
+**Kind**: static function
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| template  | `string`, `URL`, `Node`, `NodeList`, `HTMLCollection` or `Template` | source of template - `required` | |
+| cache | `boolean` | store the template at cache - `optional` | `true` |
+| alias | `string` | store the template at cache - `optional` | `null` |
+
+### `fetch(url, cache, alias)` ⇒ `Template`
+
+Create a instance of `Template` by a url as `string` or `URL`.
+
+**Kind**: static function
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| url  | `string`, `URL` | source of template - `required` | |
+| cache | `boolean` | store the template at cache - `optional` | `true` |
+| alias | `string` | store the template at cache - `optional` | `null` |
+
+### `loadNodeTemplate(node, defaultTemplate, cache, alias)` ⇒ `Template`
+
+Attempts to determine a `Template` based on a `Node`.
+
+This function makes several steps to attempting a `Template` by following order:
+
+1. Search for a `HTMLTemplateElement` as child of `Node` (selector: `:scope > template`)
+2. Evaluate the attribute `template` at `Node` as a query selector
+3. Evaluate the attribute `template` at `Node` as a `URL`
+
+**Kind**: static function
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| url  | `Node` | Node to be attempting the Template - `required` | |
+| defaultTemplate  | `Template` | fallback `Template`, if no template found - `optional` | `null` |
+| cache | `boolean` | store the template at cache - `optional` | `true` |
+| alias | `string` | store the template at cache - `optional` | `null` |
+
 ## Renderer
+
+```javascript
+// import the template class
+import { Renderer } from "@default-js/defauljs-template-language";
+```
+
+### `new Renderer(template, data)`
+
+Create a instance of `Renderer`.
+
+**Kind**: constructor
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| template  | `Template` | template definition - `required` | |
+| data | `Object` | base data to render a template - `optional` | `null` |
+
+### `render(option)`
+
+Execute the rendering process.
+
+**Kind**: constructor
+
+| Param  | Type     | Description  | Default |
+| ------ | -------- | ------------ | ------- |
+| option | `Object` | option to specify the rendering - `required` |  |
+
+**option**: Option to specify the how, what and where to be render
+
+| Properties     | Type          | Description  | Default |
+| -------------- | ------------- | ------------ | ------- |
+| container      | `HTMLElement` | element where to be render the template into - `required` | |
+| template       | `Template`    | the template that to be render. - `optional` | template from the renderer |
+| data           | `Object`      | data for rendering - `optional` | |
+| mode           | `string`      | possible options [`append`, `prepend`,`replace`] - `optional` | `replace` |
 
 ## Custom Directives
 
