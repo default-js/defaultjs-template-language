@@ -10,24 +10,30 @@ const EVENTFUNCTIONS = {
 	},
 	toggleclass: async (event, handle, setting, type, resolver, content, options, context) => {
 		const clazz = options.shift();
-		const selector = await resolver.resolveText(handle, handle);		
+		const selector = handle ? await resolver.resolveText(handle, handle) : null;		
 		content.on(event, (event) => {
 			event.preventDefault();
-			content.closests(selector).toggleClass(clazz);
+			if(selector)
+				content.closests(selector).toggleClass(clazz);
+			else
+				content.toggleClass(clazz);
 		});
 	},
 	toggleattribute: async (event, handle, setting, type, resolver, content, options, context) => {
 		const attribute = options.shift();
-		const selector = await resolver.resolveText(handle, handle);		
+		const selector = handle ? await resolver.resolveText(handle, handle) : null;		
 		content.on(event, (event) => {
 			event.preventDefault();
-			content.closests(selector).forEach(element => {
-				element.toggleAttribute(attribute)				
-			});
+			if(selector)
+				content.closests(selector).forEach(element => {
+					element.toggleAttribute(attribute)				
+				});
+			else 
+				content.toggleAttribute(attribute);
 		});
 	},
 	[DEFAULT_EVENT_FUNCTION]: async (event, handle, setting, type, resolver, content, options, context) => {
-		const eventhandle = await resolver.resolve(handle, handle);
+		const eventhandle = handle ? await resolver.resolve(handle, handle) : null;
 
 		if (!eventhandle) console.error(new Error("Can't resolve \"" + handle + '" to event handle!'));
 		else if (typeof eventhandle === "function") content.on(event, eventhandle);
@@ -69,14 +75,18 @@ const bindEvent = async ({ condition, name, value, context }) => {
 	let split = name.split(":");
 	const event = split.shift();
 	const type = (split.shift() || DEFAULT_EVENT_FUNCTION).toLowerCase();
+	
+	if(typeof handle === "undefined" || handle == null)
+		console.error(`Definition of "${event}" - event handle at`, content, "is incorrect!");
 
+	handle = handle.trim();
 	const setting = {
-		bubble: false,
+		bubble: true,
 	};
 
-	if (condition && handle) {
+	if (condition ) {
 		if ((await resolver.resolve(condition, false)) == true) await binding(event, handle, setting, type, resolver, content, split, context);
-	} else if (handle) await binding(event, handle, setting, type, resolver, content, split, context);
+	} else await binding(event, handle, setting, type, resolver, content, split, context);
 };
 
 const binding = async (event, handle, setting, type, resolver, content, options, context) => {

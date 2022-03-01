@@ -446,8 +446,9 @@ To make the content interactive by user, it is possible to define event handler.
 >syntax: @[event]:toggleClass:[class name]="[selector of target element]"
 
 ```html
-<div @click:toggleAttribute:test-class="#id-of-target-element"></div>
-<div ?@click:toggleAttribute:test-class="${condition}" @click:toggleAttribute:test-class="#id-of-target-element"></div>
+<div @click:toggleClass:test-class=""></div>
+<div @click:toggleClass:test-class="#id-of-target-element"></div>
+<div ?@click:toggleclass:test-class="${condition}" @click:toggleAttribute:test-class="#id-of-target-element"></div>
 ```
 
 ## jstl-async
