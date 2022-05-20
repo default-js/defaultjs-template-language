@@ -18,8 +18,8 @@ module.exports = merge(common, {
 		port: 80,
 	},
 	output: {
-		filename: "[name]-" + project.buildname + ".js",
-		path: path.resolve(__dirname, "dist"),
+		filename: project.buildname + ".js",
+		path: path.resolve(__dirname, "WebContent"),
 	},
 	plugins: [new webpack.HotModuleReplacementPlugin()],
 });

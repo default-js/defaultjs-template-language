@@ -1,0 +1,20 @@
+.visiblity-toggle:not(.show) {
+    display: none;
+}
+
+.dropdown-menu{
+    position: relative;
+ }
+ .dropdown-menu-content{
+     position: absolute;
+     top: calc(100% + 1px);
+     left: -1px;
+
+     background: lightgray;
+     border: solid 1px gray;
+ }
+
+.dropdown-menu:not(.show) .dropdown-menu-content{
+    display: none;
+
+}

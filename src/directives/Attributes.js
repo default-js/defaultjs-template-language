@@ -3,6 +3,8 @@ import Directive from "../Directive.js";
 const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
 
 const DEFAULT_EVENT_FUNCTION = "default";
+const OPTION_PREVENT_DEFAULT = "prevent-default"
+
 const EVENTFUNCTIONS = {
 	delegate: async (event, handle, setting, type, resolver, content, options, context) => {
 		const eventhandle = await resolver.resolveText(handle, handle);
@@ -10,9 +12,11 @@ const EVENTFUNCTIONS = {
 	},
 	toggleclass: async (event, handle, setting, type, resolver, content, options, context) => {
 		const clazz = options.shift();
+		const preventDefault = options.includes(OPTION_PREVENT_DEFAULT);
 		const selector = handle ? await resolver.resolveText(handle, handle) : null;		
 		content.on(event, (event) => {
-			event.preventDefault();
+			if(preventDefault)
+				event.preventDefault();
 			if(selector)
 				content.closests(selector).toggleClass(clazz);
 			else
@@ -21,9 +25,11 @@ const EVENTFUNCTIONS = {
 	},
 	toggleattribute: async (event, handle, setting, type, resolver, content, options, context) => {
 		const attribute = options.shift();
+		const preventDefault = options.includes(OPTION_PREVENT_DEFAULT);
 		const selector = handle ? await resolver.resolveText(handle, handle) : null;		
 		content.on(event, (event) => {
-			event.preventDefault();
+			if(preventDefault)
+				event.preventDefault();
 			if(selector)
 				content.closests(selector).forEach(element => {
 					element.toggleAttribute(attribute)				
