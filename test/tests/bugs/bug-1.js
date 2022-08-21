@@ -3,7 +3,7 @@
 
 */
 
-import Renderer from "@src/Renderer.js";
+import Renderer from "../../../src/Renderer.js";
 
 describe("Attribute Test - ", () => {
 
