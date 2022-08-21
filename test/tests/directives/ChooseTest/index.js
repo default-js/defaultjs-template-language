@@ -1,5 +1,4 @@
-import Renderer from "@src/Renderer.js";
-import Template from "@src/Template.js";
+import {Renderer, Template} from "../../../../index";
 
 describe("Choose Test - ", () => {
 	

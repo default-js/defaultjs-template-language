@@ -1,4 +1,4 @@
-import Template from "@src/Template.js";
+import { Template } from "../../../index";
 
 describe("Template Cache Test - Template.load()", () => {
 	

@@ -1,4 +1,4 @@
-import Renderer from "@src/Renderer.js";
+import {Renderer} from "../../../../index";
 
 describe("Data Test - ", () => {
 	

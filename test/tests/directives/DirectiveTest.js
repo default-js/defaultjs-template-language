@@ -1,5 +1,5 @@
-import Directive from "@src/Directive.js";
-import "@src/directives";
+import Directive from "../../../src/Directive";
+import "../../../src/directives";
 
 describe("Test directive chain - ", () => {
 	
