@@ -7,16 +7,23 @@ const MODE_APPEND = "append";
 const MODE_PREPEND = "prepend";
 const MODE_REPLACE = "replace";
 
+const PRECHECK = /^#.+$/;
+
 const getElement = async (template, resolver) => {
-	const expression = template.attr(ATTRIBUTE__ATTACHELEMENT);
-	try{
-		//check first, if an element find on document by expression
-		const result = find(expression)
-		if(result && result.length > 0)
-			return result.length == 0 ? result.first() : result;
-	}catch(e){}
-	const element = await resolver.resolve(expression);	
-	if (element instanceof HTMLElement) return element;
+	let element = (template.attr(ATTRIBUTE__ATTACHELEMENT) || "").trim();
+	if (!PRECHECK.test(element)) {
+		try {
+			element = await resolver.resolve(element, element);
+		} catch (e) {}
+		if (element instanceof HTMLElement) return element;
+	}
+
+	try {
+		element = find(element);
+	} catch (e) {}
+
+	if (element && element.length > 0) return element.length == 0 ? element.first() : element;
+
 	return null;
 };
 

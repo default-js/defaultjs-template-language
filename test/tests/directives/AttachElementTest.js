@@ -72,6 +72,23 @@ describe("Attach element Test", () => {
 
 		span.remove();
 	});
+
+	it("element by selector - dynamic", async () => {
+		const selector ="attach-element-test-by-selector";
+		const span = create(`<span id="${selector}"></span>`).first();
+		document.body.append(span);
+
+		const container = document.createElement("div");		
+		const renderer = await Renderer.build({template: `<div jstl-attach-element="\${selector}"></div>`});
+		
+		await renderer.render({container, data: {selector: `#${selector}`}});
+		
+		let element = container.children[0];
+		expect(element.children.length).toBe(1);
+		expect(element.children[0]).toBe(span);
+
+		span.remove();
+	});
 	
 	afterAll(() => {});
 });
