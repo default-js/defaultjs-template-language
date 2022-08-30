@@ -15,8 +15,10 @@ defaultjs-template-language (`alias: jstl`)
     - [`jstl-data-mode="remote"`](#jstl-data-moderemote)
     - [`jstl-data-mode="set"`](#jstl-data-modeset)
     - [`jstl-data-mode="direct"`](#jstl-data-modedirect)
-  - [jstl-include](#jstl-include)
+  - [`jstl-include`](#jstl-include)
     - [Additional option](#additional-option)
+  - [`jstl-attach-element`](#jstl-attach-element)
+    - [Additional option](#additional-option-1)
   - [Attribute manipulation](#attribute-manipulation)
   - [Event handler](#event-handler)
     - [add event handler](#add-event-handler)
@@ -372,7 +374,7 @@ The `direct` are used to define a static value.
 <div>hello world</div>
 ```
 
-## jstl-include
+## `jstl-include`
 
 With `jstl-include` it is possible to load a template and execute the template as content of current tag. The url of template can be static or evaluated by an expression.
 
@@ -385,11 +387,33 @@ With `jstl-include` it is possible to load a template and execute the template a
 
 `jstl-include-mode`
 
-> |value||
-> |-|-|
-> |replace|replacing the content of current tag|
-> |append|appending the template as content of current tag|
-> |prepand|prepending the template as content of current tag|
+|value||
+|-|-|
+|replace|replacing the content of current tag|
+|append|appending the template as content of current tag|
+|prepand|prepending the template as content of current tag|
+
+## `jstl-attach-element`
+
+`jstl-attach-element` provide the capability to include a existing dom object by javascript object reference or by a query selector string. 
+
+> The attached element dosen`t process. It would be included only!
+
+```html
+<div jstl-attach-element="${domElement}"></div>
+<div jstl-attach-element="${querySelector}"></div>
+<div jstl-attach-element="[querySelector]"></div>
+```
+
+### Additional option
+
+`jstl-attach-element-mode`
+
+|value||
+|-|-|
+|replace|replacing the content by resolved element|
+|append|append resolved element, after current element is completely rendered|
+|prepand|prepend resolved element, after current element is completely rendered|
 
 ## Attribute manipulation
 
@@ -407,6 +431,8 @@ The `JSTL` provide the functionality to manipulate the attributes of a tag.
 <!-- check if attribute including and set value by an expression-->
 <div ?attribute="${value}" attrbute="${value}"></div>
 ```
+
+
 
 ## Event handler
 

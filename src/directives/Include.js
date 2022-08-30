@@ -30,7 +30,8 @@ class Include extends Directive {
 			const subContext = context.subContext({ template: include, container: context.content, mode});
 			await renderer.render(subContext);
 			await subContext.ready();
-			context.ignore;
+			context.ignore = true;
+			context.stop = true;
 
 			return context;
 		} catch (e) {

@@ -16,6 +16,7 @@ describe("Test directive chain - ", () => {
 			"jstl-repeat",		
 			"attribute",
 			"text",
+			"attach-element",
 			"on-finished"
 		];
 		
