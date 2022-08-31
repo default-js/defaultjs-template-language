@@ -50,10 +50,9 @@ class Initial extends Directive {
 		} else if (template.tagName) {
 			let is = template.attr("is");
 			if(is){
-				template.attr("is", null);
-				is  = await resolver.resolveText(is);
-				const element = document.createElement(template.tagName, { is })
-				element.attr("is", is);				
+				is = await resolver.resolveText(is);
+				const element = document.createElement(template.tagName, { is });
+				element.attr("is", is);
 				context.content = element;
 			}else
 				context.content =  document.createElement(template.tagName);

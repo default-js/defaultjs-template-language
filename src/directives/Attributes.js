@@ -4,6 +4,7 @@ const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
 
 const DEFAULT_EVENT_FUNCTION = "default";
 const OPTION_PREVENT_DEFAULT = "prevent-default"
+const IGNORED_ATTRIBUTES = ["is"];
 
 const EVENTFUNCTIONS = {
 	delegate: async (event, handle, setting, type, resolver, content, options, context) => {
@@ -128,7 +129,7 @@ class Attribute extends Directive {
 		const { template } = context;
 		if (!(template instanceof HTMLElement)) return context;
 
-		const processed = new Set();
+		const processed = new Set(IGNORED_ATTRIBUTES);
 		for (const attribute of template.attributes) {
 			const [, jstl, condition, event, name] = ATTRIBUTE_NAME.exec(attribute.name);
 			if (!jstl && !processed.has(name)) {
