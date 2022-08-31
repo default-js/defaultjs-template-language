@@ -1,7 +1,7 @@
 {
 	"name": "@default-js/defaultjs-template-language",
 	"buildname": "defaultjs-template-language",
-	"version": "1.6.7",
+	"version": "1.6.8",
 	"description": "template language to compute html content with javascript and/or remote json data. If, foreach, include, choose and many more function, usable as declarative syntax!",
 	"main": "./index.js",
 	"scripts": {
@@ -54,6 +54,7 @@
 		"src/**",
 		"dist/**",
 		"LICENSE",
-		"README.md"
+		"README.md",
+		"package.json"
 	]
 }
