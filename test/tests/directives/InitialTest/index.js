@@ -1,5 +1,17 @@
 import { Renderer } from "../../../../index";
 
+
+
+class ExtDivTestElement extends HTMLDivElement{
+	constructor(){
+		super();
+		console.log("test div element")
+	}
+};
+
+customElements.define("test-div", ExtDivTestElement, {extends: "div"});
+
+
 describe("InitialDirective Test - ", () => {
 
 	beforeAll(() => { });
@@ -88,6 +100,18 @@ describe("InitialDirective Test - ", () => {
 		expect(element instanceof HTMLSpanElement).toBe(true);
 		expect(element.attr("test-attr")).toBe("attr");
 		expect(element.children.length).toBe(3);
+	});
+
+
+	it("initial with \"is\" directive", async () => {
+		const renderer = await Renderer.build({ template: `<div is="test-div" test="test"></div>` });
+		const container = create("<div></div>").first();
+		await renderer.render({ container , data : {}});
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element instanceof ExtDivTestElement).toBe(true);
+		expect(element.attr("is")).toBe("test-div");
 	});
 	
 
