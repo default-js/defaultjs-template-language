@@ -12,7 +12,9 @@ class Choose extends Directive {
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || !context.template.hasAttribute("jstl-choose") || context.template.children.length == 0)
 			return context;
-
+		
+		//clone template, before manipulate template
+		context.template = context.template.cloneNode(true);
 		const { template, resolver } = context;
 		let resolved = false;
 		const whens = template.find(":scope > [jstl-when]");

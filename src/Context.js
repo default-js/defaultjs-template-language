@@ -48,28 +48,38 @@ const toTemplate = (template) => {
 
 let id = 0;
 export default class Context {
-	constructor({ resolver, renderer, template, container, root, mode = "replace", target = null, parent = null, ignoreDirective }) {
+	#id;
+	#depth;
+	#parent;
+	#renderer;
+	#root;
+	#template;
+	#mode;
+	#subcontexts;
+	#wait;
+	#ignoreDirectives;
+	#callbacks;
+
+	constructor({ content = null, resolver, renderer, template, container, root, mode = "replace", target = null, parent = null, wait = null, callbacks = null, ignoreDirective }) {
 		if (!resolver) throw new Error('Parameter "resolver" is required!');
 		if (!renderer) throw new Error('Parameter "renderer" is required!');
 		if (!template) throw new Error('Parameter "template" is required!');
 		if (!container) throw new Error('Parameter "container" is required!');
 		if (!root) throw new Error('Parameter "root" is required!');
 
-		defValue(this, "id", parent ? `${parent.id}->${id++}` : `root::${id++}`);
-		defValue(this, "depth", parent ? parent.depth + 1 : 0);
-		defValue(this, "parent", parent);
-		//defValue(this, "resolver", resolver);
-		defValue(this, "renderer", renderer);
-		defValue(this, "root", root);
-		defValue(this, "template", toTemplate(template));
-		defValue(this, "mode", mode);
-		defValue(this, "subcontexts", new Set());
-		const wait = lazyPromise();
-		privateProperty(this, PRIVATE_IGNOREDIRECTIVES, ignoreDirective instanceof Set ? ignoreDirective : new Set());
-		privateProperty(this, PRIVATE_WAIT, wait);
-		privateProperty(this, PRIVATE_CALLBACKS, []);
+		this.#id = parent ? `${parent.id}->${id++}` : `root::${id++}`;
+		this.#depth = parent ? parent.depth + 1 : 0;
+		this.#parent = parent;
+		this.#renderer = renderer;
+		this.#root = root;
+		this.#template = toTemplate(template);
+		this.#mode = mode;
+		this.#subcontexts = new Set();
+		this.#wait = wait ? wait : lazyPromise();
+		this.#ignoreDirectives = ignoreDirective instanceof Set ? ignoreDirective : new Set();
+		this.#callbacks = callbacks instanceof Array ? callbacks : [];
 
-		this.content = null;
+		this.content = content;
 		this.container = container;
 		this.target = target;
 		this.resolver = resolver;
@@ -85,17 +95,46 @@ export default class Context {
 		}
 	}
 
+	get id() {
+		return this.#id;
+	}
+	get depth() {
+		return this.#depth;
+	}
+	get parent() {
+		return this.#parent;
+	}
+	get renderer() {
+		return this.#renderer;
+	}
+	get root() {
+		return this.#root;
+	}
+	get template() {
+		return this.#template;
+	}
+	set template(template){
+		this.#template = toTemplate(template);
+	}
+
+	get mode() {
+		return this.#mode;
+	}
+	get subcontexts() {
+		return this.#subcontexts;
+	}
+
 	get closed() {
-		return privateProperty(this, PRIVATE_WAIT).resolved;
+		return this.#wait.resolved;
 	}
 
 	ignoreDirective(directive) {
-		const ignoreDirectives = privateProperty(this, PRIVATE_IGNOREDIRECTIVES);
+		const ignoreDirectives = this.#ignoreDirectives;
 		directive instanceof Directive ? ignoreDirectives.add(directive.name) : ignoreDirectives.add(directive);
 	}
 
 	acceptDirective(directive) {
-		const ignoreDirectives = privateProperty(this, PRIVATE_IGNOREDIRECTIVES);
+		const ignoreDirectives = this.#ignoreDirectives;
 		if (directive instanceof Directive) return !(ignoreDirectives.has(directive.name) || ignoreDirectives.has(directive));
 
 		return !ignoreDirectives.has(directive);
@@ -107,13 +146,13 @@ export default class Context {
 	}
 
 	async ready(callback) {
-		const callbacks = privateProperty(this, PRIVATE_CALLBACKS);
+		const callbacks = this.#callbacks;
 		if (callback) {
 			if (callback instanceof Array) callback.forEach((callback) => this.wait.then(callback));
 			else if (callback instanceof Promise) callbacks.push(async () => await callback);
 			else if (typeof callback === "function") callbacks.push(callback);
 		} else {
-			const wait = privateProperty(this, PRIVATE_WAIT);
+			const wait = this.#wait;
 			if (!wait.resolved) {
 				if (!this.ignore) for (let callback of callbacks) await callback(this);
 
@@ -132,8 +171,19 @@ export default class Context {
 		return new Context({ resolver, renderer, template, container, mode, root, target, parent: this, ignoreDirective });
 	}
 
-	clone({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
-		return new Context({ resolver, renderer, template, container, mode, root, target, parent: null, ignoreDirective });
+	clone({ content = this.content, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = this.#ignoreDirectives } = {}) {
+		return new Context({ content, 
+			resolver: this.resolver, 
+			renderer: this.renderer, 
+			template, 
+			container, 
+			root, 
+			mode, 
+			target, 
+			ignoreDirective,
+			wait: this.#wait,
+			callbacks: this.#callbacks
+		 });
 	}
 
 	toRenderOption({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
