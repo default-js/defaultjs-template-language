@@ -1,3 +1,4 @@
+import GLOBAL from "@default-js/defaultjs-common-utils/src/Global.js";
 import Directive from "../Directive.js";
 
 const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
@@ -5,6 +6,9 @@ const ATTRIBUTE_NAME = /(jstl)?(\?)?(@)?([^\?@]+)/i;
 const DEFAULT_EVENT_FUNCTION = "default";
 const OPTION_PREVENT_DEFAULT = "prevent-default"
 const IGNORED_ATTRIBUTES = ["is"];
+
+const FUNCTION_SPLITTER = "::";
+const FUNCTION_SPLITTER_OLD = ":";
 
 const EVENTFUNCTIONS = {
 	delegate: async (event, handle, setting, type, resolver, content, options, context) => {
@@ -79,7 +83,10 @@ const bindEvent = async ({ condition, name, value, context }) => {
 
 	condition = condition ? value : template.attr("?@" + name);
 	let handle = !condition ? value : template.attr("@" + name);
-	let split = name.split(":");
+	let split = name.split(FUNCTION_SPLITTER);
+	if(split.length == 1)
+		split = name.split(FUNCTION_SPLITTER_OLD);
+
 	const event = split.shift();
 	const type = (split.shift() || DEFAULT_EVENT_FUNCTION).toLowerCase();
 	

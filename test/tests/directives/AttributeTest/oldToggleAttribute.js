@@ -1,13 +1,13 @@
 import {Renderer} from "../../../../index"
 
-describe("Attribute->event bind->toggleAttribute -", () => {
+describe("OLD FUNCTION SPLITTER: Attribute->event bind->toggleAttribute -", () => {
 
 	beforeAll(() => { });
 	
 	it("toggleAttribute with target selector", async () => {
 		const container = create("<div></div>").first();
 		const renderer = await Renderer.build({ template: 
-			`<div id="source" @click::toggleAttribute::test="#target"></div>
+			`<div id="source" @click:toggleAttribute:test="#target"></div>
 			<div id="target"></div>
 		` });
 
@@ -24,7 +24,7 @@ describe("Attribute->event bind->toggleAttribute -", () => {
 
 	it("toggleAttribute", async () => {
 		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<div id="target" @click::toggleAttribute::test=""></div>` });
+		const renderer = await Renderer.build({ template: `<div id="target" @click:toggleAttribute:test=""></div>` });
 
 		await renderer.render({ container, data: {} });
 		const target = container.find("#target").first();
