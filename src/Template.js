@@ -109,4 +109,15 @@ export default class Template {
 
 		return defaultTemplate;
 	}
-}
+};
+
+export const toAsyncTemplateLoader = (url) => {
+    let template = null;
+
+    return async () => {
+        if(!template)
+            template = Template.load(url);
+
+        return template;
+    };
+};
