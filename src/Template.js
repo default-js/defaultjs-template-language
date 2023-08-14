@@ -115,8 +115,13 @@ export const toAsyncTemplateLoader = (/*URL*/url) => {
     let template = null;
 
     return async () => {
-        if(!template)
-            template = Template.load(await url);
+        if(!template){
+			if(typeof url === "function")
+				url = await url();
+			else if(url instanceof Promise)
+				url = await url;
+            template = Template.load(url);
+		}
 
         return template;
     };
