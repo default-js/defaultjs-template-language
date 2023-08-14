@@ -111,12 +111,12 @@ export default class Template {
 	}
 };
 
-export const toAsyncTemplateLoader = (url) => {
+export const toAsyncTemplateLoader = (/*URL*/url) => {
     let template = null;
 
     return async () => {
         if(!template)
-            template = Template.load(url);
+            template = Template.load(await url);
 
         return template;
     };
