@@ -1,8 +1,8 @@
-import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils";
-import { defGet, defValue } from "@default-js/defaultjs-common-utils/src/ObjectUtils";
-import { privateProperty } from "@default-js/defaultjs-common-utils/src/PrivateProperty";
-import Directive from "./Directive";
-import Template from "./Template";
+import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils.js";
+import { defGet, defValue } from "@default-js/defaultjs-common-utils/src/ObjectUtils.js";
+import { privateProperty } from "@default-js/defaultjs-common-utils/src/PrivateProperty.js";
+import Directive from "./Directive.js";
+import Template from "./Template.js";
 
 const PRIVATE_WAIT = "wait";
 const PRIVATE_CALLBACKS = "callbacks";

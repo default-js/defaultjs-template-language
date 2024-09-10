@@ -1,5 +1,5 @@
 import Directive from "../Directive.js";
-import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver";
+import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 
 const MODES = {
 	"remote": async ({ data, context }) => {		

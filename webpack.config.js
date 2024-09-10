@@ -1,4 +1,5 @@
 const path = require("path");
+const { merge } = require("webpack-merge");
 const project = require("./package.json");
 const ReplaceInFileWebpackPlugin = require("replace-in-file-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
@@ -23,38 +24,44 @@ module.exports = (env, argv) => {
 			path: path.resolve(__dirname, target),
 		},
 		plugins: (() => {
-			return [
-				new ReplaceInFileWebpackPlugin([
-					{
-						dir: "dist",
-						test: [/\.js$/],
-						rules: [
-							{
-								search: /\$\{version\}/gi,
-								replace: project.version,
-							},
-						],
-					},
-				]),
+
+
+
+            return  [
+                new ReplaceInFileWebpackPlugin([
+                    {
+                        dir: "dist",
+                        test: [/\.js$/],
+                        rules: [
+                            {
+                                search: /\$\{version\}/gi,
+                                replace: project.version,
+                            }
+                        ]
+                    }
+                ]),
 				new CopyPlugin({
-					patterns: [{ from: "./src/css", to: `css`, noErrorOnMissing: true }],
-				}),
-			];
-		})(),
-		devServer: {
-			open: true,
+					patterns: [
+						{ from: "./src/css", to: `css`, noErrorOnMissing: true }
+					]
+				})
+            ]
+        })(),
+        devServer: {
+            open: true,
+			port: 3000,
 			allowedHosts: "all",
 			client: {
 				overlay: true,
 				progress: true,
 				reconnect: true,
 			},
-			devMiddleware: {
+            devMiddleware: {
 				index: true,
 				writeToDisk: false,
 			},
 			static: ["./webcontent", "./src/css"],
-			watchFiles: { paths: ["src/**/*", "./webcontent"] },
-		},
+			watchFiles: { paths: ["src/**/*", "./webcontent/**/*"] }
+        }       
 	};
 };

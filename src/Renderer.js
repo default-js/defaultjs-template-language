@@ -4,8 +4,8 @@ import Template from "./Template.js";
 import Context from "./Context.js";
 import Directive from "./Directive.js";
 import Element from "./Element.js";
-import "./directives";
-import "./elements";
+import "./directives/index.js";
+import "./elements/index.js";
 
 export const SCOPES = {
 	application: "application",
