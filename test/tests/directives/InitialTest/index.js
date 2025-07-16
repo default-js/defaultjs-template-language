@@ -113,6 +113,32 @@ describe("InitialDirective Test - ", () => {
 		expect(element instanceof ExtDivTestElement).toBe(true);
 		expect(element.attr("is")).toBe("test-div");
 	});
+
+
+	it("initial if htmltemplate", async () => {
+		const renderer = await Renderer.build({ template: `<div>
+				<template id="template-test-id">
+					<div>\${text}</div>
+				</template>
+			</div>` });
+		const container = create("<div></div>").first();
+		document.body.append(container);
+		await renderer.render({ container , data : {text:"test"}});
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.children[0];
+		expect(element.tagName).toBe("DIV");
+		expect(element.children.length).toBe(1);
+		element = element.children[0];
+		expect(element.tagName).toBe("TEMPLATE");
+		expect(element.getAttribute("id")).toBe("template-test-id");
+		expect(element.content.children.length).toBe(1);
+		element = element.content.children[0];
+		expect(element.tagName).toBe("DIV");
+		expect(element.textContent).toBe("test");
+
+		container.remove(); 
+	});
 	
 
 	afterAll(() => { });

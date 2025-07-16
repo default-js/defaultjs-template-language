@@ -20,11 +20,11 @@ class Initial extends Directive {
 		const { template, renderer, resolver } = context;
 		if (!(template instanceof Element)) {
 			context.content = document.importNode(template, true);
-		} else if (template.attr("jstl-ignore")) {
+		} else if (template.hasAttribute("jstl-ignore")) {
 			context.content = document.importNode(template, true);
 			context.stop = true;
 			context.ignore = true;
-		} else if (template.attr("jstl-async")) {
+		} else if (template.hasAttribute("jstl-async")) {
 			context.content = new Replace();
 			template.attr("jstl-async", null);
 			const renderOption = context.toRenderOption({ mode: "replace", target: context.content });
@@ -37,7 +37,7 @@ class Initial extends Directive {
 			context.content = document.createElement(template.tagName);
 			const subContext = context.subContext({ template: template.content.childNodes, container: context.content.content });
 			await renderer.render(subContext);
-			context.stop = true;
+			context.stop = false;
 			context.ignore = true;
 		} else if (template.hasAttribute("jstl-tagname")) {
 			let tagname = template.attr("jstl-tagname").trim();
