@@ -1,2 +1,4 @@
-import "@default-js/defaultjs-extdom";
-import "./tests";
+import "@default-js/defaultjs-extdom/index.js";
+import "./setup.js";
+
+import "./tests/index.js";

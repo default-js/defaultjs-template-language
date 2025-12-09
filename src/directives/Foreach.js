@@ -1,5 +1,6 @@
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
+import {isUndefinedOrNullOrBlank, isUndefinedOrNull} from "../Utils.js";
 
 const ATTRIBUTE = {
 	DATA: "jstl-foreach",
@@ -83,9 +84,11 @@ class Foreach extends Directive {
 		context.ignore = true;
 		try {
 			const { template, resolver, renderer, content } = context;
+			const data = (template.attr(ATTRIBUTE.DATA) || "").trim();
+			const count = (template.attr(ATTRIBUTE.COUNT) || "").trim();
 			const option = {
-				data: (template.attr(ATTRIBUTE.DATA) || "").trim(),
-				count: (template.attr(ATTRIBUTE.COUNT) || "").trim(),
+				data,
+				count,
 				start: await resolver.resolve(template.attr(ATTRIBUTE.START) || "0"),
 				step: await resolver.resolve(template.attr(ATTRIBUTE.STEP) || "1"),
 				varname: (template.attr(ATTRIBUTE.VAR) || "item").trim(),
@@ -97,9 +100,9 @@ class Foreach extends Directive {
 				container: content,
 				context
 			};
-			if ((!option.data || option.data == "") && option.count)
+			if (isUndefinedOrNullOrBlank(data) && !isUndefinedOrNullOrBlank(count))
 				await doCount(option);
-			else
+			else if(!isUndefinedOrNullOrBlank(data))
 				await doForeach(option);
 
 		} catch (error) {
