@@ -29,6 +29,22 @@ describe("Foreach Test - ", () => {
 			expect(item.textContent).toBe(i  + "-" + i);			
 		}		
 	});
+
+	it("undefined array", async () => {		
+		const container = create("<div></div>").first();
+		document.body.appendChild(container);		
+		const renderer = await Renderer.build({template: `
+			<div jstl-foreach-count=\"\${data}\" jstl-foreach-var=\"item\" jstl-foreach-status=\"status\">
+				<div>\${item}-\${status.index}</div>
+			</div>`
+		});
+		
+		await renderer.render({container, data : {}});
+		const element = container.children[0];
+		expect(element.children.length).toBe(0);
+
+		container.remove();
+	});
 	
 	afterAll(() => {});
 });

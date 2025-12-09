@@ -12,6 +12,17 @@ const ATTRIBUTE = {
 	CONDITION: "jstl-foreach-condition"
 };
 
+
+/**
+ * @param {object} option 
+ * @param {number} option.start 
+ * @param {number} option.step 
+ * @param {number} option.count 
+ * @param {string} option.varname 
+ * @param {string} option.status 
+ * @param {ExpressionResolver} option.resolver 
+ * @returns {Promise<void>}
+ */
 const doCount = async (option) => {
 	let { start, step, count, varname, status, resolver } = option;
 
@@ -31,10 +42,23 @@ const doCount = async (option) => {
 	}
 };
 
+
+
+/**
+ * @param {object} option 
+ * @param {Array<any>|any} option.data 
+ * @param {number} option.start 
+ * @param {number} option.step 
+ * @param {number} option.count 
+ * @param {string} option.varname 
+ * @param {string} option.status 
+ * @param {ExpressionResolver} option.resolver 
+ * @returns {Promise<void>}
+ */
 const doForeach = async (option) => {
 	let { data, start, step, count, varname, status, resolver } = option;
 
-	data = await resolver.resolve(data);
+	data = await resolver.resolve(data, []);
 	let array = data;
 	if (!(data instanceof Array))
 		array = Object.getOwnPropertyNames(data);

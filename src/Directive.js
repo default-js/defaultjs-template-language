@@ -1,5 +1,13 @@
+import Context from "./Context.js";
+
+
 const DEFINED_DIRECTIVES = [];
 
+
+/**
+ * @param {object} options
+ * @param {Directive} options.directive 
+ */
 const defineDirective = ({ directive }) => {
 	if (!(directive instanceof Directive))
 		throw new Error("Implementation dosn't extend Directive class!");
@@ -20,7 +28,11 @@ const defineDirective = ({ directive }) => {
 	});
 };
 
-const PHASE = {
+/**
+ * @readonly
+ * @enum {number}	
+ */
+export const PHASE = {
 	init: 0,
 	data: 1,
 	template: 2,
@@ -30,30 +42,55 @@ const PHASE = {
 
 export default class Directive {
 
+	/** @enum {PHASE} */
 	static get PHASE() { return PHASE };
+	/** @enum {number} */
 	static get MIN_RANK() { return 0 };
+	/** @enum {number} */
 	static get MAX_RANK() { return 100000 };
 
 	constructor() { };
 
+	/**
+	 * @abstract 
+	 * @enum {string} 
+	 */
 	get name() { }
+	/** 
+	 * @abstract
+	 * @enum {number} 
+	 */
 	get rank() { }
+	/**
+	 * @abstract 
+	 * @enum {PHASE} 
+	 */
 	get phase() {return PHASE.finish}
 
 	/**
-	 * need to be implemented
-	 * 
-	 * return DirectiveResult
+	 * @abstract
+	 * @param {Context} context 
+	 * @returns 
 	 */
 	async execute(context) {
 		return context;
 	}
 
-
+	/**
+	 * @static
+	 * @param {object} options
+	 * @param {Directive} options.directive 
+	 */
 	static define(option) {
 		defineDirective(option);
 	}
 
+	
+	/**
+	 * @static
+	 * @readonly
+	 * @type {Array<Directive>}
+	 */
 	static get directives() {
 		return DEFINED_DIRECTIVES;
 	}

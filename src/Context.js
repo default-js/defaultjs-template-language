@@ -1,8 +1,8 @@
 import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils.js";
-import { defGet, defValue } from "@default-js/defaultjs-common-utils/src/ObjectUtils.js";
-import { privateProperty } from "@default-js/defaultjs-common-utils/src/PrivateProperty.js";
 import Directive from "./Directive.js";
 import Template from "./Template.js";
+import { ExpressionResolver } from "@default-js/defaultjs-expression-language/index.js";
+import {Renderer} from "./Renderer.js";
 
 const PRIVATE_WAIT = "wait";
 const PRIVATE_CALLBACKS = "callbacks";
@@ -60,6 +60,25 @@ export default class Context {
 	#ignoreDirectives;
 	#callbacks;
 
+	
+	/**
+	 * Creates an instance of Context.
+	 *
+	 * @constructor
+	 * @param {object} options
+	 * @param {NodeList} [options.content=null] 
+	 * @param {ExpressionResolver} options.resolver 
+	 * @param {Renderer} options.renderer 
+	 * @param {Template|string} options.template 
+	 * @param {HTMLElement} options.container 
+	 * @param {HTMLElement} options.root 
+	 * @param {string} [options.mode="replace"] 
+	 * @param {HTMLElement} [options.target=null] 
+	 * @param {Context} [options.parent=null] 
+	 * @param {Promise<>} [options.wait=null] 
+	 * @param {Array<Function>} [options.callbacks=null] 
+	 * @param {Set<Directive|string>} options.ignoreDirective 
+	 */
 	constructor({ content = null, resolver, renderer, template, container, root, mode = "replace", target = null, parent = null, wait = null, callbacks = null, ignoreDirective }) {
 		if (!resolver) throw new Error('Parameter "resolver" is required!');
 		if (!renderer) throw new Error('Parameter "renderer" is required!');
