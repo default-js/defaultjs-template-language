@@ -31,7 +31,7 @@ class Include extends Directive {
 			await renderer.render(subContext);
 			await subContext.ready();
 			context.ignore = true;
-			context.stop = true;
+			context.stop = false;
 
 			return context;
 		} catch (e) {
