@@ -49,6 +49,8 @@ export default defineConfig({
 		globals: false,
 		// test/index.js imports every test file; the files are not discovered
 		include: ["test/index.js"],
+		// timing dependent and slow, so never part of the gate: `npm run bench` runs them
+		benchmark: { include: ["test/bench/*.bench.js"] },
 		browser: {
 			enabled: true,
 			provider: playwright(),

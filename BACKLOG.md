@@ -170,7 +170,7 @@ Agreed: removed.
 
 ### B16 — benchmark runner and baseline
 
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
+**Status:** in progress · **Kind:** task · **Blocks 2.0.0**
 
 The record in `BENCHMARKS.md` is a table, one row per measurement. Today the cases in
 `test/tests/performance/index.js` run nowhere and time a single render with `Date.now()`.
@@ -184,6 +184,19 @@ Exception, decided 2026-10-11: `src/Context.js` imported a named export `Rendere
 `src/Renderer.js` does not have, so no browser could load the sources unbundled; it was fixed before
 the baseline. The binding is used only in a JSDoc type, so the fix does not change what is
 measured.
+
+Scope detailed 2026-10-11: Vitest 5's benchmark API (`bench` of the test context; the `bench()` of
+Vitest 4 is gone), measured in Chromium, Firefox and WebKit. Cases 1–3 stay as they are. `if`,
+`choose`, attributes (`attr`, `?attr`), events (`@click`) and `include` are each measured nested,
+at a depth of 10, 100 and 500 elements, each level carrying the directive, and side by side, with
+10, 100 and 1000 siblings; `foreach` and `repeat` flat over 10, 100 and 1000 items, one element
+each. Recorded per engine as the median of three runs of `latency.mean`. `BENCHMARKS.md` gets a
+table "States" (version, state, change, date) and one table per case group, a row per state and
+engine, a column per size.
+
+Why not a depth of 1000: measured 2026-10-11, the HTML parser caps nesting at 512 levels in Chromium
+and Firefox, 511 in WebKit, and attaches deeper elements as siblings — case 1, "depth 5000", is 512
+deep as well. Depth counts elements, so a level of `jstl-choose` with its `jstl-when` counts two.
 
 ### B17 — the `module` bundle exports nothing
 

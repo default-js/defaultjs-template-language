@@ -34,7 +34,9 @@ directory's `index.js` imports its files; a file outside that chain does not run
 | `test/tests/RendererTest/` | `Renderer` |
 | `test/tests/directives/<Directive>Test/` | one directive each |
 | `test/tests/bugs/` | empty |
-| `test/tests/performance/` | not imported — see `BENCHMARKS.md` |
+
+`test/bench/` holds the benchmarks, `*.bench.js`. `npm run bench` runs them, `npm test` never does;
+`BENCHMARKS.md` describes them.
 
 ## Fixtures
 
@@ -43,4 +45,4 @@ Served as they are on disk by a middleware in `vitest.config.mjs`, not loaded as
 | Directory | URL |
 |---|---|
 | `test/data/` | `/data/` |
-| `test/templates/` | `/templates/` |
+| `test/templates/` | `/templates/` — `test/templates/bench/` for the benchmarks |

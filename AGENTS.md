@@ -96,6 +96,7 @@ The repository root holds permanent records only; anything temporary lives in `p
 |---|---|
 | `npm test` | Vitest in browser mode, one run in headless Chromium, Firefox and WebKit through Playwright — the test gate |
 | `npm run test:live` | Vitest in watch mode, in visible browsers |
+| `npm run bench` | the benchmarks of `BENCHMARKS.md`, one engine after the other — never part of the gate |
 | `npm run build:dev` / `build:prod` | webpack bundles into `dist/` |
 | `npm run build` | `test`, then both builds |
 | `npm run dev` | webpack dev server on port 3000, serving `WebContent/` |

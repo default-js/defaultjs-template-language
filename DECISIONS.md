@@ -19,6 +19,31 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-11 — How is rendering performance measured?
+
+**Decision:** With Vitest's benchmark API — the `bench` of the test context in Vitest 5 — through
+`npm run bench`, in Chromium, Firefox and WebKit, one engine and one file after the other, never as
+part of `npm test`. Besides cases 1–3, which stay as they were, every directive with a nesting of
+its own is measured nested at a depth of 10, 100 and 500 elements and side by side as 10, 100 and
+1000 siblings, the loops over 10, 100 and 1000 items. Recorded is the median of three runs of the
+mean latency, per engine. The maintainer's decisions.
+
+**Reasoning:** The former cases ran nowhere and timed a single render with `Date.now()`; a benchmark
+runner repeats a render until the mean is stable. Vitest 5 replaced the `bench()` of Vitest 4, so
+the API differs from the expression language, which still runs Vitest 4. A regression can be
+specific to one engine, and the package supports all three. Measurements that share the machine
+distort each other, hence one after the other. A directive costs per element and per level of
+nesting, so both are measured. The depth stops at 500 because the HTML parser caps nesting at 512
+levels — 511 in WebKit — and attaches deeper elements as siblings (measured 2026-10-11): a deeper
+template cannot be written as HTML, and a `jstl-choose` chain written deeper falls apart.
+
+**Alternatives:** Vitest 4, as in the expression language — keeps its `bench()`, at the price of
+an older release. Chromium only — a third of the time, blind to the other engines. A depth of 1000 built
+through the DOM API — a depth no HTML template reaches, loaded another way than the other sizes.
+
+**Consequences:** A full run takes several minutes and needs the three Playwright browsers. Case 1,
+written 5000 levels deep, is 512 deep in every engine; its description says so.
+
 ## 2026-10-11 — What does the test suite run on?
 
 **Decision:** Vitest in browser mode, through Playwright, in Chromium, Firefox and WebKit — every
