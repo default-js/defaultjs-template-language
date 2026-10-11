@@ -2,7 +2,8 @@
 
 How the rendering performance of `@default-js/defaultjs-template-language` is measured, and the
 running record of the results, ordered by package version and development state, so the trend can
-be drawn as a graph.
+be drawn as a graph. Whether a change is worth the performance it costs is the maintainer's
+decision; this record is what it is based on.
 
 ## What exists
 
@@ -23,4 +24,16 @@ file, so `npm test` does not run it, and no npm script does.
 
 ## Results
 
-No measurement recorded yet. The format of the record is an open decision in `BACKLOG.md`.
+One row per measurement, oldest first — by package version, then by development state — so that
+each case column reads as one series of the graph.
+
+- **Version** — `version` from `package.json`.
+- **State** — the commit the measurement ran on; with uncommitted changes, `<commit> + <what is changed>`.
+- **Change** — what changed since the row before, above all which function was added — the
+  reason a curve bends.
+- **Date** — `YYYY-MM-DD`.
+- **Environment** — browser and its version, operating system.
+- **Case 1–3** — rendering time in ms, the cases as listed above.
+
+| Version | State | Change | Date | Environment | Case 1 (ms) | Case 2 (ms) | Case 3 (ms) |
+|---|---|---|---|---|---|---|---|

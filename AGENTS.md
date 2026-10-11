@@ -2,18 +2,17 @@
 
 ## Project
 
-`@default-js/defaultjs-template-language`, alias `jstl`, is a declarative template language for HTML in the browser. A template is plain HTML: `jstl-*` attributes and custom elements describe conditions, loops, includes, data loading, attributes and event handling, and `${…}` expressions bring in the data. The expressions are evaluated by `@default-js/defaultjs-expression-language`. The package is the successor of `de.titus.jstl`, rebuilt without jQuery.
+`@default-js/defaultjs-template-language`, alias `jstl`, is a library for rendering dynamic user interfaces and content. It separates logic from design: the design is an HTML template with declarative directives and `${…}` expressions, the logic and the data come from JavaScript.
 
-Goals, in order of priority. Every change keeps them:
+The expressions are evaluated by `@default-js/defaultjs-expression-language`. What an expression can do, and how that is configured, is defined there, not here.
 
-1. **Async throughout** — `async`/`await` works in every directive and at every level of the API.
-2. **Performance** — rendering cost is a design criterion, not an afterthought.
+What sets the library apart:
 
-Constraints:
+- **Async/await throughout** — data, templates and expressions may be asynchronous, in every directive and at every level of the API.
+- **Event binding** — event handlers are bound in the template, declared beside the markup they belong to.
+- **Extensible** — custom directives and elements extend the template language; the built-in ones are built the same way.
 
-- **Runtime dependencies come from the `@default-js` ecosystem only.** No third-party library is used at runtime.
-- **The browser is the target.** Rendering works on the live DOM, and the tests run in a real browser.
-- **Extensible.** Directives and elements are pluggable; each built-in directive registers itself through `Directive.define`, the same mechanism a custom directive uses.
+It runs without a build step, loaded as a script or imported as an ES module, and alongside other frameworks. `README.md` documents what it offers in detail.
 
 ## Working agreement
 
@@ -39,6 +38,18 @@ fix passes on the broken version often enough to be worthless, and nobody finds 
 two states genuinely cannot be told apart from the outside, write that limitation into the test
 file instead of implying a proof that is not there.
 
+**README first** — `README.md` is the reference for what the package does (`DECISIONS.md`,
+2026-10-11), so a change in behaviour starts there. It defines *what* is built; *Tests come first*
+governs building it. The plan carries the new wording of
+`README.md`, the maintainer approves it with the plan, and then the order is README, test, code — all in
+the same diff, so that no commit has a README describing what the code does not do. Where the code
+deviates from `README.md`, that is a defect: the code is fixed and the README stays. Behaviour
+`README.md` does not describe is not documented along the way; it gets its own `BACKLOG.md` entry.
+
+**Performance is the maintainer's call** — a change that can affect rendering speed is measured
+before the handover and gets its row in `BENCHMARKS.md`; whether the cost is acceptable is the
+maintainer's decision.
+
 **No unrequested extras** — no drive-by refactorings, no new dependencies, no additional tooling (formatter, linter, CI, types) without asking. The requested scope is the scope.
 
 **Report findings, and write them down** — a defect noticed along the way goes into `BACKLOG.md` in the same turn it is reported: not at handover, and not into the diff. A session can end without a handover, and anything living only in the conversation is lost when it does.
@@ -49,7 +60,7 @@ entry under `## [Unreleased]` in `CHANGELOG.md` together with the diff, never as
 release time from memory. Same reason as the backlog rule: a session ends without warning.
 Build and test work is not consumer-visible and stays out.
 
-**No commits, no pushes** — git is available for reading, diffs, and stashes — a stash may set the current state aside, for instance to run a test against the unchanged code — but `git commit` and `git push` are Frank's to run. Work happens on the branch that is checked out; no switching or creating branches. When work reaches the main branch, by commit or pull request, the working branch is kept, never deleted.
+**No commits, no pushes** — git is available for reading, diffs, and stashes — a stash may set the current state aside, for instance to run a test against the unchanged code — but `git commit` and `git push` are the maintainer's to run. Work happens on the branch that is checked out; no switching or creating branches. When work reaches the main branch, by commit or pull request, the working branch is kept, never deleted.
 
 ## Workflow
 
@@ -57,10 +68,10 @@ Sessions end whenever a topic is finished, often without warning. The files unde
 
 0. **Orient** — read `BACKLOG.md` from disk at the start of every session, before anything else; nothing is injected automatically. Read `DECISIONS.md` before proposing anything about architecture or the public API. If `plans/` exists, read the plan it contains before touching whatever it covers. The question *what do we do next?* is answered from `BACKLOG.md` and this file alone: the backlog is the authoritative status, so no test run, no build and no code search is needed to work it out.
 1. **Clarify** — check the request, ask the open questions of intent in one batch before starting.
-2. **Plan** — for anything touching more than one file or changing dependencies: goal, affected files, risk, intended verification. Wait for approval. An approved plan that is not implemented straight away becomes a `BACKLOG.md` entry carrying the agreed scope. Small, locally contained changes go straight in.
+2. **Plan** — for anything touching more than one file or changing dependencies: goal, affected files, risk, intended verification, and for a change in behaviour the new wording of `README.md`. Wait for approval. An approved plan that is not implemented straight away becomes a `BACKLOG.md` entry carrying the agreed scope. Small, locally contained changes go straight in.
 3. **Implement** — the agreed scope, nothing beside it.
 4. **Verify** — `npm test`; if the build is affected, also `npm run build` plus a diff of `dist/` against the previous state. Show the result instead of summarizing it.
-5. **Hand over** — what changed, what was deliberately left alone, what is still open. Frank commits.
+5. **Hand over** — what changed, what was deliberately left alone, what is still open. The maintainer commits.
 
 ## Records
 
@@ -108,7 +119,10 @@ The repository root holds permanent records only; anything temporary lives in `p
 - **Private fields.** A field is a private `#` field whenever its data is not public, may only be
   read from outside — then through a getter — or follows rules when it changes. Beyond that,
   whether a field is private depends on the field and its use.
-- **JSDoc on everything.**
+- **JSDoc on everything.** It is what the type declarations are generated from
+  (`DECISIONS.md`, 2026-10-11), so it keeps to what `tsc` reads: function types in arrow syntax,
+  `(aTemplate: string) => *`, never the Closure form `function(string): *`, which `tsc` reads as
+  `Function`; no `@readonly` on a getter; no `@typedef` on the class it names.
 - `.editorconfig` and `.gitattributes` carry the rules above in machine-readable form. They
   advise editors and agents; nothing enforces them, because no formatter and no linter is
   configured. Beyond what they cover, follow the style of the surrounding file.
