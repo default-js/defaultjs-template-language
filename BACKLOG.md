@@ -36,8 +36,6 @@ then it may still change.
   one by one with its reason.
 - **Package shape (B30):** `"type": "module"` and an `exports` field opening `.`, `./index.js`,
   `./browser.js`, `./src/*` and `./dist/*` — clear entry points, deep imports stay open.
-- **Runtime dependencies:** caret ranges on the current releases instead of `latest` (B10) —
-  `^3.0.2`, `^1.0.0`, `^2.0.0` for the expression language, common-utils and extdom.
 - **Build (B31):** webpack stays, its configuration becomes an ES module (`webpack.config.mjs`); Node 24
   pinned in `.nvmrc`.
 - **Development dependencies (B36):** brought up to date — webpack, webpack-dev-server and the
@@ -49,13 +47,13 @@ then it may still change.
 - **Extension API (B32):** custom directives and elements become official API — `index.js` exports
   `Directive` and `Element`, `README.md` documents extending (B11), tests cover it. Nothing new is
   built; the existing mechanism is made public.
-- **Defects**, decided one by one — fixed in 2.0.0: B1, B2, B3, B4 (a string template works, as
-  the JSDoc promises), B5 (an array of callbacks works like a single one), B7 and B8 (with the
-  move to `webpack.config.mjs`), B18 (custom elements are repaired: the renderer recognizes one
+- **Defects**, decided one by one — fixed in 2.0.0: B2, B3, B4 (a string template works, as
+  the JSDoc promises), B5 (an array of callbacks works like a single one), B7 (with the move to
+  `webpack.config.mjs`), B18 (custom elements are repaired: the renderer recognizes one
   through `customElements.get` and a class extending `Element`; `execute(context)` gets one
   signature), B22 (an object is iterated by its own properties — the item is the value, the
-  status also carries the key; documented, README first), B6 (`jstl-async` implemented anew).
-  All defects are fixed.
+  status also carries the key; documented, README first), B6 (`jstl-async` implemented anew),
+  B37 (loading `src/Directive.js` first). All defects are fixed.
 - **README:** complete and correct at 2.0.0 — the errors of B23 fixed, the empty sections filled
   (B11), every function of the code documented or removed (B24, decided item by item). Code and
   README agree.
@@ -63,9 +61,9 @@ then it may still change.
   baseline is measured on the sources of 1.7.20, before the first change to `src/`; every stage
   after it gets its row in `BENCHMARKS.md`. Before the baseline the cases are extended by one each
   for loops (`foreach`, `repeat`), conditions (`if`, `choose`), attributes and events, and
-  `include`, so every one of them has its 1.7.20 value.
-- **Clean-up:** `web/` (B9), the unused fixtures `test/sites/**` and `test/templates/performance/`
-  (B19), and the dead code of B12 are removed.
+  `include`, so every one of them has its 1.7.20 value. One exception: the import in
+  `src/Context.js` that Vitest's browser mode could not load was fixed before the baseline.
+- **Clean-up:** `web/` (B9) and the dead code of B12 are removed.
 - **Browsers (B28, B35):** current evergreen browsers — Chrome, Edge, Firefox, Safari — named in the README
   with their limitations (e.g. `is` in Safari). The suite runs in all three engines through
   Playwright: Chromium, Firefox, WebKit.
@@ -76,21 +74,12 @@ then it may still change.
 - **Error behaviour (B34):** decided per directive — what the result holds and what is logged when a
   directive or an expression fails — written into `README.md` first, then tested. Today renderer
   and directives log and render on, from 15 `console.*` call sites in `src/`.
-- **Tracking:** no plan under `plans/`; every scope item is a backlog entry, its order decided
-  when it is started.
+- **Tracking:** no plan under `plans/`; every scope item is a backlog entry. Order decided
+  2026-10-11: the 1:1 port of B28, B16 with its baseline, then everything that changes `src/`.
 - **Releases:** no pre-release on npm; 1.7.20 stays `latest` until 2.0.0.
 - **Also in 2.0.0:** B20, measured with the first build. **Not in 2.0.0:** B25 and B26.
 
 ## Entries
-
-### B1 — `Context.js` imports an export `Renderer.js` does not have
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Context.js` does `import {Renderer} from "./Renderer.js"`, but `src/Renderer.js` exports only
-`SCOPES` and a default class. Importing a missing named binding is a link-time `SyntaxError` for
-native ES modules, so `index.js` cannot be loaded unbundled; the committed bundles in `dist/` were
-built regardless. The import is used only in a JSDoc type.
 
 ### B2 — `Template.fetch` with a string throws `ReferenceError`
 
@@ -152,15 +141,6 @@ does not exist.
 
 Agreed: fixed with the move to `webpack.config.mjs` (B31).
 
-### B8 — `webpack-merge` required but not declared
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`webpack.config.js` requires `webpack-merge`, which is not in `devDependencies` and resolves only
-as a transitive dependency; the imported `merge` is unused.
-
-Agreed: gone with the move to `webpack.config.mjs` (B31).
-
 ### B9 — `web/` holds stale build output
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -169,23 +149,6 @@ Agreed: gone with the move to `webpack.config.mjs` (B31).
 repository refers to it.
 
 Agreed: removed.
-
-### B10 — runtime dependencies pinned to `latest`
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`package.json`, `dependencies`: all three `@default-js` packages are `latest`. Installs are not
-reproducible, and a breaking release of a dependency reaches consumers unannounced.
-
-It happened on 2026-10-11: `latest` of the expression language moved to 3.0.0, whose `exports`
-closed paths this package imports, and a fresh install of 1.7.20 no longer built — six "Module not
-found" errors under webpack 5.111.1. 3.0.1 and 3.0.2 reopened the paths. Measured with 3.0.2 on the
-sources of 1.7.20: the build succeeds with one warning (B1), `npm test` passes 92 of 92. One case,
-"undefined array" in `test/tests/directives/ForeachTest/index.js`, logs a `ReferenceError` from the
-expression language; its expectation holds. Whether 2.x logged it too was not measured.
-
-Agreed: caret ranges on the current releases — `^3.0.2` for the expression language, `^1.0.0` for
-common-utils, `^2.0.0` for extdom.
 
 ### B11 — empty README sections
 
@@ -217,6 +180,11 @@ extended by one each for loops (`foreach`, `repeat`), conditions (`if`, `choose`
 events, and `include`. Then the baseline is measured on the sources of 1.7.20, before the first
 change to `src/`; every later stage gets its row.
 
+Exception, decided 2026-10-11: `src/Context.js` imported a named export `Renderer` that
+`src/Renderer.js` does not have, so no browser could load the sources unbundled; it was fixed before
+the baseline. The binding is used only in a JSDoc type, so the fix does not change what is
+measured.
+
 ### B17 — the `module` bundle exports nothing
 
 **Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
@@ -247,15 +215,6 @@ Agreed: repaired — the renderer recognizes a custom element through `customEle
 class extending `Element`; `execute(context)` gets one signature. `Element` becomes public with the
 extension API (B32).
 
-### B19 — unused test fixtures
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`test/sites/**/*.html` is loaded through `karma-html2js-preprocessor` and
-`test/templates/performance/` is served, but no test reads either.
-
-Agreed: removed.
-
 ### B20 — line endings of `dist/`
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -263,6 +222,13 @@ Agreed: removed.
 `@default-js/defaultjs-expression-language` marks `dist/**` as `-text` in `.gitattributes`, because
 bundled dependency sources brought CRLF into its bundles and git normalized them away. Whether the
 bundles here carry CRLF is not measured, so `.gitattributes` does not carry the rule.
+
+Found 2026-10-11, without a build: the installed sources of `@default-js/defaultjs-common-utils`
+1.0.0 (8 of 18 `.js` files) and `@default-js/defaultjs-extdom` 2.0.0 (24 of 29) carry CRLF, those
+of the expression language 3.0.2 do not. The local working copy, checked out with
+`core.autocrlf=true`, holds 86 tracked files with CRLF, `src/` among them, against LF in the index,
+and its `dist/*-defaultjs-template-language.js` are mixed — so the measurement needs a build from
+a working copy checked out under `.gitattributes`.
 
 Agreed: measured with the first build of 2.0.0, and the rule added if the bundles need it.
 
@@ -356,11 +322,14 @@ goal of 2.0.0 (2026-10-11).
 
 ### B28 — move the test suite to Vitest and Playwright
 
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
+**Status:** in progress · **Kind:** task · **Blocks 2.0.0**
 
 Karma is deprecated. The suite moves to Vitest in browser mode with Playwright, replacing Karma and
 Jasmine. The 92 cases are ported 1:1 first, as a green baseline; then the suite is reorganized
 under rules written into `TESTING.md`. It runs in Chromium, Firefox and WebKit.
+
+Stage 1, the 1:1 port, done 2026-10-11 with Vitest 5.0.3 and Playwright 1.64.0, green in all three
+engines. Next: the reorganization.
 
 ### B29 — complete test coverage
 
@@ -381,7 +350,7 @@ by one with its reason.
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
 webpack stays; `webpack.config.js` becomes `webpack.config.mjs`, which `"type": "module"` (B30)
-requires anyway. Node 24 is pinned in `.nvmrc`. B7 and B8 are fixed with it.
+requires anyway. Node 24 is pinned in `.nvmrc`. B7 is fixed with it.
 
 ### B32 — extension API
 
@@ -415,6 +384,10 @@ Today renderer and directives log a failure and render on, from 15 `console.*` c
 result holds and what is logged when a directive or an expression fails — written into `README.md`
 first, then tested.
 
+Measured 2026-10-11 with the expression language 3.0.2 on the sources of 1.7.20: the case
+"undefined array" in `test/tests/directives/ForeachTest/index.js` logs a `ReferenceError` from the
+expression language; its expectation holds. Whether version 2 logged it too was not measured.
+
 ### B35 — supported browsers and migration guide
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -423,11 +396,26 @@ first, then tested.
 limitations, and gets a section "Migrating from 1.x" with the steps a consumer has to take.
 `CHANGELOG.md` lists every change under 2.0.0.
 
+The section "Browser support" exists since 2026-10-11 and holds one limitation: Safari does not
+support customized built-in elements, so the `is` attribute has no effect there.
+
 ### B36 — bring the development dependencies up to date
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
 The tools beside the test runner are updated to their current releases: webpack, webpack-cli,
-webpack-dev-server and the plugins in `devDependencies`. Karma, its plugins and puppeteer leave
-with B28. A clean `npm audit` is no condition for 2.0.0: findings are reduced as far as current
+webpack-dev-server and the plugins in `devDependencies`. A clean `npm audit` is no condition for 2.0.0: findings are reduced as far as current
 releases allow, and what remains is listed in the handover.
+
+### B37 — loading `src/Directive.js` first fails
+
+**Status:** open · **Kind:** defect · **Blocks 2.0.0**
+
+`src/Context.js` imports the default export of `src/Renderer.js`, for a JSDoc type only. That closes
+a cycle at runtime: entered through `src/Directive.js`, the chain `Context.js` → `Renderer.js` →
+`directives/index.js` reaches `class Initial extends Directive` before `Directive` is initialized.
+Measured 2026-10-11 in Chromium, Firefox and WebKit: `import("src/Directive.js")` as the first module
+throws `ReferenceError: Cannot access 'Directive' before initialization`. Without the import —
+the JSDoc type written as `import("./Renderer.js").default` — the same import succeeds in all three,
+and the suite is unchanged. Entered through `index.js`, `Renderer.js` loads first and nothing
+fails. Matters once deep imports are opened (B30) and a custom directive extends `Directive` (B32).

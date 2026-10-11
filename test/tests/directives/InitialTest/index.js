@@ -1,3 +1,5 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { server } from "vitest/browser";
 import { Renderer } from "../../../../index";
 
 
@@ -103,7 +105,7 @@ describe("InitialDirective Test - ", () => {
 	});
 
 
-	it("initial with \"is\" directive", async () => {
+	it.skipIf(server.browser === "webkit")("initial with \"is\" directive", async () => {
 		const renderer = await Renderer.build({ template: `<div is="test-div" test="test"></div>` });
 		const container = create("<div></div>").first();
 		await renderer.render({ container , data : {}});
@@ -111,6 +113,19 @@ describe("InitialDirective Test - ", () => {
 		expect(container.childNodes.length).toBe(1);
 		let element = container.childNodes[0];
 		expect(element instanceof ExtDivTestElement).toBe(true);
+		expect(element.attr("is")).toBe("test-div");
+	});
+
+	// Safari does not support customized built-in elements: the element stays what its tag names
+	it.runIf(server.browser === "webkit")("initial with \"is\" directive - no effect in WebKit", async () => {
+		const renderer = await Renderer.build({ template: `<div is="test-div" test="test"></div>` });
+		const container = create("<div></div>").first();
+		await renderer.render({ container , data : {}});
+
+		expect(container.childNodes.length).toBe(1);
+		let element = container.childNodes[0];
+		expect(element instanceof ExtDivTestElement).toBe(false);
+		expect(element.constructor).toBe(HTMLDivElement);
 		expect(element.attr("is")).toBe("test-div");
 	});
 

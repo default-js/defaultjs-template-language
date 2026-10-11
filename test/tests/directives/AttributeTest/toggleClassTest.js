@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import {Renderer} from "../../../../index"
 
 describe("Attribute->event bind->toggleClass - ", () => {
@@ -15,11 +16,11 @@ describe("Attribute->event bind->toggleClass - ", () => {
 		const source = container.find("#source").first();
 		const target = container.find("#target").first();
 
-		expect(target.is(":not(.test)")).toBeTrue();
+		expect(target.is(":not(.test)")).toBe(true);
 		source.trigger("click");
-		expect(target.is(".test")).toBeTrue();
+		expect(target.is(".test")).toBe(true);
 		source.trigger("click");
-		expect(target.is(":not(.test)")).toBeTrue();
+		expect(target.is(":not(.test)")).toBe(true);
 	});
 
 	it("toggleClass", async () => {
@@ -29,11 +30,11 @@ describe("Attribute->event bind->toggleClass - ", () => {
 		await renderer.render({ container, data: {} });
 		const target = container.find("#target").first();
 
-		expect(target.is(":not(.test)")).toBeTrue();
+		expect(target.is(":not(.test)")).toBe(true);
 		target.trigger("click");
-		expect(target.is(".test")).toBeTrue();
+		expect(target.is(".test")).toBe(true);
 		target.trigger("click");
-		expect(target.is(":not(.test)")).toBeTrue();
+		expect(target.is(":not(.test)")).toBe(true);
 	});
 
 	afterAll(() => { });

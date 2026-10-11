@@ -94,8 +94,8 @@ The repository root holds permanent records only; anything temporary lives in `p
 
 | | |
 |---|---|
-| `npm test` | Karma with Jasmine, one run in headless Chrome — the Chromium that puppeteer installs — the test gate |
-| `npm run test:live` | Karma in watch mode, in a visible Chrome |
+| `npm test` | Vitest in browser mode, one run in headless Chromium, Firefox and WebKit through Playwright — the test gate |
+| `npm run test:live` | Vitest in watch mode, in visible browsers |
 | `npm run build:dev` / `build:prod` | webpack bundles into `dist/` |
 | `npm run build` | `test`, then both builds |
 | `npm run dev` | webpack dev server on port 3000, serving `WebContent/` |

@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Renderer } from "../../../../index";
 
 describe("OnFinished Directive Test - ", () => {
@@ -13,7 +14,7 @@ describe("OnFinished Directive Test - ", () => {
 		const renderer = await Renderer.build({template});
 		
 		await renderer.render({ container, template });
-		expect(window.ONFINISH_CASE_1).toBeTrue();
+		expect(window.ONFINISH_CASE_1).toBe(true);
 	});
 
 	

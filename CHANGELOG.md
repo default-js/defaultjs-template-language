@@ -12,3 +12,16 @@ This file carries the effect of a change, and its reason where a consumer needs 
 Versions up to 1.7.20 predate this file — the git history is the record for those.
 
 ## [Unreleased]
+
+### Changed
+
+- The runtime dependencies are declared with caret ranges instead of `latest`:
+  `@default-js/defaultjs-expression-language` `^3.0.2`, `@default-js/defaultjs-common-utils`
+  `^1.0.0`, `@default-js/defaultjs-extdom` `^2.0.0`. A new major release of a dependency no longer
+  reaches an install unannounced. An install that resolved version 2 of the expression language
+  gets version 3.
+
+### Fixed
+
+- `index.js` loads as an ES module without a bundler. `src/Context.js` imported an export
+  `src/Renderer.js` does not have, which the browser rejects with a `SyntaxError`.

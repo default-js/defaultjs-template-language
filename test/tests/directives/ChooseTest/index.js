@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Renderer, Template } from "../../../../index";
 
 describe("Choose Test - ", () => {

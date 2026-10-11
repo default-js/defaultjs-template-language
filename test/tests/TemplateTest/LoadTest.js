@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Template } from "../../../index";
 
 describe("Template Test - Template.load()", () => {

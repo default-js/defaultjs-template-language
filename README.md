@@ -3,6 +3,7 @@ defaultjs-template-language (`alias: jstl`)
 
 - [defaultjs-template-language (`alias: jstl`)](#defaultjs-template-language-alias-jstl)
 - [Basic usage](#basic-usage)
+- [Browser support](#browser-support)
 - [Use Template File](#use-template-file)
 - [Template functionality](#template-functionality)
   - [Expressions](#expressions)
@@ -96,6 +97,10 @@ Renderer.render({container, template, data: {}});
     </body>
 </html>
 ```
+
+# Browser support
+
+Safari does not support customized built-in elements; there the `is` attribute has no effect.
 
 # Use Template File
 

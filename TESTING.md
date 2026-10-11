@@ -8,14 +8,20 @@ No rule has been agreed yet; each one gets its section here once it is.
 
 ## What the suite runs on
 
-Karma with Jasmine, in Chrome — the Chromium that puppeteer installs, headless for `npm test`, with
-a window for `npm run test:live`. Configuration in `karma.conf.js`. Karma bundles `test/index.js`
-with webpack, using `webpack.config.js` in development mode.
+Vitest in browser mode, through Playwright, in three engines: Chromium, Firefox and WebKit —
+headless for `npm test`, with windows for `npm run test:live`. Configuration in `vitest.config.mjs`.
+The sources are served unbundled, as ES modules; so are the `@default-js` packages, which vite
+does not pre-bundle.
 
 `test/index.js` imports `@default-js/defaultjs-extdom`, then `test/setup.js`, which sets the
-default executer of `ExpressionResolver` to `context-deconstruction-executer`, then the tests.
-Jasmine's functions — `describe`, `it`, `expect`, `beforeAll`, `afterAll` — are globals, and so are
-the helpers of `@default-js/defaultjs-extdom` the tests use, such as `create`.
+default executer of `ExpressionResolver` to `context-deconstruction-executer`, then the tests. All
+of it runs in one page per engine, so the cases share the state of the package, such as the
+template cache. Every test file imports `describe`, `it`, `expect`, `beforeAll` and `afterAll` from
+`vitest`; they are not globals, because an expression resolves a name it does not find in its
+context against the global object. The helpers of `@default-js/defaultjs-extdom` the tests use,
+such as `create`, are globals.
+
+A case that depends on the engine reads it from `server.browser` of `vitest/browser`.
 
 ## Files
 
@@ -32,12 +38,9 @@ directory's `index.js` imports its files; a file outside that chain does not run
 
 ## Fixtures
 
-Served by Karma, not loaded as scripts:
+Served as they are on disk by a middleware in `vitest.config.mjs`, not loaded as scripts:
 
 | Directory | URL |
 |---|---|
 | `test/data/` | `/data/` |
 | `test/templates/` | `/templates/` |
-
-`test/sites/**/*.html` is turned into `window.__html__` by `karma-html2js-preprocessor`; no test
-reads it.

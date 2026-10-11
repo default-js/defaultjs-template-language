@@ -29,5 +29,5 @@ its entry. `dist/` is committed.
 `package.json` `files`: `index.js`, `browser.js`, `src/**`, `dist/**`, `LICENSE`, `README.md`,
 `package.json`. It carries neither `"type"` nor `exports`.
 
-Runtime dependencies: `@default-js/defaultjs-common-utils`,
-`@default-js/defaultjs-expression-language`, `@default-js/defaultjs-extdom`.
+Runtime dependencies, as caret ranges: `@default-js/defaultjs-common-utils` `^1.0.0`,
+`@default-js/defaultjs-expression-language` `^3.0.2`, `@default-js/defaultjs-extdom` `^2.0.0`.

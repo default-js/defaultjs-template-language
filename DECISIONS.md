@@ -19,6 +19,52 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-11 — What does the test suite run on?
+
+**Decision:** Vitest in browser mode, through Playwright, in Chromium, Firefox and WebKit — every
+engine from the first run on. The sources and the `@default-js` packages are served unbundled.
+Vitest's functions are imported in every test file, not globals. The maintainer's decisions,
+except the last, which follows from the reasoning below.
+
+**Reasoning:** Karma is deprecated. The package renders into the DOM of the browser it runs in, so
+the suite runs in real browsers, and in the engines of the browsers the package supports — WebKit
+for Safari. Served unbundled, the suite loads the sources the way a browser does without a bundler,
+which showed at once that `src/Context.js` imported an export that does not exist; the bundled
+Karma run never failed on it. The packages are not pre-bundled because the sources and
+`test/setup.js` import them through different paths and have to share one instance of each module.
+An expression resolves a name its context does not hold against the global object, so global
+`describe`, `it`, `test` or `expect` would be found by a template that means something else.
+
+**Alternatives:** Node with jsdom or happy-dom — a simulation of the DOM, not a browser. One engine
+first and the others later — the maintainer chose all three at once.
+
+**Consequences:** `npm test` needs the three Playwright browsers installed
+(`npx playwright install chromium firefox webkit`). A case that a single engine cannot pass needs a
+decision of its own, since the gate runs all three. The first one, decided by the maintainer: WebKit does
+not support customized built-in elements, so `README.md` names that limitation for Safari, the case
+for the `is` attribute is skipped in WebKit, and a case of its own asserts there what the README
+says.
+
+## 2026-10-11 — How are the runtime dependencies declared?
+
+**Decision:** With caret ranges on the current releases: `^3.0.2` for
+`@default-js/defaultjs-expression-language`, `^1.0.0` for `@default-js/defaultjs-common-utils`,
+`^2.0.0` for `@default-js/defaultjs-extdom`. The maintainer's decision.
+
+**Reasoning:** Up to 1.7.20 all three were declared `latest`, so an install was not reproducible
+and a breaking release of a dependency reached consumers unannounced. It happened on 2026-10-11:
+`latest` of the expression language moved to 3.0.0, whose `exports` closed paths this package
+imports, and a fresh install of 1.7.20 no longer built. 3.0.1 and 3.0.2 reopened the paths; with
+3.0.2 the build succeeds and the suite passes, hence the lower bound. A caret range still accepts
+the minor and patch releases of each dependency.
+
+**Alternatives:** Exact versions — every fix in a dependency would need a release of this package
+to reach a consumer; the better choice if a dependency broke compatibility within a major version.
+`latest`, as before.
+
+**Consequences:** A new major version of a dependency reaches consumers only through a release of
+this package that raises the range.
+
 ## 2026-10-11 — How does a change in behaviour reach `README.md`?
 
 **Decision:** README first, on trial. The plan for a change in behaviour carries the new wording
