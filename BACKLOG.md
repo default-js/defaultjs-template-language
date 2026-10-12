@@ -55,8 +55,8 @@ then it may still change.
   status also carries the key; documented, README first), B6 (`jstl-async` implemented anew),
   B37 (loading `src/Directive.js` first). All defects are fixed.
 - **README:** complete and correct at 2.0.0 — the errors of B23 fixed, the empty sections filled
-  (B11), every function of the code documented or removed (B24, decided item by item). Code and
-  README agree.
+  (B11), every function of the code documented or removed (B24, B40, B43, decided item by item). Code
+  and README agree.
 - **Benchmarks:** the baseline on the sources of 1.7.20 is in `BENCHMARKS.md` (2026-10-11); every
   later stage gets its row.
 - **Clean-up:** `web/` (B9) and the dead code of B12 are removed.
@@ -82,6 +82,9 @@ then it may still change.
 **Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
 
 `src/Template.js`, `Template.fetch`: `new URL(url, loaction)` — `loaction` is a typo for `location`.
+
+Two cases of `test/tests/Template.test.js` are marked `it.fails` for it; the fix starts by turning
+them into `it`.
 
 ### B3 — `Template.fetch` and `Template.load` swallow unsupported types
 
@@ -242,8 +245,12 @@ carries the key; documented in `README.md` first.
   `defauljs-template-language` in both API imports;
 - the script tag names `defaultjs-template-languange.min.js`; the bundle is
   `browser-defaultjs-template-language.min.js`;
-- "Text content manipulation": `${hallo}` against the data key `hello`; the escaped output reads
-  `&gt;b&lt;` where escaping gives `&lt;b&gt;`; the filtered output ends `</b>/div>`;
+- "Text content manipulation": `${hallo}` against the data key `hello`; the filtered output ends
+  `</b>/div>`;
+- "Text content manipulation", trim length: `jstl-text-trim-length` is the length with the
+  ellipsis — the example gives `this is an l...`, not `this is an long...`;
+- "Text content manipulation", html as text: the tags are not escaped but removed, entities
+  decoded — the example gives `hello worldalert("unsecure")`;
 - the `jstl-repeat-var` example uses `jstl-foreach-var`;
 - the mode tables of `jstl-include` and `jstl-attach-element` list `prepand`; the code reads
   `prepend`;
@@ -352,8 +359,8 @@ Today renderer and directives log a failure and render on, from 15 `console.*` c
 result holds and what is logged when a directive or an expression fails — written into `README.md`
 first, then tested.
 
-Measured 2026-10-11 on the sources of 1.7.20, the case "undefined array", now in
-`test/tests/directives/Foreach.test.js`: with the expression language 2.0.4 the resolver logs
+Measured 2026-10-11 on the sources of 1.7.20, the case "undefined array", now "renders no item
+when jstl-foreach-count is undefined" in `test/tests/directives/Foreach.test.js`: with the expression language 2.0.4 the resolver logs
 the `ReferenceError` ("Execution error on statement!") and the directive goes on; with 3.0.2 the
 resolver logs it and passes it on, and `jstl-foreach` logs it a second time ("error at
 jstl-foreach"). The expectation of the case holds with both. Version 3 hands a failing expression
@@ -397,25 +404,18 @@ expression language and its executers are neither changed nor configured nor ana
 renders with the default executer (`DECISIONS.md`, 2026-10-12), and the investigation measures with
 it.
 
-### B39 — revise every test case
+### B43 — what `render` resolves to
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
-Every case of the suite is revised under rules on what a case asserts and how it is written; the
-rules are agreed with the maintainer first and written into `TESTING.md`. The weak cases are
-repaired in the same revision, not before (the maintainer, 2026-10-12). The structure of the suite is
-settled (`TESTING.md`, `DECISIONS.md`, 2026-10-12): the cases still stand as ported from Karma.
+`src/Renderer.js`: `render(option)` and the static `Renderer.render` resolve to the `Context` of
+the rendering (measured 2026-10-12). `Context` is not exported by `index.js` and `README.md` does
+not describe the value.
 
-Found 2026-10-12 in the ported cases:
-- `test/tests/Renderer.test.js`, "replace without target": the second `render` is not awaited, so
-  the assertion runs before it and the case passes even if `replace` appended.
-- `test/tests/directives/Data.test.js`, "copy data - direct mode": uses `jstl-data-mode="set"`, a
-  copy of the case before it; `direct` with an expression is not tested.
-- `test/tests/directives/Choose.test.js`, "case 3 - foreach": `jstl-foreach-item` is no attribute
-  — `Foreach.js` reads `jstl-foreach-var` — so the case passes through the default name `item`.
-- Duplicate names: two cases "default" in `AttachElement.test.js` (the second tests `replace`),
-  two "event bind:delegate - with condition" in `Attributes.test.js` (the second for `false`).
-- Output and leftovers: `console.log` in `Choose.test.js` and in the custom element of
-  `Initial.test.js`; `OnFinished.test.js` sets the global `window.ONFINISH_CASE_1` and leaves its
-  container in the document; empty `beforeAll` / `afterAll` in every file;
-  `test/templates/include-test-case-1.tpl.html` is used by no test.
+Agreed 2026-10-12: the `Context` is documented — `index.js` exports it, `README.md` describes its
+public parts (README first), the type declarations of B21 cover it. Public is all of `Context`
+(the maintainer, 2026-10-12): the constructor, the methods `ignoreDirective`, `acceptDirective`,
+`finished`, `ready`, `subContext`, `clone`, `toRenderOption`, the getters `id`, `depth`, `parent`,
+`renderer`, `root`, `template` (with its setter), `mode`, `subcontexts`, `closed`, and the fields
+`content`, `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives (B32) work with
+the same members.

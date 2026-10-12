@@ -125,6 +125,14 @@ const executeDirectives = async (context) => {
 };
 
 export default class Renderer {
+	/**
+	 * Creates a renderer.
+	 *
+	 * @param {object} [anOption]
+	 * @param {Template} [anOption.template] - the template rendered, if `render` gets none
+	 * @param {object} [anOption.data] - base data, available in every rendering
+	 * @throws {Error} if `template` is not a `Template`
+	 */
 	constructor({ template, data } = {}) {
 		if (template && !(template instanceof Template)) throw new Error("template must be an instance of Template!");
 
@@ -137,8 +145,8 @@ export default class Renderer {
 	 * 
 	 * @param {object|Context} context 
 	 * @param {HTMLElement} context.container
-	 * @param {object} context.data
-	 * @param {Template|string|Node|NodeList|HTMLCollection} [context.template]
+	 * @param {object} [context.data]
+	 * @param {Template|string|URL|Node|NodeList|HTMLCollection} [context.template]
 	 * @param {MODETYPES} [context.mode]
 	 * @param {HTMLElement} [context.root]
 	 * @param {HTMLElement} [context.target]
@@ -165,6 +173,16 @@ export default class Renderer {
 		return context;
 	}
 
+	/**
+	 * Creates a renderer and loads its template with `Template.load` first.
+	 *
+	 * @static
+	 * @async
+	 * @param {object} [anOption]
+	 * @param {Template|string|URL|Node|NodeList|HTMLCollection|Promise<Template|string|URL|Node|NodeList|HTMLCollection>} [anOption.template] - source of the template
+	 * @param {object} [anOption.data] - base data, available in every rendering
+	 * @returns {Promise<Renderer>}
+	 */
 	static async build({ template, data } = {}) {
 		if (template && template instanceof Promise) template = await template;
 
@@ -173,16 +191,16 @@ export default class Renderer {
 	}
 
 	/**
-	 * Renders a template into a container.
+	 * Renders a template into a container without keeping a renderer.
 	 *
 	 * @static
 	 * @async
 	 * @param {object} context
-	 * @param {HTMLElement} context.container 
-	 * @param {object} context.data 
-	 * @param {Template|string|Node|NodeList|HTMLCollection} context.template 
-	 * @param {MODETYPES} context.mode 
-	 * @param {HTMLElement} context.target 
+	 * @param {HTMLElement} context.container
+	 * @param {object} [context.data]
+	 * @param {Template} context.template
+	 * @param {MODETYPES} [context.mode]
+	 * @param {HTMLElement} [context.target]
 	 * @returns {Promise<Context>}
 	 * @memberof Renderer
 	 */

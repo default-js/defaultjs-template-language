@@ -39,8 +39,10 @@ defaultjs-template-language (`alias: jstl`)
     - [`fetch(url, cache, alias)` ⇒ `Template`](#fetchurl-cache-alias--template)
     - [`loadNodeTemplate(node, defaultTemplate, cache, alias)` ⇒ `Template`](#loadnodetemplatenode-defaulttemplate-cache-alias--template)
   - [Renderer](#renderer)
-    - [`new Renderer(template, data)`](#new-renderertemplate-data)
-    - [`render(option)`](#renderoption)
+    - [`new Renderer(option)`](#new-rendereroption)
+    - [`Renderer.build(option)` ⇒ `Promise<Renderer>`](#rendererbuildoption--promiserenderer)
+    - [`render(option)` ⇒ `Promise`](#renderoption--promise)
+    - [`Renderer.render(option)` ⇒ `Promise`](#rendererrenderoption--promise)
   - [Custom Directives](#custom-directives)
   - [Custom Tags](#custom-tags)
 
@@ -665,35 +667,74 @@ This function makes several steps to attempting a `Template` by following order:
 import { Renderer } from "@default-js/defauljs-template-language";
 ```
 
-### `new Renderer(template, data)`
+### `new Renderer(option)`
 
-Create a instance of `Renderer`.
-
-**Kind**: constructor
-
-| Param     | Type                | Description  | Default |
-| --------- | ------------------- | ------------ | ------- |
-| template  | `Template` | template definition - `required` | |
-| data | `Object` | base data to render a template - `optional` | `null` |
-
-### `render(option)`
-
-Execute the rendering process.
+Creates an instance of `Renderer`.
 
 **Kind**: constructor
 
 | Param  | Type     | Description  | Default |
 | ------ | -------- | ------------ | ------- |
-| option | `Object` | option to specify the rendering - `required` |  |
+| option | `Object` | template and base data of the renderer - `optional` | `{}` |
 
-**option**: Option to specify the how, what and where to be render
+**option**
 
-| Properties     | Type          | Description  | Default |
-| -------------- | ------------- | ------------ | ------- |
-| container      | `HTMLElement` | element where to be render the template into - `required` | |
-| template       | `Template`    | the template that to be render. - `optional` | template from the renderer |
-| data           | `Object`      | data for rendering - `optional` | |
-| mode           | `string`      | possible options [`append`, `prepend`,`replace`] - `optional` | `replace` |
+| Properties | Type       | Description  | Default |
+| ---------- | ---------- | ------------ | ------- |
+| template   | `Template` | the template rendered, if `render` gets none - `optional` | `null` |
+| data       | `Object`   | base data, available in every rendering - `optional` | `{}` |
+
+Throws an `Error`, if `template` is not a `Template`. To create a renderer from another source of a template, use `Renderer.build`.
+
+### `Renderer.build(option)` ⇒ `Promise<Renderer>`
+
+Creates an instance of `Renderer` and loads its template with `Template.load` first.
+
+**Kind**: static function
+
+| Properties | Type | Description  | Default |
+| ---------- | ---- | ------------ | ------- |
+| template   | `Template`, `string`, `URL`, `Node`, `NodeList`, `HTMLCollection` or a `Promise` of one | source of the template - `optional` | `null` |
+| data       | `Object` | base data, available in every rendering - `optional` | `{}` |
+
+### `render(option)` ⇒ `Promise`
+
+Renders a template into a container. The promise resolves, when the rendering is finished.
+
+**Kind**: constructor
+
+| Param  | Type     | Description  | Default |
+| ------ | -------- | ------------ | ------- |
+| option | `Object` | what to render, and where - `required` |  |
+
+**option**
+
+| Properties | Type          | Description  | Default |
+| ---------- | ------------- | ------------ | ------- |
+| container  | `HTMLElement` | the element to render into - `required` | |
+| template   | `Template`, `string`, `URL`, `Node`, `NodeList` or `HTMLCollection` | the template to render, loaded with `Template.load` - `optional` | the template of the renderer |
+| data       | `Object`      | data of this rendering; a name it holds hides the same name of the base data - `optional` | |
+| mode       | `string`      | `replace`, `append` or `prepend` - `optional` | `replace` |
+| target     | `HTMLElement` | an element in the container: `replace` replaces it, `append` inserts the result after it, `prepend` before it - `optional` | |
+| root       | `HTMLElement` | the element `jstl-on-finished` gets as `$root` - `optional` | the container |
+
+Without `target`, `replace` replaces the content of the container, `append` appends the result to it and `prepend` prepends it. The promise is rejected, if there is no template, neither in `option` nor at the renderer, or if `mode` is none of the three.
+
+### `Renderer.render(option)` ⇒ `Promise`
+
+Renders a template into a container without keeping a renderer: `new Renderer({ template, data }).render({ container, mode, target })`.
+
+**Kind**: static function
+
+| Properties | Type          | Description  | Default |
+| ---------- | ------------- | ------------ | ------- |
+| container  | `HTMLElement` | the element to render into - `required` | |
+| template   | `Template`    | the template to render - `required` | |
+| data       | `Object`      | data for rendering - `optional` | |
+| mode       | `string`      | as for `render(option)` - `optional` | `replace` |
+| target     | `HTMLElement` | as for `render(option)` - `optional` | |
+
+The promise is rejected, if `template` is not a `Template`; load one with `Template.load` first, or use `Renderer.build`.
 
 ## Custom Directives
 

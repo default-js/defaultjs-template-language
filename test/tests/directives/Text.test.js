@@ -1,112 +1,125 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Renderer } from "../../../index.js";
+import { describe, it, expect } from "vitest";
+import { Renderer, Template } from "../../../index.js";
 
-describe("Text Test - text mode ", () => {
+const UNSECURE = `<script></script><html></html><head></head><object></object><style></style><link></link>`;
+const UNSECURE_SELECTOR = "script, style, body, html, head, object, link";
 
-	beforeAll(() => {});
+describe("text content", () => {
+	it("renders plain text", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div>test text</div>`);
 
-	it("plain text", async () => {
-		const renderer = await Renderer.build({template: "<div>test text</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container});
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
 		expect(container.children[0].textContent).toBe("test text");
 	});
 
-	it("plain text with dynamic content", async () => {
-		const renderer = await Renderer.build({template: "<div>test text ${dynamic} content</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {dynamic:"dynamic"}});
+	it("renders the expressions in a text", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div>test text \${dynamic} content</div>`);
+
+		await Renderer.render({ container, template, data: { dynamic: "dynamic" } });
+
+		expect(container.children).toHaveLength(1);
 		expect(container.children[0].textContent).toBe("test text dynamic content");
 	});
 
-	it("plain text with jstl-text-ignore", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-ignore>test text ${dynamic} content</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {dynamic:"dynamic"}});
+	it("leaves the text unrendered with jstl-text-ignore", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-ignore>test text \${dynamic} content</div>`);
+
+		await Renderer.render({ container, template, data: { dynamic: "dynamic" } });
+
+		expect(container.children).toHaveLength(1);
 		expect(container.children[0].textContent).toBe("test text ${dynamic} content");
 	});
 
+	it("trims a text to jstl-text-trim-length, the ellipsis included", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-trim-length="\${length}">\${longText}</div>`);
 
-	it("plain text with max text length and dynamic content", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-trim-length=\"${length}\">test text ${dynamic} content</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {dynamic:"dynamic", length: 15}});
-		expect(container.children[0].textContent).toBe("test text dy...");
+		await Renderer.render({ container, template, data: { longText: "this is an long\nlong\nlong\ntext", length: 15 } });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].textContent).toBe("this is an l...");
 	});
 
-	it("plain text with dynamic html content", async () => {
-		const renderer = await Renderer.build({template: "<div>test text ${dynamic}</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {dynamic:"<div>dynamic<div> content</div></div>"}});
-		expect(container.children[0].children.length).toBe(0);
-		expect(container.children[0].textContent).toBe("test text dynamic content");
-	});
+	it("renders html as text without its tags", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div>\${html}</div>`);
+		const html = `<b>hello world</b><script type="application/javascript">alert("unsecure")</script>`;
 
-	afterAll(() => {});
+		await Renderer.render({ container, template, data: { html } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.children).toHaveLength(0);
+		expect(element.textContent).toBe(`hello worldalert("unsecure")`);
+	});
 });
 
-describe("Text Test - html mode ", () => {
+describe("jstl-text-content-type html", () => {
+	it("renders the text as html", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html">\${content}</div>`);
 
-	beforeAll(() => {});
+		await Renderer.render({ container, template, data: { content: "<div></div>" } });
 
-	it("html", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-content-type=\"html\">${content}</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {content: "<div></div>"}});
-
-		let element = container.children[0];
-		expect(element.children.length).toBe(1);
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV"]);
 	});
 
-	it("html between text", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-content-type=\"html\">text ${content} test</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {content: "<div></div>"}});
+	it("renders html between text", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html">text \${content} test</div>`);
 
-		let element = container.children[0];
-		expect(element.children.length).toBe(1);
-		expect(element.childNodes.length).toBe(3);
-		expect(element.childNodes[0] instanceof Text).toBe(true);
-		expect(element.childNodes[1] instanceof HTMLElement).toBe(true);
-		expect(element.childNodes[2] instanceof Text).toBe(true);
+		await Renderer.render({ container, template, data: { content: "<div></div>" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.childNodes).toHaveLength(3);
+		expect(element.childNodes[0]).toBeInstanceOf(Text);
+		expect(element.childNodes[0].textContent).toBe("text ");
+		expect(element.childNodes[1]).toBeInstanceOf(HTMLDivElement);
+		expect(element.childNodes[2]).toBeInstanceOf(Text);
+		expect(element.childNodes[2].textContent).toBe(" test");
 	});
 
-	it("html with expression as context (don't execute)", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-content-type=\"html\">${content}</div>"});
-		const container = create("<div></div>").first();
-		await renderer.render({container, data: {content: "<div>${fail}</div>"}, fail:"fail"});
+	it("does not resolve the expressions in the html", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html">\${content}</div>`);
 
-		let element = container.children[0];
-		expect(element.children.length).toBe(1);
+		await Renderer.render({ container, template, data: { content: "<div>${fail}</div>", fail: "fail" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.children).toHaveLength(1);
 		expect(element.children[0].textContent).toBe("${fail}");
-
 	});
 
+	it("removes the tags script, style, body, html, head, object and link", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html">\${content}</div>`);
 
-	it("html secure content (no script, style, body, html, head, object and link tags)", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-content-type=\"html\">${content}</div>"});
-		const container = create("<div></div>").first();
-		const badContent = "<script></script><html></html><head></head><object></object><style></style><link></link>"
-		const badContentSelector = "script, style, body, html, head, object, link";
-		await renderer.render({container, data: {content: badContent + "<div>" + badContent + "</div>"}});
+		await Renderer.render({ container, template, data: { content: `${UNSECURE}<div>${UNSECURE}</div>` } });
 
-		let element = container.children[0];
-		expect(element.children.length).toBe(1);
-		expect(element.find(badContentSelector).length).toBe(0);
-
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.find(UNSECURE_SELECTOR)).toHaveLength(0);
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["DIV"]);
+		expect(element.children[0].children).toHaveLength(0);
 	});
 
-	it("html include unsecure content ", async () => {
-		const renderer = await Renderer.build({template: "<div jstl-text-content-type=\"html\" jstl-text-unsecure>${content}</div>"});
-		const container = create("<div></div>").first();
-		const badContent = "<script></script><html></html><head></head><object></object><style></style><link></link>"
-		const badContentSelector = "script, style, body, html, head, object, link";
-		await renderer.render({container, data: {content: badContent + "<div>" + badContent + "</div>"}});
+	it("keeps those tags with jstl-text-unsecure", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html" jstl-text-unsecure>\${content}</div>`);
 
-		let element = container.children[0];
-		expect(element.find(badContentSelector).length).not.toBe(0);
+		await Renderer.render({ container, template, data: { content: `${UNSECURE}<div>${UNSECURE}</div>` } });
 
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SCRIPT", "OBJECT", "STYLE", "LINK", "DIV"]);
+		expect(Array.from(element.children[4].children, (aChild) => aChild.tagName)).toEqual(["SCRIPT", "OBJECT", "STYLE", "LINK"]);
 	});
-
-	afterAll(() => {});
 });

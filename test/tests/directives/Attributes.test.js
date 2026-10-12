@@ -1,344 +1,199 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Renderer } from "../../../index.js";
+import { describe, it, expect, vi } from "vitest";
+import { Renderer, Template } from "../../../index.js";
 
-describe("Attribute Test - ", () => {
+describe("attribute manipulation", () => {
+	it("keeps the attributes of the template", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="id" attr-1="attr-1" data-test-1="data-test-1"></div>`);
 
-	beforeAll(() => { });
+		await Renderer.render({ container, template });
 
-	it("keep attributes from template", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\"></div>" });
-
-		await renderer.render({ container });
-		let element = container.children[0];
-
-		expect(element.attr("id")).toBe("id");
-		expect(element.attr("attr-1")).toBe("attr-1");
-		expect(element.attr("data-test-1")).toBe("data-test-1");
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.getAttribute("id")).toBe("id");
+		expect(element.getAttribute("attr-1")).toBe("attr-1");
+		expect(element.getAttribute("data-test-1")).toBe("data-test-1");
 	});
 
-	it("boolean attributes -> ?boolean=\"${boolean}\"", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div ?boolean=\"${boolean}\"></div>" });
+	it("sets the value of an attribute by an expression", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div attr="\${attr}"></div>`);
 
-		await renderer.render({ container, data: { boolean: true } });
-		let element = container.children[0];
-		expect(element.attr("boolean")).toBe("true");
+		await Renderer.render({ container, template, data: { attr: "attr" } });
 
-		await renderer.render({ container, data: { boolean: false } });
-		element = container.children[0];
-		expect(element.attr("boolean")).toBe(null);
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].getAttribute("attr")).toBe("attr");
 	});
 
+	it("keeps an empty attribute", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div attr=""></div>`);
 
-	it("append attributes -> attr=\"${attr}\"", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div attr=\"${attr}\"></div>" });
+		await Renderer.render({ container, template, data: { attr: "attr" } });
 
-		await renderer.render({ container, data: { attr: "attr" } });
-		let element = container.children[0];
-		expect(element.attr("attr")).toBe("attr");
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].getAttribute("attr")).toBe("");
 	});
 
-	it("append attributes -> attr=\"\"", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div attr=\"\"></div>" });
+	it.each([
+		{ condition: true, value: "true" },
+		{ condition: false, value: null }
+	])("with a condition only, evaluating to $condition, sets the attribute to $value", async ({ condition, value }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ?boolean="\${boolean}"></div>`);
 
-		await renderer.render({ container, data: { attr: "attr" } });
-		let element = container.children[0];
-		expect(element.attr("attr")).toBe("");
+		await Renderer.render({ container, template, data: { boolean: condition } });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].getAttribute("boolean")).toBe(value);
 	});
 
+	it.each([
+		{ condition: true, value: "attr" },
+		{ condition: false, value: null }
+	])("with a condition evaluating to $condition sets the attribute to $value", async ({ condition, value }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ?attr="\${boolean}" attr="\${attr}"></div>`);
 
-	it("append attributes with condition=true -> ?attr=\"${boolean}\" attr=\"${attr}\"", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div ?attr=\"${boolean}\" attr=\"${attr}\"></div>" });
+		await Renderer.render({ container, template, data: { attr: "attr", boolean: condition } });
 
-		await renderer.render({ container, data: { attr: "attr", boolean: true } });
-		let element = container.children[0];
-		expect(element.attr("attr")).toBe("attr");
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].getAttribute("attr")).toBe(value);
 	});
 
-	it("append attributes with condition=false -> ?attr=\"${boolean}\" attr=\"${attr}\"", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div ?attr=\"${boolean}\" attr=\"${attr}\"></div>" });
+	it("keeps the attributes of the template beside conditional ones", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="id" attr-1="attr-1" data-test-1="data-test-1" ?data-test-2="true" data-test-2="data-test-2" ?data-test-3="false" data-test-3="data-test-3" data-test-4="data-test-4"></div>`);
 
-		await renderer.render({ container, data: { attr: "attr", boolean: false } });
-		let element = container.children[0];
-		expect(element.attr("attr")).toBe(null);
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.getAttribute("id")).toBe("id");
+		expect(element.getAttribute("attr-1")).toBe("attr-1");
+		expect(element.getAttribute("data-test-1")).toBe("data-test-1");
+		expect(element.getAttribute("data-test-2")).toBe("data-test-2");
+		expect(element.getAttribute("data-test-3")).toBeNull();
+		expect(element.getAttribute("data-test-4")).toBe("data-test-4");
+	});
+});
+
+describe("event handler", () => {
+	it("binds a function of the data as handler", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${action}"></div>`);
+		const action = vi.fn();
+
+		await Renderer.render({ container, template, data: { action } });
+		container.children[0].trigger("click");
+
+		expect(action).toHaveBeenCalledOnce();
+		expect(action.mock.calls[0][0].type).toBe("click");
 	});
 
+	it.each([
+		{ kind: "with :delegate", attribute: "@click:delegate" },
+		{ kind: "implied by a string", attribute: "@click" }
+	])("delegates the event as an event of its own, $kind", async ({ attribute }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ${attribute}="\${action}"></div>`);
+		const handle = vi.fn();
 
-	it("event bind with normal function", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div @click=\"${action}\"></div>" });
-
-
-		let action = null
-		const promise = new Promise((r) => {
-			action = function(e) {
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action, boolean: false } });
-		setTimeout(() => container.children[0].trigger("click"), 1);
-
-		return promise;
-	});
-
-	it("event bind with arrow function", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div @click=\"${action}\"></div>" });
-
-
-		let action = null
-		const promise = new Promise((r) => {
-			action = (e) => {
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action, boolean: false } });
-		setTimeout(() => container.children[0].trigger("click"), 1);
-
-		return promise;
-	});
-
-	it("event bind - delegate", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div @click:delegate=\"${action}\"></div>" });
-
-
-		let handle = null
-		const promise = new Promise((r) => {
-			handle = (e) => {
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action: "event-delegate-test", boolean: false } });
+		await Renderer.render({ container, template, data: { action: "event-delegate-test" } });
 		container.children[0].on("event-delegate-test", handle);
-		setTimeout(() => container.children[0].trigger("click"), 1);
+		container.children[0].trigger("click");
 
-		return promise;
+		expect(handle).toHaveBeenCalledOnce();
 	});
 
-	it("event bind - delegate -> triggered at child", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div @click:delegate=\"${action}\"><span>trigger</span></div>" });
+	it("delegates an event triggered at a child from the element", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click:delegate="\${action}"><span>trigger</span></div>`);
+		const handle = vi.fn();
 
-
-		let handle = null
-		const promise = new Promise((r) => {
-			handle = (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				expect(e.target).toBe(container.children[0]);
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action: "event-delegate-test", boolean: false } });
+		await Renderer.render({ container, template, data: { action: "event-delegate-test" } });
 		container.on("event-delegate-test", handle);
-		setTimeout(() => container.children[0].children[0].trigger("click"), 1);
+		container.children[0].children[0].trigger("click");
 
-		return promise;
+		expect(handle).toHaveBeenCalledOnce();
+		expect(handle.mock.calls[0][0].target).toBe(container.children[0]);
 	});
 
+	it.each([
+		{ condition: true, calls: 1 },
+		{ condition: false, calls: 0 }
+	])("with a condition evaluating to $condition delegates the event $calls times", async ({ condition, calls }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ?@click:delegate="\${boolean}" @click:delegate="\${action}"></div>`);
+		const handle = vi.fn();
 
-	it("event bind - delegate (impliced)", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div @click=\"${action}\"></div>" });
-
-
-		let handle = null
-		const promise = new Promise((r) => {
-			handle = (e) => {
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action: "event-delegate-test", boolean: false } });
+		await Renderer.render({ container, template, data: { action: "event-delegate-test", boolean: condition } });
 		container.children[0].on("event-delegate-test", handle);
-		setTimeout(() => container.children[0].trigger("click"), 1);
+		container.children[0].trigger("click");
 
-		return promise;
+		expect(handle).toHaveBeenCalledTimes(calls);
 	});
-
-	it("event bind:delegate - with condition", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div ?@click:delegate=\"${boolean}\" @click:delegate=\"${action}\"></div>" });
-
-
-		let handle = null
-		const promise = new Promise((r) => {
-			handle = (e) => {
-				r();
-			};
-		});
-
-		await renderer.render({ container, data: { action: "event-delegate-test", boolean: true } });
-		container.children[0].on("event-delegate-test", handle);
-		setTimeout(() => container.children[0].trigger("click"), 1);
-
-		return promise;
-	});
-
-	it("event bind:delegate - with condition", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div ?@click:delegate=\"${boolean}\" @click:delegate=\"${action}\"></div>" });
-
-
-		let handle = null
-		const promise = new Promise((r) => {
-			handle = (e) => {
-				throw new Error();
-			};
-		});
-
-		await renderer.render({ container, data: { action: "event-delegate-test", boolean: false } });
-		container.children[0].on("event-delegate-test", handle);
-		setTimeout(() => container.children[0].trigger("click"), 1);
-
-		return Promise.race([promise, new Promise((r) => {
-			setTimeout(r, 100);
-		})]);
-	});
-
-
-
-	it("attributes copied", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: "<div id=\"id\" attr-1=\"attr-1\" data-test-1=\"data-test-1\" ?data-test-2=\"true\" data-test-2=\"data-test-2\" ?data-test-3=\"false\" data-test-3=\"data-test-3\" data-test-4=\"data-test-4\"></div>" });
-
-		await renderer.render({ container });
-		let element = container.children[0];
-
-		expect(element.attr("id")).toBe("id");
-		expect(element.attr("attr-1")).toBe("attr-1");
-		expect(element.attr("data-test-1")).toBe("data-test-1");
-		expect(element.attr("data-test-2")).toBe("data-test-2");
-		expect(element.attr("data-test-3")).toBe(null);
-		expect(element.attr("data-test-4")).toBe("data-test-4");
-	});
-
-	afterAll(() => { });
 });
 
-describe("Attribute->event bind->toggleClass - ", () => {
+describe("event handler toggleClass", () => {
+	it("toggles the class at the target found by the selector", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="source" @click:toggleClass:test="#target"></div><div id="target"></div>`);
 
-	beforeAll(() => { });
+		await Renderer.render({ container, template, data: {} });
+		const [source, target] = container.children;
 
-	it("toggleClass with target selector", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template:
-			`<div id="source" @click:toggleClass:test="#target"></div>
-			<div id="target"></div>
-		` });
-
-		await renderer.render({ container, data: {} });
-		const source = container.find("#source").first();
-		const target = container.find("#target").first();
-
-		expect(target.is(":not(.test)")).toBe(true);
+		expect(target.className).toBe("");
 		source.trigger("click");
-		expect(target.is(".test")).toBe(true);
+		expect(target.className).toBe("test");
 		source.trigger("click");
-		expect(target.is(":not(.test)")).toBe(true);
+		expect(target.className).toBe("");
 	});
 
-	it("toggleClass", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<div id="target" @click:toggleClass:test=""></div>` });
+	it("toggles the class at the element without selector", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="target" @click:toggleClass:test=""></div>`);
 
-		await renderer.render({ container, data: {} });
-		const target = container.find("#target").first();
+		await Renderer.render({ container, template, data: {} });
+		const target = container.children[0];
 
-		expect(target.is(":not(.test)")).toBe(true);
+		expect(target.className).toBe("");
 		target.trigger("click");
-		expect(target.is(".test")).toBe(true);
+		expect(target.className).toBe("test");
 		target.trigger("click");
-		expect(target.is(":not(.test)")).toBe(true);
+		expect(target.className).toBe("");
 	});
-
-	afterAll(() => { });
 });
 
-describe("OLD FUNCTION SPLITTER: Attribute->event bind->toggleAttribute -", () => {
+describe.each([
+	{ separator: ":" },
+	{ separator: "::" }
+])("event handler toggleAttribute, separated by $separator", ({ separator }) => {
+	it("toggles the attribute at the target found by the selector", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="source" @click${separator}toggleAttribute${separator}test="#target"></div><div id="target"></div>`);
 
-	beforeAll(() => { });
+		await Renderer.render({ container, template, data: {} });
+		const [source, target] = container.children;
 
-	it("toggleAttribute with target selector", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template:
-			`<div id="source" @click:toggleAttribute:test="#target"></div>
-			<div id="target"></div>
-		` });
-
-		await renderer.render({ container, data: {} });
-		const source = container.find("#source").first();
-		const target = container.find("#target").first();
-
-		expect(target.is(":not([test])")).toBe(true);
+		expect(target.getAttribute("test")).toBeNull();
 		source.trigger("click");
-		expect(target.is("[test]")).toBe(true);
+		expect(target.getAttribute("test")).toBe("");
 		source.trigger("click");
-		expect(target.is(":not([test])")).toBe(true);
+		expect(target.getAttribute("test")).toBeNull();
 	});
 
-	it("toggleAttribute", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<div id="target" @click:toggleAttribute:test=""></div>` });
+	it("toggles the attribute at the element without selector", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div id="target" @click${separator}toggleAttribute${separator}test=""></div>`);
 
-		await renderer.render({ container, data: {} });
-		const target = container.find("#target").first();
+		await Renderer.render({ container, template, data: {} });
+		const target = container.children[0];
 
-		expect(target.is(":not([test])")).toBe(true);
+		expect(target.getAttribute("test")).toBeNull();
 		target.trigger("click");
-		expect(target.is("[test]")).toBe(true);
+		expect(target.getAttribute("test")).toBe("");
 		target.trigger("click");
-		expect(target.is(":not([test])")).toBe(true);
+		expect(target.getAttribute("test")).toBeNull();
 	});
-
-	afterAll(() => { });
-});
-
-describe("Attribute->event bind->toggleAttribute -", () => {
-
-	beforeAll(() => { });
-
-	it("toggleAttribute with target selector", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template:
-			`<div id="source" @click::toggleAttribute::test="#target"></div>
-			<div id="target"></div>
-		` });
-
-		await renderer.render({ container, data: {} });
-		const source = container.find("#source").first();
-		const target = container.find("#target").first();
-
-		expect(target.is(":not([test])")).toBe(true);
-		source.trigger("click");
-		expect(target.is("[test]")).toBe(true);
-		source.trigger("click");
-		expect(target.is(":not([test])")).toBe(true);
-	});
-
-	it("toggleAttribute", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<div id="target" @click::toggleAttribute::test=""></div>` });
-
-		await renderer.render({ container, data: {} });
-		const target = container.find("#target").first();
-
-		expect(target.is(":not([test])")).toBe(true);
-		target.trigger("click");
-		expect(target.is("[test]")).toBe(true);
-		target.trigger("click");
-		expect(target.is(":not([test])")).toBe(true);
-	});
-
-	afterAll(() => { });
 });

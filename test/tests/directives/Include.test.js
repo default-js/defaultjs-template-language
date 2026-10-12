@@ -1,38 +1,35 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Renderer } from "../../../index.js";
+import { describe, it, expect } from "vitest";
+import { Renderer, Template } from "../../../index.js";
 
-describe("Include Test - ", () => {
-	beforeAll(() => {});
+const INCLUDE_URL = "/templates/directives/Include/LoadFromURL.tpl.html";
 
-	it("load template from url", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: '<div jstl-include="/templates/directives/Include/LoadFromURL.tpl.html"></div>' });
-		await renderer.render({ container });
-		let result = container;
-		expect(result.children.length).toBe(1);
-		result = result.children[0];
-		expect(result.children.length).toBe(5);
-		container.remove();
+describe("jstl-include", () => {
+	it("renders the template loaded from a URL as content of the element", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-include="${INCLUDE_URL}"></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
 	});
 
-	it("load template from url after if", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<div jstl-if="\${include}" jstl-include="/templates/directives/Include/LoadFromURL.tpl.html"></div>` });
-		await renderer.render({ container, data: { include: true } });
-		let result = container;
-		expect(result.children.length).toBe(1);
-		result = result.children[0];
-		expect(result.children.length).toBe(5);
-		container.remove();
+	it("renders the template after jstl-if evaluated to true", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-if="\${include}" jstl-include="${INCLUDE_URL}"></div>`);
+
+		await Renderer.render({ container, template, data: { include: true } });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
 	});
 
-	it("load template from url after if on jstl-tag", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({ template: `<jstl jstl-if="\${include}" jstl-include="/templates/directives/Include/LoadFromURL.tpl.html"></jstl>` });
-		await renderer.render({ container, data: { include: true } });
-		expect(container.children.length).toBe(5);
-		container.remove();
-	});
+	it("renders the template in place of a jstl tag after jstl-if evaluated to true", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<jstl jstl-if="\${include}" jstl-include="${INCLUDE_URL}"></jstl>`);
 
-	afterAll(() => {});
+		await Renderer.render({ container, template, data: { include: true } });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
+	});
 });

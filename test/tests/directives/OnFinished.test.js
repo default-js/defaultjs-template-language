@@ -1,23 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Renderer } from "../../../index.js";
+import { describe, it, expect, vi } from "vitest";
+import { Renderer, Template } from "../../../index.js";
 
-describe("OnFinished Directive Test - ", () => {
+describe("jstl-on-finished", () => {
+	it("resolves its expression once the rendering is finished", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-on-finished="\${finished()}"></div>`);
+		const finished = vi.fn();
 
-	beforeAll(() => { });
+		await Renderer.render({ container, template, data: { finished } });
 
-	it("default case 1", async () => {
-		window.ONFINISH_CASE_1 = false;
-		const template =`<div jstl-on-finished="\${window.ONFINISH_CASE_1 = true}"></div>`;
-		const container = create("<div></div>").first();
-
-		document.body.append(container);
-		const renderer = await Renderer.build({template});
-
-		await renderer.render({ container, template });
-		expect(window.ONFINISH_CASE_1).toBe(true);
+		expect(finished).toHaveBeenCalledOnce();
+		expect(container.children).toHaveLength(1);
 	});
-
-
-
-	afterAll(() => { });
 });

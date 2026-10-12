@@ -1,13 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect } from "vitest";
+// loaded first on purpose: as the first module, src/Directive.js once threw a ReferenceError
 import Directive from "../../src/Directive.js";
 import "../../src/directives/index.js";
 
-describe("Test directive chain - ", () => {
-
-	beforeAll(() => {});
-
-	it("order test", async () => {
-		const expected = [
+describe("Directive.directives", () => {
+	it("lists the built-in directives in the order they run", () => {
+		expect(Directive.directives.map((aDirective) => aDirective.name)).toEqual([
 			"initial",
 			"if",
 			"data",
@@ -19,12 +17,6 @@ describe("Test directive chain - ", () => {
 			"text",
 			"attach-element",
 			"on-finished"
-		];
-
-		const directive = Directive.directives.map(d => d.name);
-
-		expect(directive).toEqual(expected);
+		]);
 	});
-
-	afterAll(() => {});
 });

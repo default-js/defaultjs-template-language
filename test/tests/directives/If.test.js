@@ -1,42 +1,38 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { Renderer } from "../../../index.js";
+import { describe, it, expect, vi } from "vitest";
+import { Renderer, Template } from "../../../index.js";
 
-describe("If Test - ", () => {
+describe("jstl-if", () => {
+	it.each([
+		{ render: true, tagNames: ["DIV"] },
+		{ render: false, tagNames: [] }
+	])("evaluating to $render renders $tagNames", async ({ render, tagNames }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-if="\${render}"></div>`);
 
-	beforeAll(() => {});
+		await Renderer.render({ container, template, data: { render } });
 
-	it("jstl-if=${render} render=true", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({template: "<div jstl-if=\"${render}\"></div>"});
-		await renderer.render({container, data : {render : true}});
-		expect(container.children.length).toBe(1);
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
 	});
 
-	it("jstl-if=${render} render=false", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({template: "<div jstl-if=\"${render}\"></div>"});
-		await renderer.render({container, data : {render : false}});
-		expect(container.children.length).toBe(0);
+	it("evaluating to false executes no other directive of the element", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-if="\${render}" attr="\${executed()}"></div>`);
+		const executed = vi.fn();
+
+		await Renderer.render({ container, template, data: { render: false, executed } });
+
+		expect(container.children).toHaveLength(0);
+		expect(executed).not.toHaveBeenCalled();
 	});
 
+	it("evaluating to false renders none of the children", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-if="\${render}"><div>\${executed()}</div></div>`);
+		const executed = vi.fn();
 
-	it("jstl-if=${render} render=false -> no other directive executed", async () => {
-		const container = create("<div></div>").first();
-		const renderer = await Renderer.build({template: "<div jstl-if=\"${render}\" attr=\"test\"></div>"});
-		await renderer.render({container, data : {render : false}});
-		expect(container.children.length).toBe(0);
+		await Renderer.render({ container, template, data: { render: false, executed } });
+
+		expect(container.children).toHaveLength(0);
+		expect(executed).not.toHaveBeenCalled();
 	});
-
-	it("jstl-if=${render} render=false -> don't execute children", async () => {
-		const container = create("<div></div>").first();
-		let fail = false;
-		const renderer = await Renderer.build({template: "<div jstl-if=\"${render}\"><div>${executed()}</div></div>", data : {
-			executed : () =>{ fail = true}
-		}});
-		await renderer.render({container, data : {render : false}});
-		expect(container.children.length).toBe(0);
-		expect(fail).toBe(false);
-	});
-
-	afterAll(() => {});
 });

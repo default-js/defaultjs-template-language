@@ -19,6 +19,43 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-12 — What does a test case assert, and how is it written?
+
+**Decision:** As `TESTING.md` sets it out in "What a case asserts", "How a case is written",
+"Skipped and failing cases" and "Fixtures". The result is checked by targeted assertions, the
+expected number of children always among them, independent of the formatting of the template; text
+is compared exactly through `textContent`, whitespace included; the cases of a directive render the
+way `README.md` shows it, `Template.load` and the static `Renderer.render`; a case that reveals a
+defect is marked `it.fails` and names the defect's backlog entry. The maintainer's decisions on
+these four; the other rules were agreed with the maintainer as drafted.
+
+**Reasoning:** The cases ported from Karma pass where the behaviour is wrong (found 2026-10-12): a
+second `render` not awaited, so its assertion runs before it; a case named "direct mode" that tests
+`set`; a case that passes through a default name because the attribute it sets does not exist;
+assertions on a count only, down to `find("div").length > 100`; negative event cases that race a
+100 ms timeout and `throw` inside the handler, where the error never reaches the case. A count
+alone passes with wrong content, so the properties the behaviour is about are asserted beside it;
+counting through `children` keeps the whitespace of a formatted template out of the count. Text is
+compared with its whitespace because whitespace is part of the result — in a `<pre>` it is the
+point, and a `trim()` by default would hide it. A handler as spy is asserted after a synchronous
+`trigger`, since the handlers are bound once `render` is awaited and extdom's `trigger` dispatches
+at once (`EventSupport.js`, read 2026-10-12). Rendering as `README.md` shows it makes the cases use
+the documented API. `it.fails` keeps the right assertion in the suite and the gate green; Vitest
+fails a case marked so once it passes ("Expect test to fail", Vitest 5.0.3), so a fix cannot go
+unnoticed.
+
+**Alternatives:** The rendered markup compared as a string — short and complete, but tied to the
+formatting of the template and to the serialization; with a helper that drops whitespace text
+nodes, a helper of its own and whitespace no longer asserted. `Renderer.build`, through which most
+ported cases render — it takes a string, and `README.md` does not describe it. For a revealed
+defect: the weak assertion kept until the fix, or the case removed until then — either loses the
+right assertion until someone writes it again.
+
+**Consequences:** Every case of the suite is revised under these rules. A case asserting text in a
+formatted template carries the template's whitespace in its expectation. `it.fails` passes for any
+failure, also a wrong one, so a case is seen failing for the right reason before it is marked.
+Cases of a directive depend on `Template.load` and the static `Renderer.render` working.
+
 ## 2026-10-12 — How is the test suite organized?
 
 **Decision:** Vitest finds the test files, every `*.test.js` under `test/`, and runs each in a page

@@ -1,189 +1,149 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { Template } from "../../index.js";
 
-describe("Template Test - Template.load()", () => {
+const TEMPLATE_URL = "/templates/Template/LoadFromURL.html";
 
-	beforeAll(() => {});
+describe("Template.load", () => {
+	it("loads a template from source code", async () => {
+		const result = await Template.load(`<div><div></div><span></span></div>`, false);
 
-	it("load from source code", async () => {
-		const source =	"<div>" +
-						"\t<div></div>" +
-						"\t<div></div>" +
-						"</div>";
-
-		const result = await Template.load(source, false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBeInstanceOf(HTMLTemplateElement);
+		const content = result.template.content;
+		expect(content.children).toHaveLength(1);
+		expect(Array.from(content.children[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
 	});
 
-	it("load from url string", async () => {
-		const result = await Template.load(new URL("/templates/Template/LoadFromURL.html", location), false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.template.content.children.length).toBe(5);
-		expect(result.key).toBeDefined();
+	it("loads a template from a URL", async () => {
+		const result = await Template.load(new URL(TEMPLATE_URL, location), false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBeInstanceOf(HTMLTemplateElement);
+		expect(result.template.content.children).toHaveLength(5);
 	});
 
-	it("load from url", async () => {
-		const url = new URL("/templates/Template/LoadFromURL.html", location);
-		const result = await Template.load(url.toString(), false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.key).toBeDefined();
-	});
-
-	it("load from HTMLTemplateElement", async () => {
-		const template = create("<div></div>" +
-								"<div></div>" +
-								"<div></div>" +
-								"<div></div>" +
-								"<div></div>", true);
+	it("loads a template from an HTMLTemplateElement", async () => {
+		const template = document.createElement("template");
+		template.innerHTML = `<div></div><div></div><div></div><div></div><div></div>`;
 
 		const result = await Template.load(template, false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.template.content.childNodes.length).toBe(5);
-		expect(result.key).toBeDefined();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBe(template);
+		expect(result.template.content.children).toHaveLength(5);
 	});
 
-	it("load from Node", async () => {
-		const node = create(`<div><div></div><div></div></div>`).first();
+	it("loads a template from a Node", async () => {
+		const node = create(`<div><div></div><span></span></div>`).first();
 
-		expect(node instanceof Node).toBe(true);
 		const result = await Template.load(node, false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.importContent().length).toBe(1);
-		expect(result.key).toBeDefined();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBeInstanceOf(HTMLTemplateElement);
+		const content = result.importContent();
+		expect(content).toHaveLength(1);
+		expect(Array.from(content[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
 	});
 
-	it("load from NodeList", async () => {
-		const nodelist = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>");
+	it("loads a template from a NodeList", async () => {
+		const nodelist = create(`<div><div></div><span></span></div>`);
+		expect(nodelist).toBeInstanceOf(NodeList);
 
-		expect(nodelist instanceof NodeList).toBe(true);
 		const result = await Template.load(nodelist, false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.key).toBeDefined();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBeInstanceOf(HTMLTemplateElement);
+		const content = result.template.content;
+		expect(content.children).toHaveLength(1);
+		expect(Array.from(content.children[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
 	});
 
-	it("load from HTMLCollection", async () => {
-		const htmlcollection = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>",true).content.children;
+	it("loads a template from an HTMLCollection", async () => {
+		const htmlcollection = create(`<div><div></div><span></span></div>`, true).content.children;
+		expect(htmlcollection).toBeInstanceOf(HTMLCollection);
 
-		expect(htmlcollection instanceof HTMLCollection).toBe(true);
 		const result = await Template.load(htmlcollection, false);
-		expect(result).toBeDefined();
-		expect(result instanceof Template).toBe(true);
-		expect(result.template).toBeDefined();
-		expect(result.template instanceof HTMLTemplateElement).toBe(true);
-		expect(result.key).toBeDefined();
-	});
 
-	afterAll(() => {});
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template).toBeInstanceOf(HTMLTemplateElement);
+		const content = result.template.content;
+		expect(content.children).toHaveLength(1);
+		expect(Array.from(content.children[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
+	});
 });
 
-describe("Template Cache Test - Template.load()", () => {
+describe("Template.fetch", () => {
+	// defect: B2
+	it.fails("loads a template from a URL given as string", async () => {
+		const result = await Template.fetch(TEMPLATE_URL, false);
 
-	beforeAll(() => {});
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template.content.children).toHaveLength(5);
+	});
+});
 
-	it("load from source code", async () => {
-		const source =	"<div>" +
-						"\t<div></div>" +
-						"\t<div></div>" +
-						"</div>";
+describe("Template.load - cache", () => {
+	it("returns the cached template for the same source code", async () => {
+		const source = `<div><div></div><span></span></div>`;
 
 		const expected = await Template.load(source);
 		const result = await Template.load(source);
+
 		expect(result).toBe(expected);
 	});
 
-	it("load from url string", async () => {
-		const expected = await Template.load("/templates/Template/LoadFromURL.html");
-		const result = await Template.load("/templates/Template/LoadFromURL.html");
+	it("returns the cached template for the same URL", async () => {
+		const expected = await Template.load(new URL(TEMPLATE_URL, location));
+		const result = await Template.load(new URL(TEMPLATE_URL, location));
+
 		expect(result).toBe(expected);
 	});
 
-	it("load from url", async () => {
-		const url = new URL("/templates/Template/LoadFromURL.html", location.origin).toString();
+	// defect: B2
+	it.fails("returns the cached template for the same URL given as string", async () => {
+		const expected = await Template.fetch(TEMPLATE_URL);
+		const result = await Template.fetch(TEMPLATE_URL);
 
-		const expected = await Template.load(url);
-		const result = await Template.load(url);
 		expect(result).toBe(expected);
 	});
 
-	it("load from HTMLTemplateElement", async () => {
-		const template = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>", true);
+	it("returns the cached template for the same HTMLTemplateElement", async () => {
+		const template = document.createElement("template");
+		template.innerHTML = `<div><div></div><span></span></div>`;
 
 		const expected = await Template.load(template);
 		const result = await Template.load(template);
+
 		expect(result).toBe(expected);
 	});
 
-	it("load from Node", async () => {
-		const node = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>").first();
+	it.each([
+		{ type: "Node", source: () => create(`<div><div></div><span></span></div>`).first() },
+		{ type: "NodeList", source: () => create(`<div><div></div><span></span></div>`) }
+	])("creates a new template from a $type when cache is false", async ({ source }) => {
+		const node = source();
 
 		const expected = await Template.load(node, false);
 		const result = await Template.load(node, false);
+
 		expect(result).not.toBe(expected);
 	});
 
-	it("load from NodeList", async () => {
-		const nodelist = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>");
-
-		const expected = await Template.load(nodelist, false);
-		const result = await Template.load(nodelist, false);
-		expect(result).not.toBe(expected);
-	});
-
-	it("load from HTMLCollection", async () => {
-		const htmlcollection = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>",true).content.children;
+	it("does not cache a template from an HTMLCollection", async () => {
+		const htmlcollection = create(`<div><div></div><span></span></div>`, true).content.children;
 
 		const expected = await Template.load(htmlcollection);
 		const result = await Template.load(htmlcollection);
+
 		expect(result).not.toBe(expected);
 	});
 
-	it("load with alias", async () => {
-		const nodelist = create("<div>" +
-								"\t<div></div>" +
-								"\t<div></div>" +
-								"</div>");
+	it("returns the cached template for the same alias", async () => {
+		const nodelist = create(`<div><div></div><span></span></div>`);
 
 		const expected = await Template.load(nodelist, true, "test");
 		const result = await Template.load(nodelist, true, "test");
+
 		expect(result).toBe(expected);
 	});
-
-	afterAll(() => {});
 });
