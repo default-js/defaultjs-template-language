@@ -19,6 +19,35 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-12 — How does the package declare its module format, its entry points and its build?
+
+**Decision:** `package.json` declares `"type": "module"` and an `exports` field opening `.`,
+`./index.js`, `./browser.js`, `./src/*`, `./dist/*` and `./package.json`. The webpack configuration
+is an ES module, `webpack.config.mjs`; Node 24 is pinned in `.nvmrc`. The `CopyPlugin` and
+`copy-webpack-plugin` are removed. The maintainer's decisions.
+
+**Reasoning:** The sources are ES modules. Without `"type"`, Node 24 parses a source as CommonJS
+first, warns `MODULE_TYPELESS_PACKAGE_JSON` and parses it again as ES module (measured
+2026-10-12). `exports` names the entry points; `./src/*` and `./dist/*` keep deep imports open, and
+`./package.json`, opened as in the expression language, leaves every published file that can be
+imported reachable — `exports` closes nothing that worked before. Under `"type": "module"` the
+CommonJS configuration fails with `ReferenceError: require is not defined in ES module scope`
+(measured 2026-10-12), hence the move to `.mjs`. The `CopyPlugin` copied only `./src/css`, which
+does not exist. Measured 2026-10-12 against a build of the same sources with the former
+configuration: webpack now treats the sources as strict ES modules, and the development bundles
+differ only in the order of the modules, the name of an unused parameter and their inline source
+map; the minified `module` bundle is identical; the minified `browser` bundle orders its modules
+differently and renders a template with `jstl-if`, `jstl-foreach`, `jstl-choose`, `jstl-data`, `jstl`
+and html content the same in Chromium, Firefox and WebKit.
+
+**Alternatives:** No `exports`, as before — every path open, no declared entry point. `exports`
+without `./src/*` — it would close the deep imports consumers use. `webpack.config.cjs` — the
+smallest change, keeping the configuration in CommonJS. Keeping the `CopyPlugin` for files to come.
+
+**Consequences:** A module a consumer imports has to lie under one of the opened paths; every
+module under `src/` can be imported, so moving or renaming one changes a public path. Copying files
+into `dist/` needs a plugin again.
+
 ## 2026-10-12 — What does a test case assert, and how is it written?
 
 **Decision:** As `TESTING.md` sets it out in "What a case asserts", "How a case is written",

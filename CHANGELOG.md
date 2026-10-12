@@ -15,6 +15,11 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ### Changed
 
+- `package.json` declares `"type": "module"`: Node loads the `.js` files of the package as ES
+  modules, without the warning `MODULE_TYPELESS_PACKAGE_JSON` and without parsing them twice.
+- `package.json` declares `exports`: `.` and `./index.js` for the ES module entry, `./browser.js`,
+  `./src/*`, `./dist/*` and `./package.json`. Every published file that can be imported stays
+  reachable; any other path of the package is refused, in Node with `ERR_PACKAGE_PATH_NOT_EXPORTED`.
 - The runtime dependencies are declared with caret ranges instead of `latest`:
   `@default-js/defaultjs-expression-language` `^3.0.2`, `@default-js/defaultjs-common-utils`
   `^1.0.0`, `@default-js/defaultjs-extdom` `^2.0.0`. A new major release of a dependency no longer

@@ -130,16 +130,6 @@ branch also removes the attribute before reading its value as the delay, so the 
 Agreed: implemented anew — first reproduce in a test what broke when it was enabled,
 then implement it as `README.md` describes.
 
-### B7 — dev server paths do not match the repository
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`webpack.config.js`, `devServer`: `static` and `watchFiles` name `./webcontent`, the directory is
-`WebContent` — works on case-insensitive file systems only. `./src/css` (also in `CopyPlugin`)
-does not exist.
-
-Agreed: fixed with the move to `webpack.config.mjs` (B31).
-
 ### B9 — `web/` holds stale build output
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -171,7 +161,7 @@ Agreed: removed.
 
 **Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
 
-`webpack.config.js` sets no `output.library`; `dist/module-defaultjs-template-language[.min].js`
+`webpack.config.mjs` sets no `output.library`; `dist/module-defaultjs-template-language[.min].js`
 is a script that runs `index.js` and exposes none of its exports.
 
 Agreed: the `module` bundle becomes an ES module exporting what `index.js` exports; the `browser`
@@ -213,6 +203,11 @@ and its `dist/*-defaultjs-template-language.js` are mixed — so the measurement
 a working copy checked out under `.gitattributes`.
 
 Agreed: measured with the first build of 2.0.0, and the rule added if the bundles need it.
+
+Measured 2026-10-12 on builds for B30 and B31, from the working copy with `core.autocrlf=true`
+(35 tracked files with CRLF): the development bundles carry CR — 3164 of 7372 line ends in
+`browser-…js`, 3153 of 7343 in `module-…js` — the minified bundles and their maps none. Those
+builds were not committed; `dist/` is unchanged. Which sources bring the CR is not attributed.
 
 ### B21 — ship type declarations with 2.0.0
 
@@ -312,20 +307,6 @@ goal of 2.0.0 (2026-10-11).
 
 Coverage is complete, measured with v8 coverage; whatever stays untested on purpose is listed one
 by one with its reason.
-
-### B30 — package shape: ES module and `exports`
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`package.json` gets `"type": "module"` and an `exports` field opening `.`, `./index.js`,
-`./browser.js`, `./src/*` and `./dist/*` — clear entry points, deep imports stay open.
-
-### B31 — build configuration as an ES module
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-webpack stays; `webpack.config.js` becomes `webpack.config.mjs`, which `"type": "module"` (B30)
-requires anyway. Node 24 is pinned in `.nvmrc`. B7 is fixed with it.
 
 ### B32 — extension API
 
