@@ -18,6 +18,13 @@ export const SCOPES = {
 
 const APPLICATION_SCOPE_RESOLVER = new ExpressionResolver({ name: SCOPES.application });
 
+
+/**
+ * @readonly
+ * @enum {string}
+ */
+const MODETYPES = ["replace", "append", "prepend"];
+
 const MODEWORKER = {
 	replace: async ({ container, target = null, content }) => {
 		if (target) {
@@ -126,16 +133,16 @@ export default class Renderer {
 	}
 
 	/**
-	 * @param
-	 * 		container HTMLElement -> target to render in
-	 * @param
-	 * 		data Object|... -> data to used at rendering
-	 * @param
-	 * 		template Template|Node|NodeList|HTMLCollection|String -> template to render
-	 * @param
-	 * 		mode "append"|"insert"|"replace"
-	 * @param
-	 * 		target
+	 * Renders a template into a container.
+	 * 
+	 * @param {object|Context} context 
+	 * @param {HTMLElement} context.container
+	 * @param {object} context.data
+	 * @param {Template|string|Node|NodeList|HTMLCollection} [context.template]
+	 * @param {MODETYPES} [context.mode]
+	 * @param {HTMLElement} [context.root]
+	 * @param {HTMLElement} [context.target]
+	 * @returns {Promise<Context>}
 	 */
 	async render(context) {
 		const calledWithContext = context instanceof Context;
@@ -165,6 +172,20 @@ export default class Renderer {
 		return new Renderer({ template, data });
 	}
 
+	/**
+	 * Renders a template into a container.
+	 *
+	 * @static
+	 * @async
+	 * @param {object} context
+	 * @param {HTMLElement} context.container 
+	 * @param {object} context.data 
+	 * @param {Template|string|Node|NodeList|HTMLCollection} context.template 
+	 * @param {MODETYPES} context.mode 
+	 * @param {HTMLElement} context.target 
+	 * @returns {Promise<Context>}
+	 * @memberof Renderer
+	 */
 	static async render({ container, data, template, mode, target }) {
 		const renderer = new Renderer({ template, data });
 		return renderer.render({ container, mode, target });

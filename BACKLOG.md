@@ -57,12 +57,8 @@ then it may still change.
 - **README:** complete and correct at 2.0.0 — the errors of B23 fixed, the empty sections filled
   (B11), every function of the code documented or removed (B24, decided item by item). Code and
   README agree.
-- **Benchmarks (B16):** `npm run bench` through `vitest bench`, as in the expression language. The
-  baseline is measured on the sources of 1.7.20, before the first change to `src/`; every stage
-  after it gets its row in `BENCHMARKS.md`. Before the baseline the cases are extended by one each
-  for loops (`foreach`, `repeat`), conditions (`if`, `choose`), attributes and events, and
-  `include`, so every one of them has its 1.7.20 value. One exception: the import in
-  `src/Context.js` that Vitest's browser mode could not load was fixed before the baseline.
+- **Benchmarks:** the baseline on the sources of 1.7.20 is in `BENCHMARKS.md` (2026-10-11); every
+  later stage gets its row.
 - **Clean-up:** `web/` (B9) and the dead code of B12 are removed.
 - **Browsers (B28, B35):** current evergreen browsers — Chrome, Edge, Firefox, Safari — named in the README
   with their limitations (e.g. `is` in Safari). The suite runs in all three engines through
@@ -74,8 +70,8 @@ then it may still change.
 - **Error behaviour (B34):** decided per directive — what the result holds and what is logged when a
   directive or an expression fails — written into `README.md` first, then tested. Today renderer
   and directives log and render on, from 15 `console.*` call sites in `src/`.
-- **Tracking:** no plan under `plans/`; every scope item is a backlog entry. Order decided
-  2026-10-11: the 1:1 port of B28, B16 with its baseline, then everything that changes `src/`.
+- **Tracking:** no plan under `plans/`; every scope item is a backlog entry, its order decided when
+  it is started. The baseline is measured, so `src/` may change.
 - **Releases:** no pre-release on npm; 1.7.20 stays `latest` until 2.0.0.
 - **Also in 2.0.0:** B20, measured with the first build. **Not in 2.0.0:** B25 and B26.
 
@@ -167,36 +163,6 @@ Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extensi
 `SCOPES.directive` in `src/Renderer.js` is used nowhere.
 
 Agreed: removed.
-
-### B16 — benchmark runner and baseline
-
-**Status:** in progress · **Kind:** task · **Blocks 2.0.0**
-
-The record in `BENCHMARKS.md` is a table, one row per measurement. Today the cases in
-`test/tests/performance/index.js` run nowhere and time a single render with `Date.now()`.
-
-Agreed: `npm run bench` through `vitest bench`, as in the expression language. The cases are
-extended by one each for loops (`foreach`, `repeat`), conditions (`if`, `choose`), attributes and
-events, and `include`. Then the baseline is measured on the sources of 1.7.20, before the first
-change to `src/`; every later stage gets its row.
-
-Exception, decided 2026-10-11: `src/Context.js` imported a named export `Renderer` that
-`src/Renderer.js` does not have, so no browser could load the sources unbundled; it was fixed before
-the baseline. The binding is used only in a JSDoc type, so the fix does not change what is
-measured.
-
-Scope detailed 2026-10-11: Vitest 5's benchmark API (`bench` of the test context; the `bench()` of
-Vitest 4 is gone), measured in Chromium, Firefox and WebKit. Cases 1–3 stay as they are. `if`,
-`choose`, attributes (`attr`, `?attr`), events (`@click`) and `include` are each measured nested,
-at a depth of 10, 100 and 500 elements, each level carrying the directive, and side by side, with
-10, 100 and 1000 siblings; `foreach` and `repeat` flat over 10, 100 and 1000 items, one element
-each. Recorded per engine as the median of three runs of `latency.mean`. `BENCHMARKS.md` gets a
-table "States" (version, state, change, date) and one table per case group, a row per state and
-engine, a column per size.
-
-Why not a depth of 1000: measured 2026-10-11, the HTML parser caps nesting at 512 levels in Chromium
-and Firefox, 511 in WebKit, and attaches deeper elements as siblings — case 1, "depth 5000", is 512
-deep as well. Depth counts elements, so a level of `jstl-choose` with its `jstl-when` counts two.
 
 ### B17 — the `module` bundle exports nothing
 
@@ -344,6 +310,11 @@ under rules written into `TESTING.md`. It runs in Chromium, Firefox and WebKit.
 Stage 1, the 1:1 port, done 2026-10-11 with Vitest 5.0.3 and Playwright 1.64.0, green in all three
 engines. Next: the reorganization.
 
+Noted 2026-10-12: `test/setup.js` sets `ExpressionResolver.defaultExecuter` to
+`context-deconstruction-executer`, so the suite runs under a fixed executer while the package
+renders with the default (`DECISIONS.md`, 2026-10-12). Open until the reorganization: whether the
+setting goes.
+
 ### B29 — complete test coverage
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -397,9 +368,12 @@ Today renderer and directives log a failure and render on, from 15 `console.*` c
 result holds and what is logged when a directive or an expression fails — written into `README.md`
 first, then tested.
 
-Measured 2026-10-11 with the expression language 3.0.2 on the sources of 1.7.20: the case
-"undefined array" in `test/tests/directives/ForeachTest/index.js` logs a `ReferenceError` from the
-expression language; its expectation holds. Whether version 2 logged it too was not measured.
+Measured 2026-10-11 on the sources of 1.7.20, the case "undefined array" in
+`test/tests/directives/ForeachTest/index.js`: with the expression language 2.0.4 the resolver logs
+the `ReferenceError` ("Execution error on statement!") and the directive goes on; with 3.0.2 the
+resolver logs it and passes it on, and `jstl-foreach` logs it a second time ("error at
+jstl-foreach"). The expectation of the case holds with both. Version 3 hands a failing expression
+to the directive, where version 2 kept it.
 
 ### B35 — supported browsers and migration guide
 
@@ -432,3 +406,22 @@ throws `ReferenceError: Cannot access 'Directive' before initialization`. Withou
 the JSDoc type written as `import("./Renderer.js").default` — the same import succeeds in all three,
 and the suite is unchanged. Entered through `index.js`, `Renderer.js` loads first and nothing
 fails. Matters once deep imports are opened (B30) and a custom directive extends `Directive` (B32).
+
+### B38 — this package's share in the cost of nesting depth
+
+**Status:** agreed · **Kind:** task
+
+Rendering cost grows faster than the nesting depth. Measured 2026-10-11 (`BENCHMARKS.md`, median of
+three runs): ten times the siblings — 100 to 1000 — cost 9.1 to 10.3 times as much in every engine,
+close to linear; five times the depth — 100 to 500 — costs 9.0 to 28.8 times as much in Chromium,
+9.0 to 20.1 in WebKit and 6.4 to 15.4 in Firefox, where linear would be 5. Case 1, 5000 elements
+512 deep, takes 1200 ms in Chromium against 278 ms for the 10000 flat elements of case 3. Compared
+across executers ("Expression language and executer compared"): with `with-scoped-executer`, `if`,
+attributes and events still grow 8.8 to 11.3 times from a depth of 100 to 500 in Chromium, so part
+of the growth is not the executer's.
+
+Agreed 2026-10-12: investigated within the boundaries of this package — the renderer, the contexts
+and the directives, and what they hand to the expression language per level of nesting. The
+expression language and its executers are neither changed nor configured nor analysed; the package
+renders with the default executer (`DECISIONS.md`, 2026-10-12), and the investigation measures with
+it.

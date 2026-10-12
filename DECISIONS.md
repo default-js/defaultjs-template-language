@@ -19,6 +19,30 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-12 — Which executer does the package render with?
+
+**Decision:** The default executer of `@default-js/defaultjs-expression-language`. The package
+neither selects nor configures an executer: which one runs, and what it costs, is a matter of the
+expression language, not a function of this package. The maintainer's decision.
+
+**Reasoning:** What an expression can do, and how that is configured, is defined by the expression
+language. The executer matters for speed — measured 2026-10-11 (`BENCHMARKS.md`, "Expression
+language and executer compared"), `context-deconstruction-executer`, the default of 3.x, renders
+1.23 to 1.65 times as slow as `with-scoped-executer` over all cases and up to 2.15 times on deep
+templates — but choosing one would make the package carry a rule of the expression language and
+change what an expression means for every consumer: the executers differ in semantics, e.g.
+`context-deconstruction-executer` carries no assignment back to the context. A consumer who wants
+another executer sets it in the expression language.
+
+**Alternatives:** Setting `with-scoped-executer`, the fastest in every engine measured — it would
+override the default of the expression language for every consumer and tie the package to the
+semantics of one executer.
+
+**Consequences:** The package's rendering speed follows the default of the expression language, and
+the benchmarks measure with it. Work on performance stays within this package: what the renderer,
+the contexts and the directives cost and what they hand to the expression language, never the
+executers themselves.
+
 ## 2026-10-11 — How is rendering performance measured?
 
 **Decision:** With Vitest's benchmark API — the `bench` of the test context in Vitest 5 — through

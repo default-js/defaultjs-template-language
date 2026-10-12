@@ -2,7 +2,6 @@ import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils
 import Directive from "./Directive.js";
 import Template from "./Template.js";
 import { ExpressionResolver } from "@default-js/defaultjs-expression-language/index.js";
-import Renderer from "./Renderer.js";
 
 const PRIVATE_WAIT = "wait";
 const PRIVATE_CALLBACKS = "callbacks";
@@ -68,7 +67,7 @@ export default class Context {
 	 * @param {object} options
 	 * @param {NodeList} [options.content=null] 
 	 * @param {ExpressionResolver} options.resolver 
-	 * @param {Renderer} options.renderer 
+	 * @param {import("./Renderer.js").default} options.renderer 
 	 * @param {Template|string} options.template 
 	 * @param {HTMLElement} options.container 
 	 * @param {HTMLElement} options.root 
