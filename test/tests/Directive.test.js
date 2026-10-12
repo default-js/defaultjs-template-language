@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import Directive from "../../../src/Directive";
-import "../../../src/directives";
+import Directive from "../../src/Directive.js";
+import "../../src/directives/index.js";
 
 describe("Test directive chain - ", () => {
-	
+
 	beforeAll(() => {});
-	
+
 	it("order test", async () => {
 		const expected = [
 			"initial",
@@ -14,17 +14,17 @@ describe("Test directive chain - ", () => {
 			"include",
 			"choose",
 			"foreach",
-			"jstl-repeat",		
+			"jstl-repeat",
 			"attribute",
 			"text",
 			"attach-element",
 			"on-finished"
 		];
-		
-		const directive = Directive.directives.map(d => d.name);		
-				
+
+		const directive = Directive.directives.map(d => d.name);
+
 		expect(directive).toEqual(expected);
 	});
-	
+
 	afterAll(() => {});
 });

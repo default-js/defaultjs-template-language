@@ -38,7 +38,7 @@ const fixtures = () => ({
  */
 export default defineConfig({
 	plugins: [fixtures()],
-	// the @default-js packages are served as they are, not pre-bundled: src and test/setup.js
+	// the @default-js packages are served as they are, not pre-bundled: src and the test setup
 	// import them through different paths and have to share one instance of each module
 	optimizeDeps: {
 		exclude: ["@default-js/defaultjs-common-utils", "@default-js/defaultjs-expression-language", "@default-js/defaultjs-extdom"]
@@ -47,8 +47,11 @@ export default defineConfig({
 		// not globals: true - expressions in a template are resolved against global names as
 		// well, and vitest's describe, it, test and expect would be found there
 		globals: false,
-		// test/index.js imports every test file; the files are not discovered
-		include: ["test/index.js"],
+		// every test file runs in a page of its own, the cases of src/<path>.js in
+		// test/tests/<path>.test.js
+		include: ["test/**/*.test.js"],
+		// the helpers of extdom, such as create, are globals in every test file
+		setupFiles: ["@default-js/defaultjs-extdom/index.js"],
 		// timing dependent and slow, so never part of the gate: `npm run bench` runs them
 		benchmark: { include: ["test/bench/*.bench.js"] },
 		browser: {

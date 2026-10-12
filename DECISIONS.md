@@ -19,6 +19,31 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-12 — How is the test suite organized?
+
+**Decision:** Vitest finds the test files, every `*.test.js` under `test/`, and runs each in a page
+of its own. The suite mirrors `src/`: the cases of `src/<path>.js` stand in
+`test/tests/<path>.test.js`. The maintainer's decisions.
+
+**Reasoning:** Until then `test/index.js` imported every test file into one page per engine. A
+file outside that import chain did not run, without anyone noticing; the cases shared the state of
+the package — the template cache, globals, registered custom elements — and the order of the
+imports decided which module of the package loaded first. That order hid a defect: loading
+`src/Directive.js` as the first module threw a `ReferenceError` while `src/Context.js` imported
+`src/Renderer.js`. In a page of its own, `test/tests/Directive.test.js` loads `src/Directive.js`
+first; with that import put back it fails in Chromium, Firefox and WebKit, without it it passes
+(measured 2026-10-12). Mirroring `src/` gives every module one place for its cases, and the
+coverage of a source file points at one test file.
+
+**Alternatives:** The import chain in one page, as before — half the run time, at the price of
+shared state and of a file that can drop out unnoticed. A structure by the sections of `README.md`
+— closer to the reference for the behaviour, further from the coverage per file.
+
+**Consequences:** A page per file and engine costs time to start: `npm test` took 6.1 to 6.8 s with
+the chain and takes 12.2 to 12.5 s with 14 files (measured 2026-10-12, same machine, same 279
+cases). A case cannot rely on what another file set up. Test files carry the `.test.js` suffix, or
+they do not run.
+
 ## 2026-10-12 — Which executer does the package render with?
 
 **Decision:** The default executer of `@default-js/defaultjs-expression-language`. The package
@@ -38,8 +63,8 @@ another executer sets it in the expression language.
 override the default of the expression language for every consumer and tie the package to the
 semantics of one executer.
 
-**Consequences:** The package's rendering speed follows the default of the expression language, and
-the benchmarks measure with it. Work on performance stays within this package: what the renderer,
+**Consequences:** The package's rendering speed follows the default of the expression language; the
+benchmarks measure with it, and the suite tests with it. Work on performance stays within this package: what the renderer,
 the contexts and the directives cost and what they hand to the expression language, never the
 executers themselves.
 
@@ -80,7 +105,7 @@ the suite runs in real browsers, and in the engines of the browsers the package 
 for Safari. Served unbundled, the suite loads the sources the way a browser does without a bundler,
 which showed at once that `src/Context.js` imported an export that does not exist; the bundled
 Karma run never failed on it. The packages are not pre-bundled because the sources and
-`test/setup.js` import them through different paths and have to share one instance of each module.
+the test setup import them through different paths and have to share one instance of each module.
 An expression resolves a name its context does not hold against the global object, so global
 `describe`, `it`, `test` or `expect` would be found by a template that means something else.
 

@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { server } from "vitest/browser";
-import { Renderer } from "../../../../index";
-
-
+import { Renderer } from "../../../index.js";
 
 class ExtDivTestElement extends HTMLDivElement{
 	constructor(){
@@ -40,8 +38,8 @@ describe("InitialDirective Test - ", () => {
 		expect(element instanceof DocumentFragment).toBe(true);
 		expect(element.children.length).toBe(1);
 	});
-	
-	
+
+
 	it("process template with comments", async () => {
 		const renderer = await Renderer.build({ template: "<div><!-- test --></div>" });
 		const container = create("<div></div>").first();
@@ -71,7 +69,7 @@ describe("InitialDirective Test - ", () => {
 		expect(element.children.length).toBe(3);
 	});
 
-	
+
 	it("change tagname jstl -> span", async () => {
 		const renderer = await Renderer.build({ template: `<jstl jstl-tagname="span" test-attr="attr">
 			<span></span>
@@ -152,9 +150,9 @@ describe("InitialDirective Test - ", () => {
 		expect(element.tagName).toBe("DIV");
 		expect(element.textContent).toBe("test");
 
-		container.remove(); 
+		container.remove();
 	});
-	
+
 
 	afterAll(() => { });
 });

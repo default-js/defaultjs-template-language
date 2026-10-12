@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import {Renderer} from "../../../../index";
+import { Renderer } from "../../../index.js";
 
 describe("Attribute Test - ", () => {
 
@@ -39,7 +39,7 @@ describe("Attribute Test - ", () => {
 		let element = container.children[0];
 		expect(element.attr("attr")).toBe("attr");
 	});
-	
+
 	it("append attributes -> attr=\"\"", async () => {
 		const container = create("<div></div>").first();
 		const renderer = await Renderer.build({ template: "<div attr=\"\"></div>" });
@@ -104,7 +104,7 @@ describe("Attribute Test - ", () => {
 
 		return promise;
 	});
-	
+
 	it("event bind - delegate", async () => {
 		const container = create("<div></div>").first();
 		const renderer = await Renderer.build({ template: "<div @click:delegate=\"${action}\"></div>" });
@@ -123,7 +123,7 @@ describe("Attribute Test - ", () => {
 
 		return promise;
 	});
-	
+
 	it("event bind - delegate -> triggered at child", async () => {
 		const container = create("<div></div>").first();
 		const renderer = await Renderer.build({ template: "<div @click:delegate=\"${action}\"><span>trigger</span></div>" });
@@ -165,7 +165,7 @@ describe("Attribute Test - ", () => {
 
 		return promise;
 	});
-	
+
 	it("event bind:delegate - with condition", async () => {
 		const container = create("<div></div>").first();
 		const renderer = await Renderer.build({ template: "<div ?@click:delegate=\"${boolean}\" @click:delegate=\"${action}\"></div>" });
@@ -221,6 +221,123 @@ describe("Attribute Test - ", () => {
 		expect(element.attr("data-test-2")).toBe("data-test-2");
 		expect(element.attr("data-test-3")).toBe(null);
 		expect(element.attr("data-test-4")).toBe("data-test-4");
+	});
+
+	afterAll(() => { });
+});
+
+describe("Attribute->event bind->toggleClass - ", () => {
+
+	beforeAll(() => { });
+
+	it("toggleClass with target selector", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template:
+			`<div id="source" @click:toggleClass:test="#target"></div>
+			<div id="target"></div>
+		` });
+
+		await renderer.render({ container, data: {} });
+		const source = container.find("#source").first();
+		const target = container.find("#target").first();
+
+		expect(target.is(":not(.test)")).toBe(true);
+		source.trigger("click");
+		expect(target.is(".test")).toBe(true);
+		source.trigger("click");
+		expect(target.is(":not(.test)")).toBe(true);
+	});
+
+	it("toggleClass", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template: `<div id="target" @click:toggleClass:test=""></div>` });
+
+		await renderer.render({ container, data: {} });
+		const target = container.find("#target").first();
+
+		expect(target.is(":not(.test)")).toBe(true);
+		target.trigger("click");
+		expect(target.is(".test")).toBe(true);
+		target.trigger("click");
+		expect(target.is(":not(.test)")).toBe(true);
+	});
+
+	afterAll(() => { });
+});
+
+describe("OLD FUNCTION SPLITTER: Attribute->event bind->toggleAttribute -", () => {
+
+	beforeAll(() => { });
+
+	it("toggleAttribute with target selector", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template:
+			`<div id="source" @click:toggleAttribute:test="#target"></div>
+			<div id="target"></div>
+		` });
+
+		await renderer.render({ container, data: {} });
+		const source = container.find("#source").first();
+		const target = container.find("#target").first();
+
+		expect(target.is(":not([test])")).toBe(true);
+		source.trigger("click");
+		expect(target.is("[test]")).toBe(true);
+		source.trigger("click");
+		expect(target.is(":not([test])")).toBe(true);
+	});
+
+	it("toggleAttribute", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template: `<div id="target" @click:toggleAttribute:test=""></div>` });
+
+		await renderer.render({ container, data: {} });
+		const target = container.find("#target").first();
+
+		expect(target.is(":not([test])")).toBe(true);
+		target.trigger("click");
+		expect(target.is("[test]")).toBe(true);
+		target.trigger("click");
+		expect(target.is(":not([test])")).toBe(true);
+	});
+
+	afterAll(() => { });
+});
+
+describe("Attribute->event bind->toggleAttribute -", () => {
+
+	beforeAll(() => { });
+
+	it("toggleAttribute with target selector", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template:
+			`<div id="source" @click::toggleAttribute::test="#target"></div>
+			<div id="target"></div>
+		` });
+
+		await renderer.render({ container, data: {} });
+		const source = container.find("#source").first();
+		const target = container.find("#target").first();
+
+		expect(target.is(":not([test])")).toBe(true);
+		source.trigger("click");
+		expect(target.is("[test]")).toBe(true);
+		source.trigger("click");
+		expect(target.is(":not([test])")).toBe(true);
+	});
+
+	it("toggleAttribute", async () => {
+		const container = create("<div></div>").first();
+		const renderer = await Renderer.build({ template: `<div id="target" @click::toggleAttribute::test=""></div>` });
+
+		await renderer.render({ container, data: {} });
+		const target = container.find("#target").first();
+
+		expect(target.is(":not([test])")).toBe(true);
+		target.trigger("click");
+		expect(target.is("[test]")).toBe(true);
+		target.trigger("click");
+		expect(target.is(":not([test])")).toBe(true);
 	});
 
 	afterAll(() => { });
