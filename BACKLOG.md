@@ -141,8 +141,6 @@ source, they are committed, and the gate type-checks them.
 
 The code does more than the README documents. Each item needs the maintainer's decision — document it
 (README first) or remove it:
-- `jstl-foreach-count`, `-start`, `-step`, `-condition` and the same for `jstl-repeat`: a counting
-  loop without data, a start index, a step, a break condition; iterating an object (see B22);
 - `jstl-data-option` (fetch options for `remote`), `jstl-data-scope`; `remote` is the default mode;
 - `jstl-text-ignore`; `jstl-text-prevent-format` is read and has no effect;
 - `jstl-ignore-childs`; the `is` attribute for customized built-in elements; a `<template>` in a
@@ -155,7 +153,6 @@ The code does more than the README documents. Each item needs the maintainer's d
 - the global `defaultjs.tl` / `defaultjs.jstl` of `browser.js`.
 
 Agreed:
-- loops: `-count`, `-start`, `-step`, `-condition` documented and tested, for both directives.
 - data: `jstl-data-option`, `jstl-data-scope` and `remote` as the default mode documented and tested.
 - text: `jstl-text-ignore` documented and tested; `jstl-text-prevent-format` removed — it called
   `StringUtils.formatToHtml` until 2019 (`c3eeceb`) and has had no effect since the reimplementation.
@@ -167,6 +164,9 @@ Agreed:
 - the rest: `jstl-on-finished` with `-async` and `$element`, `$root`, `$template` (no longer
   "experimental"), `toAsyncTemplateLoader`, the global `defaultjs.tl` / `defaultjs.jstl` documented
   and tested.
+
+Done 2026-10-13: the loops — `-count`, `-start`, `-step`, `-condition` of `jstl-foreach` and
+`jstl-repeat` — documented as the code does it, the two modes of each directive apart, and tested.
 
 ### B25 — update a rendering when its data changes
 

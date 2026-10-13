@@ -251,6 +251,11 @@ This is the equivalent of `if - if else - else` structure. The direct content of
 
 This provide the capabillity to loop over an array. The content of element would be repeated and rendered with every element of array.
 
+`jstl-foreach` works in two modes: with `jstl-foreach`, it iterates data; without it, but with
+`jstl-foreach-count`, it counts.
+
+**Iterating data**
+
 ```javascript
 //data used for example
 {
@@ -293,7 +298,64 @@ An object is iterated by its own properties: the item is the value of a property
 </div>
 ```
 
-**additional parameter**
+| Attribute | |
+|-|-|
+| `jstl-foreach-start` | the index of the first item, `0` by default |
+| `jstl-foreach-step` | the distance between two items, `1` by default: `2` renders every second item |
+| `jstl-foreach-count` | only the items with an index below `start + count` are iterated; `0` iterates all |
+
+The status of an iteration:
+
+```javascript
+{
+    index: 0, // item index (zero based)
+    number: 1, // item number (one based)
+    key: 0, // the index of the item in an array, the name of the property in an object
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two iterations
+    count: 10, // the end of the iterated range: the length of the array, or start + count if smaller
+    data: [] // full array or object
+}
+```
+
+**Counting**
+
+Without `jstl-foreach`, the content is rendered `jstl-foreach-count` times; the item is a number.
+
+```html
+<div jstl-foreach-count="${3}">
+    <div>${item}</div>
+</div>
+
+<!-- output -->
+<div>
+    <div>0</div>
+    <div>1</div>
+    <div>2</div>
+</div>
+```
+
+| Attribute | |
+|-|-|
+| `jstl-foreach-count` | the number of iterations |
+| `jstl-foreach-start` | the first number, `0` by default |
+| `jstl-foreach-step` | the distance between two numbers, `1` by default |
+
+The status of an iteration:
+
+```javascript
+{
+    index: 0, // the item
+    number: 1, // the item plus one
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two numbers
+    count: 3 // the number of iterations
+}
+```
+
+**Attributes of both modes**
 
 **`jstl-foreach-var`**
 
@@ -307,24 +369,33 @@ Set a varname to be used as referrence for the loop element. The default varname
 
 **`jstl-foreach-status`**
 
-Set a varname for a meta data and state of the current iteration. The default varname is `status`.
+Set a varname for the status of the current iteration. The default varname is `status`.
 
-```javascript
-{
-    index: 0, // item index (zero based)
-    number: 1, // item number (one based)
-    key: 0, // the index of the item in an array, the name of the property in an object
-    first: true, // true for the first iteration
-    last: false, // true for the last iteration
-    step: 1, // the distance between two iterations
-    count: 10, // length of array,
-    data: [] // full array or object
-}
+**`jstl-foreach-condition`**
+
+An expression evaluated before every item, with the item and the status. Once it is `true`, the
+loop stops, and that item is not rendered.
+
+```html
+<div jstl-foreach="${array}" jstl-foreach-condition="${item.name == 'item-3'}">
+    <div>${item.name}</div>
+</div>
+
+<!-- output -->
+<div>
+    <div>item-1</div>
+    <div>item-2</div>
+</div>
 ```
 
 ## jstl-repeat
 
 This provide the capabillity to loop over an array. The difference between `jstl-foreach` and `jstl-repeat` is, `jstl-repeat` use the element self as template to be render items of array.
+
+`jstl-repeat` works in two modes: with `jstl-repeat`, it iterates data; without it, but with
+`jstl-repeat-count`, it counts.
+
+**Iterating data**
 
 ```javascript
 //data used for example
@@ -366,7 +437,60 @@ An object is iterated by its own properties: the item is the value of a property
 <div>b: value-b</div>
 ```
 
-**additional parameter**
+| Attribute | |
+|-|-|
+| `jstl-repeat-start` | the index of the first item, `0` by default |
+| `jstl-repeat-step` | the distance between two items, `1` by default: `2` renders every second item |
+| `jstl-repeat-count` | only the items with an index below `start + count` are iterated; `0` iterates all |
+
+The status of an iteration:
+
+```javascript
+{
+    index: 0, // item index (zero based)
+    number: 1, // item number (one based)
+    key: 0, // the index of the item in an array, the name of the property in an object
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two iterations
+    count: 10, // the end of the iterated range: the length of the array, or start + count if smaller
+    data: [] // full array or object
+}
+```
+
+**Counting**
+
+Without `jstl-repeat`, the element is rendered `jstl-repeat-count` times; the item is a number.
+
+```html
+<div jstl-repeat-count="${3}">${item}</div>
+
+<!-- output -->
+<div>0</div>
+<div>1</div>
+<div>2</div>
+```
+
+| Attribute | |
+|-|-|
+| `jstl-repeat-count` | the number of iterations |
+| `jstl-repeat-start` | the first number, `0` by default |
+| `jstl-repeat-step` | the distance between two numbers, `1` by default |
+
+The status of an iteration:
+
+```javascript
+{
+    index: 0, // the item
+    number: 1, // the item plus one
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two numbers
+    count: 3 // the number of iterations
+}
+```
+
+**Attributes of both modes**
 
 **`jstl-repeat-var`**
 
@@ -378,19 +502,19 @@ Set a varname to be used as referrence for the loop element. The default varname
 
 **`jstl-repeat-status`**
 
-Set a varname for a meta data and state of the current iteration. The default varname is `status`.
+Set a varname for the status of the current iteration. The default varname is `status`.
 
-```javascript
-{
-    index: 0, // item index (zero based)
-    number: 1, // item number (one based)
-    key: 0, // the index of the item in an array, the name of the property in an object
-    first: true, // true for the first iteration
-    last: false, // true for the last iteration
-    step: 1, // the distance between two iterations
-    count: 10, // length of array,
-    data: [] // full array or object
-}
+**`jstl-repeat-condition`**
+
+An expression evaluated before every item, with the item and the status. Once it is `true`, the
+loop stops, and that item is not rendered.
+
+```html
+<div jstl-repeat="${array}" jstl-repeat-condition="${item.name == 'item-3'}">${item.name}</div>
+
+<!-- output -->
+<div>item-1</div>
+<div>item-2</div>
 ```
 
 ## jstl-data
