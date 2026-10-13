@@ -358,14 +358,6 @@ limitations, and gets a section "Migrating from 1.x" with the steps a consumer h
 The section "Browser support" exists since 2026-10-11 and holds one limitation: Safari does not
 support customized built-in elements, so the `is` attribute has no effect there.
 
-### B36 — bring the development dependencies up to date
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-The tools beside the test runner are updated to their current releases: webpack, webpack-cli,
-webpack-dev-server and the plugins in `devDependencies`. A clean `npm audit` is no condition for 2.0.0: findings are reduced as far as current
-releases allow, and what remains is listed in the handover.
-
 ### B38 — this package's share in the cost of nesting depth
 
 **Status:** agreed · **Kind:** task
@@ -400,3 +392,14 @@ public parts (README first), the type declarations of B21 cover it. Public is al
 `renderer`, `root`, `template` (with its setter), `mode`, `subcontexts`, `closed`, and the fields
 `content`, `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives (B32) work with
 the same members.
+
+### B44 — a page of `WebContent/` loads a bundle the build does not emit
+
+**Status:** open · **Kind:** defect
+
+`WebContent/event-handling/index.html` loads `/defaultjs-template-language.js`; the build names its
+bundles `<entry>-defaultjs-template-language.js` since `15061e2` (2022-08-21), and
+`WebContent/delegate-input-event/main.js` loads `/browser-defaultjs-template-language.js`. Measured
+2026-10-13 with `npm run dev`: the dev server answers 404 for `/defaultjs-template-language.js`.
+`WebContent/js/Renderer.js`, loaded by the same page, reads `defaultjs.tl`, which the `browser`
+bundle sets. `WebContent/` is not published.

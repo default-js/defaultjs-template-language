@@ -19,6 +19,37 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-13 — Which tools build the bundles and serve the development pages?
+
+**Decision:** webpack 5 with webpack-cli 7, webpack-dev-server 6 and `replace-in-file-webpack-plugin`,
+each declared with a caret range on its current release: `^5.111.1`, `^7.2.3`, `^6.0.0`, `^1.0.6`.
+`clean-webpack-plugin`, `terser-webpack-plugin` and `http-server` are removed. The maintainer's
+decisions.
+
+**Reasoning:** `webpack.config.mjs` imports `replace-in-file-webpack-plugin` and no other plugin; no
+script, configuration or document names the three removed packages, and webpack minifies with the
+`terser-webpack-plugin` it depends on itself. webpack-cli 7 needs Node 20.9, webpack-dev-server 6
+Node 22.15; `.nvmrc` pins 24. Every option of `devServer` in the configuration exists in the
+schema of webpack-dev-server 6, so the configuration stays as it is. Measured 2026-10-13: the six
+files of `dist/` built with the new tools are byte-identical to those built from the same sources
+with webpack-cli 5.1.4 and webpack-dev-server 5.2.6 — webpack itself stayed at 5.111.1 — and
+`npm run dev` serves `WebContent/` and the bundles on port 3000. `npm audit` falls from 7 findings
+(5 high, 2 moderate) to 5 high, all from one advisory: GHSA-vfj7-8cjw-p6xm in `braces` 3.0.3, which
+reaches the tree through webpack-dev-server 6, `http-proxy-middleware` 4.2.0 and `micromatch`
+4.0.8. No release of `braces` fixes it. A clean audit is no condition of 2.0.0; the findings are
+reduced as far as current releases allow.
+
+**Alternatives:** Keeping webpack-cli 5 and webpack-dev-server 5 — the two moderate findings of
+`uuid` through `sockjs` stay, and the tools stay a major version or two behind. Updating the
+three unused packages instead of removing them — dependencies nothing uses. webpack-dev-server
+1.14.1, which `npm audit fix --force` proposes against the `braces` advisory — a release of
+2016-01-11 that requires webpack below 3.
+
+**Consequences:** The `braces` advisory stays in the development tree until a release of `braces`,
+`micromatch` or `http-proxy-middleware` removes it; it does not reach consumers, since
+development dependencies are not installed with the package. Building and serving need Node 22.15
+or later.
+
 ## 2026-10-12 — How does the package declare its module format, its entry points and its build?
 
 **Decision:** `package.json` declares `"type": "module"` and an `exports` field opening `.`,
