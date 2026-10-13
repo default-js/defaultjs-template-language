@@ -3,42 +3,6 @@ import Directive from "./Directive.js";
 import Template from "./Template.js";
 import { ExpressionResolver } from "@default-js/defaultjs-expression-language/index.js";
 
-const PRIVATE_WAIT = "wait";
-const PRIVATE_CALLBACKS = "callbacks";
-const PRIVATE_IGNOREDIRECTIVES = "ignoreDirectives";
-
-const CONTEXTCLONE = new Set();
-const CONTEXTS = new Map();
-const WARNTIME = 1000;
-const CRITICALTIME = 10000;
-
-let observerTimeout = null;
-const observe = (context) => {
-	CONTEXTS.set(context, Date.now());
-	runObserver();
-};
-const runObserver = () => {
-	if (observerTimeout == null) {
-		observerTimeout = setTimeout(() => {
-			observerTimeout = null;
-			const time = Date.now();
-			CONTEXTS.forEach((createTime, context) => {
-				const delta = time - createTime;
-				if (context.closed) CONTEXTS.delete(context);
-				else {
-					if (delta > CRITICALTIME) {
-						console.error("context lives longer then 10s", delta / 1000, context);
-					} else if (delta > WARNTIME) {
-						console.warn("context lives longer then 1s", delta / 1000, context);
-					}
-				}
-			});
-			console.log("open context:", CONTEXTS.size);
-			if (CONTEXTS.size > 0) runObserver();
-		}, 1000);
-	}
-};
-
 const toTemplate = (template) => {
 	if (template instanceof Template) return template.importContent();
 	else if (typeof template === "string") return create(template);

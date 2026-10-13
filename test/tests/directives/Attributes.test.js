@@ -163,6 +163,20 @@ describe("event handler toggleClass", () => {
 		target.trigger("click");
 		expect(target.className).toBe("");
 	});
+
+	it.each([
+		{ condition: true, className: "test" },
+		{ condition: false, className: "" }
+	])("with a condition evaluating to $condition sets the class to '$className' on a click", async ({ condition, className }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ?@click:toggleClass:test="\${condition}" @click:toggleClass:test=""></div>`);
+
+		await Renderer.render({ container, template, data: { condition } });
+		const target = container.children[0];
+		target.trigger("click");
+
+		expect(target.className).toBe(className);
+	});
 });
 
 describe.each([

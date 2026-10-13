@@ -34,7 +34,7 @@ defaultjs-template-language (`alias: jstl`)
   - [Tag `jstl`](#tag-jstl)
 - [Javascript API](#javascript-api)
   - [Template](#template)
-    - [`new Tempate(template)`](#new-tempatetemplate)
+    - [`new Template(template)`](#new-templatetemplate)
     - [`load(template, cache, alias)` ⇒ `Template`](#loadtemplate-cache-alias--template)
     - [`fetch(url, cache, alias)` ⇒ `Template`](#fetchurl-cache-alias--template)
     - [`loadNodeTemplate(node, defaultTemplate, cache, alias)` ⇒ `Template`](#loadnodetemplatenode-defaulttemplate-cache-alias--template)
@@ -63,7 +63,7 @@ The reimplementation has two goals:
 
 ```javascript
 //import the Template and Renderer Classes
-import {Template, Renderer} from "@default-js/defaultjs-template-languange"
+import {Template, Renderer} from "@default-js/defaultjs-template-language"
 
 //find the container at html page, to render the content into
 const container = document.getElementById("MyContainterToRenderInto");
@@ -81,13 +81,13 @@ Renderer.render({container, template, data: {}});
     <body>
         <div id="MyContainterToRenderInto"></div>
 
-        //script file is located at dist directory
-        <script type="application/javascript" src="/path/to/defaultjs-template-languange.min.js" />
+        <!-- the script file is located in the dist directory -->
+        <script type="application/javascript" src="/path/to/browser-defaultjs-template-language.min.js"></script>
         <script type="application/javascript">
         const {Template, Renderer} = defaultjs.tl;
         const container = document.getElementById("MyContainterToRenderInto");
 
-        const render = async () {
+        const render = async () => {
             //load the template to be render
             const template = await Template.load(new URL("/path/to/a/template.tpl.html", location));
             //render the template into container with some data
@@ -174,7 +174,7 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 
 ```html
 <!--template-->
-<div>${hallo} ${world}</div>
+<div>${hello} ${world}</div>
 
 <!--output-->
 <div>hello world</div>
@@ -187,19 +187,19 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 <div jstl-text-trim-length="15">${longText}</div>
 
 <!--output-->
-<div>this is an long...</div>
+<div>this is an l...</div>
 ```
 
 **Example: html as text**
 
-Including html as text, all tags are escaped.
+Including html as text, the tags are removed and entities decoded.
 
 ```html
 <!--template-->
 <div>${html}</div>
 
 <!--output-->
-<div>&gt;b&lt;hello world&gt;/b&lt;&gt;script type="application/javascript"&lt;alert("unsecure")&gt;/script&lt;</div>
+<div>hello worldalert("unsecure")</div>
 ```
 
 **Example: html with secure filter (default)**
@@ -211,7 +211,7 @@ By including html content, the default behavore is to remove unsecure tags. Unse
 <div jstl-text-content-type="html">${html}</div>
 
 <!--output: script tag is filtered-->
-<div><b>hello world</b>/div>
+<div><b>hello world</b></div>
 ```
 
 **Example: html with unsecure filter**
@@ -331,7 +331,7 @@ This provide the capabillity to loop over an array. The difference between `jstl
 Set a varname to be used as referrence for the loop element. The default varname is `item`.
 
 ```html
-<div jstl-repeat="${array}" jstl-foreach-var="element">${element}</div>
+<div jstl-repeat="${array}" jstl-repeat-var="element">${element}</div>
 ```
 
 **`jstl-repeat-status`**
@@ -414,7 +414,7 @@ With `jstl-include` it is possible to load a template and execute the template a
 |-|-|
 |replace|replacing the content of current tag|
 |append|appending the template as content of current tag|
-|prepand|prepending the template as content of current tag|
+|prepend|prepending the template as content of current tag|
 
 ## jstl-attach-element
 
@@ -436,7 +436,7 @@ With `jstl-include` it is possible to load a template and execute the template a
 |-|-|
 |replace|replacing the content by resolved element|
 |append|append resolved element, after current element is completely rendered|
-|prepand|prepend resolved element, after current element is completely rendered|
+|prepend|prepend resolved element, after current element is completely rendered|
 
 ## Attribute manipulation
 
@@ -449,10 +449,10 @@ The `JSTL` provide the functionality to manipulate the attributes of a tag.
 <div attribute="${value}"></div>
 
 <!-- check if attribute including-->
-<div ?attribute="${value}" attrbute="value"></div>
+<div ?attribute="${value}" attribute="value"></div>
 
 <!-- check if attribute including and set value by an expression-->
-<div ?attribute="${value}" attrbute="${value}"></div>
+<div ?attribute="${value}" attribute="${value}"></div>
 ```
 
 ## Event handler
@@ -495,7 +495,7 @@ To make the content interactive by user, it is possible to define event handler.
 ```html
 <div @click:toggleClass:test-class=""></div>
 <div @click:toggleClass:test-class="#id-of-target-element"></div>
-<div ?@click:toggleclass:test-class="${condition}" @click:toggleAttribute:test-class="#id-of-target-element"></div>
+<div ?@click:toggleClass:test-class="${condition}" @click:toggleClass:test-class="#id-of-target-element"></div>
 ```
 
 ## jstl-async
@@ -617,10 +617,10 @@ The tag `jstl` to use rendering functicality without visual dom structures. The 
 
 ```javascript
 // import the template class
-import { Template } from "@default-js/defauljs-template-language";
+import { Template } from "@default-js/defaultjs-template-language";
 ```
 
-### `new Tempate(template)`
+### `new Template(template)`
 
 Create a instance of `Template`.
 
@@ -680,7 +680,7 @@ This function makes several steps to attempting a `Template` by following order:
 
 ```javascript
 // import the template class
-import { Renderer } from "@default-js/defauljs-template-language";
+import { Renderer } from "@default-js/defaultjs-template-language";
 ```
 
 ### `new Renderer(option)`
@@ -717,7 +717,7 @@ Creates an instance of `Renderer` and loads its template with `Template.load` fi
 
 Renders a template into a container. The promise resolves, when the rendering is finished.
 
-**Kind**: constructor
+**Kind**: function
 
 | Param  | Type     | Description  | Default |
 | ------ | -------- | ------------ | ------- |

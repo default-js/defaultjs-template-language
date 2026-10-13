@@ -35,6 +35,11 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
   reaches an install unannounced. An install that resolved version 2 of the expression language
   gets version 3.
 
+### Removed
+
+- `src/index.js`, an empty module; a deep import of it fails.
+- The entry `directive` of `SCOPES` in `src/Renderer.js`; no resolver was named after it.
+
 ### Fixed
 
 - `Template.fetch` loads a template from a url given as `string`, resolved against `location`. It

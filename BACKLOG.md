@@ -94,15 +94,6 @@ branch also removes the attribute before reading its value as the delay, so the 
 Agreed: implemented anew — first reproduce in a test what broke when it was enabled,
 then implement it as `README.md` describes.
 
-### B9 — `web/` holds stale build output
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`web/` contains webpack output last changed in 2022 (`commons.js` alone is 29 MB). Nothing in the
-repository refers to it.
-
-Agreed: removed.
-
 ### B11 — empty README sections
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -111,15 +102,6 @@ Agreed: removed.
 content.
 
 Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extension API (B32).
-
-### B12 — dead code
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`src/Context.js`: `observe` / `runObserver` are never called. `src/index.js` is an empty file.
-`SCOPES.directive` in `src/Renderer.js` is used nowhere.
-
-Agreed: removed.
 
 ### B18 — `DirectiveElement.execute` reads a parameter it is not given
 
@@ -162,29 +144,6 @@ that is not an array, the loop runs over `Object.getOwnPropertyNames(data)`, but
 
 Agreed: an object is iterated by its own properties — the item is the value, the status also
 carries the key; documented in `README.md` first.
-
-### B23 — README errors
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`README.md`, the reference for the behaviour, contains errors:
-- the package name misspelled — `defaultjs-template-languange` in "Basic usage",
-  `defauljs-template-language` in both API imports;
-- the script tag names `defaultjs-template-languange.min.js`; the bundle is
-  `browser-defaultjs-template-language.min.js`;
-- "Text content manipulation": `${hallo}` against the data key `hello`; the filtered output ends
-  `</b>/div>`;
-- "Text content manipulation", trim length: `jstl-text-trim-length` is the length with the
-  ellipsis — the example gives `this is an l...`, not `this is an long...`;
-- "Text content manipulation", html as text: the tags are not escaped but removed, entities
-  decoded — the example gives `hello worldalert("unsecure")`;
-- the `jstl-repeat-var` example uses `jstl-foreach-var`;
-- the mode tables of `jstl-include` and `jstl-attach-element` list `prepand`; the code reads
-  `prepend`;
-- "toggle class by event": the condition names `toggleclass`, the handler `toggleAttribute`;
-- the heading `new Tempate(template)`; `render(option)` is marked "Kind: constructor".
-
-Agreed: all fixed.
 
 ### B24 — behaviour `README.md` does not describe
 
@@ -346,3 +305,15 @@ bundle sets. `WebContent/` is not published.
 falsy — `null`, `undefined` — reaches the branch of a call without argument, which runs the
 callbacks, waits for the subcontexts and resolves the context, before the rendering has finished.
 Found 2026-10-13 by reading the code; not measured.
+
+### B46 — `jstl-include-mode` `append` and `prepend` drop the content of the element
+
+**Status:** open · **Kind:** defect
+
+`README.md` describes `append` as appending and `prepend` as prepending the included template to
+the content of the element. `src/directives/Include.js` renders the template into the content with
+the mode, then sets `context.ignore`, so the children of the element are not rendered: every mode
+gives the same result as `replace`. Measured 2026-10-13 in Chromium, Firefox and WebKit with
+`<div jstl-include="…" jstl-include-mode="append"><p></p></div>`: the `<p>` is missing. The cases
+"keeps the content of the element in mode append/prepend" in
+`test/tests/directives/Include.test.js` are marked `it.fails` for it.

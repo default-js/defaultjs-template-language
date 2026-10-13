@@ -13,7 +13,6 @@ export const SCOPES = {
 	render: "render",
 	container: "container",
 	node: "node",
-	directive: "directive",
 };
 
 const APPLICATION_SCOPE_RESOLVER = new ExpressionResolver({ name: SCOPES.application });
