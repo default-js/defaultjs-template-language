@@ -157,16 +157,6 @@ Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extensi
 
 Agreed: removed.
 
-### B17 — the `module` bundle exports nothing
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`webpack.config.mjs` sets no `output.library`; `dist/module-defaultjs-template-language[.min].js`
-is a script that runs `index.js` and exposes none of its exports.
-
-Agreed: the `module` bundle becomes an ES module exporting what `index.js` exports; the `browser`
-bundle stays as it is.
-
 ### B18 — `Element.execute` reads a parameter it is not given
 
 **Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
@@ -186,28 +176,6 @@ template loaded through `Template`. `jstl-replace` is created only in the disabl
 Agreed: repaired — the renderer recognizes a custom element through `customElements.get` and a
 class extending `Element`; `execute(context)` gets one signature. `Element` becomes public with the
 extension API (B32).
-
-### B20 — line endings of `dist/`
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-`@default-js/defaultjs-expression-language` marks `dist/**` as `-text` in `.gitattributes`, because
-bundled dependency sources brought CRLF into its bundles and git normalized them away. Whether the
-bundles here carry CRLF is not measured, so `.gitattributes` does not carry the rule.
-
-Found 2026-10-11, without a build: the installed sources of `@default-js/defaultjs-common-utils`
-1.0.0 (8 of 18 `.js` files) and `@default-js/defaultjs-extdom` 2.0.0 (24 of 29) carry CRLF, those
-of the expression language 3.0.2 do not. The local working copy, checked out with
-`core.autocrlf=true`, holds 86 tracked files with CRLF, `src/` among them, against LF in the index,
-and its `dist/*-defaultjs-template-language.js` are mixed — so the measurement needs a build from
-a working copy checked out under `.gitattributes`.
-
-Agreed: measured with the first build of 2.0.0, and the rule added if the bundles need it.
-
-Measured 2026-10-12 on builds for B30 and B31, from the working copy with `core.autocrlf=true`
-(35 tracked files with CRLF): the development bundles carry CR — 3164 of 7372 line ends in
-`browser-…js`, 3153 of 7343 in `module-…js` — the minified bundles and their maps none. Those
-builds were not committed; `dist/` is unchanged. Which sources bring the CR is not attributed.
 
 ### B21 — ship type declarations with 2.0.0
 

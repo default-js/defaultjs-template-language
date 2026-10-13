@@ -17,16 +17,21 @@ imported. Any other path is refused.
 ## Bundles
 
 `entries.config.json` names both entries — `module` for `index.js`, `browser` for `browser.js` —
-and `webpack.config.mjs` bundles them into `dist/` in one configuration:
+and `webpack.config.mjs` bundles them into `dist/`, one configuration per entry:
 
 | Build | File | Source map |
 |---|---|---|
 | `npm run build:dev` | `<entry>-defaultjs-template-language.js` | inline |
 | `npm run build:prod` | `<entry>-defaultjs-template-language.min.js` | `.min.js.map` |
 
-The build replaces `${version}` in the bundles with the version from `package.json`.
-`webpack.config.mjs` sets no `output.library`, so neither bundle exports anything; each one runs
-its entry. `dist/` is committed.
+The `module` bundle is an ES module (`output.library.type` `module`) exporting what `index.js`
+exports. The `browser` bundle is a script that runs `browser.js`, wrapped in a function, and
+exports nothing. Both carry their dependencies. The build replaces `${version}` in the bundles with
+the version from `package.json`.
+
+`dist/` is committed byte for byte as webpack writes it: `.gitattributes` marks it `-text`, since
+the development bundles carry the CRLF of bundled dependency sources. `npm run dev` serves
+`WebContent/` and both bundles on port 3000.
 
 ## Published files
 

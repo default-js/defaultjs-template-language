@@ -3,5 +3,8 @@
 * text=auto eol=lf
 
 # Generated artifacts: collapsed in diffs and excluded from language stats.
-dist/**                linguist-generated=true
+# The bundles are stored byte for byte as webpack writes them: the development bundles carry the
+# CRLF of bundled dependency sources, and normalizing them would make the committed bundle differ
+# from the built one.
+dist/**                -text linguist-generated=true
 package-lock.json      linguist-generated=true

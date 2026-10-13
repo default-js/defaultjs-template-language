@@ -19,6 +19,66 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-13 — How does git store the bundles?
+
+**Decision:** `.gitattributes` marks `dist/**` `-text`: git stores the bundles byte for byte, as
+webpack writes them, without normalizing their line endings. Agreed with the maintainer on
+2026-10-11, on the condition that the bundles need it, which the measurement below shows.
+
+**Reasoning:** Measured 2026-10-13 in a clone of the repository, checked out under
+`* text=auto eol=lf`: each development bundle carries 2377 CR — 1579 from the sources of
+`@default-js/defaultjs-extdom` 2.0.0, 798 from those of `@default-js/defaultjs-common-utils` 1.0.0,
+which are installed with CRLF in 24 of 29 and 8 of 18 files. The minified bundles and the source
+maps carry none. Normalized by git, the committed bundle would differ from the built and published
+one, and every build would show `dist/` modified. With the rule, a build in that clone, a build in
+the maintainer's working copy and a second build there are byte-identical, and `git hash-object`
+gives every bundle the same id with and without filters. `@default-js/defaultjs-expression-language`
+keeps the same rule.
+
+**Alternatives:** Normalizing `dist/` to LF like every other text file — the commit would differ
+from the build. Removing the CR in the build — a step of its own for a property of the
+dependencies.
+
+**Consequences:** A bundle is built from sources with LF, or the CR of a CRLF working copy reaches
+the commit. A fresh checkout gets LF through `* text=auto eol=lf`; a working copy checked out
+before that rule needs its tracked files rewritten.
+
+## 2026-10-13 — How is the `module` bundle built, and how are the bundles checked?
+
+**Decision:** `webpack.config.mjs` exports one configuration per entry of `entries.config.json`. The
+`module` configuration enables `experiments.outputModule` and sets `output.library.type` `module`:
+the bundle is an ES module exporting what `index.js` exports, with its dependencies bundled in. The
+`browser` configuration keeps the options it had. Only the first configuration carries `devServer`.
+The suite tests the sources, not the bundles, and runs before they are built. The maintainer's
+decisions; the bundled dependencies were agreed with the plan.
+
+**Reasoning:** `index.js` imports the `@default-js` packages by bare name, so a page needs a bundler
+or an import map for it; the `module` bundle needs neither. Measured 2026-10-13 with webpack
+5.111.1: one configuration with `experiments.outputModule` emits the `module` bundle as an ES
+module, but drops the function the `browser` bundle is wrapped in, so its top-level `var`
+declarations become globals of the page; forcing `output.iife` fails in terser with "Export
+statement may only appear at the top level". In a configuration of its own, the `browser` bundle is
+concatenated differently — the minified one shrinks from 49704 to 49153 bytes — and works as
+before. Checked by loading every bundle of `dist/` in Chromium, Firefox and WebKit: both `browser`
+bundles set `defaultjs.tl` with `Renderer`, `Template` and `VERSION`, define none of the
+minifier's top-level names `t`, `e`, `n`, `r`, `o` on the global object, and render a
+`jstl-foreach` template, before and after the change; both `module` bundles exported
+nothing before and now export `Renderer`, `Template` and `toAsyncTemplateLoader` and render the
+same template. webpack-cli starts a dev server for every configuration carrying `devServer`, refuses
+two on one port, and hands each the bundles of all configurations. The configurations are built in
+parallel, so each replaces `${version}` in its own bundle only. The suite tests the code before it
+is bundled, which is why the bundles were checked outside of it.
+
+**Alternatives:** One configuration with `experiments.outputModule` — the `browser` bundle would
+leak its variables into the page. The dependencies kept as imports (`externals`) — the bundle would
+need an import map or a bundler, as `index.js` does. Tests in the suite loading `dist/` — they would
+check the bundles of the previous build.
+
+**Consequences:** The `module` bundle carries its own copy of
+`@default-js/defaultjs-expression-language`; an executer set through that package does not reach
+it, which `README.md` points out. No test notices a defect of a bundle: a change of the build is
+checked by hand.
+
 ## 2026-10-13 — Which tools build the bundles and serve the development pages?
 
 **Decision:** webpack 5 with webpack-cli 7, webpack-dev-server 6 and `replace-in-file-webpack-plugin`,

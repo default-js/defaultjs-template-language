@@ -100,6 +100,22 @@ Renderer.render({container, template, data: {}});
 </html>
 ```
 
+**ES Module Bundle**
+
+`dist/module-defaultjs-template-language.min.js` exports the same as the package, with its
+dependencies bundled in: a page imports it without a bundler and without an import map. The bundle
+carries its own copy of `@default-js/defaultjs-expression-language`.
+
+```html
+<script type="module">
+    import { Template, Renderer } from "/path/to/module-defaultjs-template-language.min.js";
+
+    const container = document.getElementById("MyContainterToRenderInto");
+    const template = await Template.load(new URL("/path/to/a/template.tpl.html", location));
+    await Renderer.render({ container, template, data: {} });
+</script>
+```
+
 # Browser support
 
 Safari does not support customized built-in elements; there the `is` attribute has no effect.

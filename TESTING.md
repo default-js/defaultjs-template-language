@@ -11,7 +11,8 @@ A rule gets its section here once the maintainer has agreed it.
 Vitest in browser mode, through Playwright, in three engines: Chromium, Firefox and WebKit —
 headless for `npm test`, with windows for `npm run test:live`. Configuration in `vitest.config.mjs`.
 The sources are served unbundled, as ES modules; so are the `@default-js` packages, which vite
-does not pre-bundle.
+does not pre-bundle. The suite tests the sources, never the bundles under `dist/`: `npm run build`
+runs it before it bundles.
 
 Vitest finds every `*.test.js` under `test/` and runs each file in a page of its own, per engine.
 The files share nothing: not the state of the package, such as the template cache, not globals, not
