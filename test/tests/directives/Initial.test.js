@@ -55,6 +55,19 @@ describe("rendering an element", () => {
 		expect(inner.content.children[0].textContent).toBe("test");
 	});
 
+	it("runs the directives in the content of an HTMLTemplateElement", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<template><p>\${text}</p><b jstl-if="\${false}"></b></template>`);
+
+		await Renderer.render({ container, template, data: { text: "test" } });
+
+		expect(container.children).toHaveLength(1);
+		const inner = container.children[0];
+		expect(inner).toBeInstanceOf(HTMLTemplateElement);
+		expect(Array.from(inner.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+		expect(inner.content.children[0].textContent).toBe("test");
+	});
+
 	it("renders a comment", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div><!-- test --></div>`);
@@ -88,7 +101,37 @@ describe("jstl-tagname", () => {
 	});
 });
 
+describe("jstl-ignore-childs", () => {
+	it("renders the attributes of the element and includes its children unprocessed", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-ignore-childs title="\${text}">\${text}<span jstl-if="\${false}">\${text}</span></div>`);
+
+		await Renderer.render({ container, template, data: { text: "test" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.getAttribute("title")).toBe("test");
+		expect(element.hasAttribute("jstl-ignore-childs")).toBe(false);
+		expect(element.childNodes[0].textContent).toBe("${text}");
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SPAN"]);
+		expect(element.children[0].getAttribute("jstl-if")).toBe("${false}");
+		expect(element.children[0].textContent).toBe("${text}");
+	});
+});
+
 describe("is", () => {
+	it.skipIf(server.browser === "webkit")("renders the customized built-in element named by an expression", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div is="\${name}"></div>`);
+
+		await Renderer.render({ container, template, data: { name: "test-div" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element).toBeInstanceOf(ExtDivTestElement);
+		expect(element.getAttribute("is")).toBe("test-div");
+	});
+
 	it.skipIf(server.browser === "webkit")("renders the customized built-in element", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div is="test-div" test="test"></div>`);

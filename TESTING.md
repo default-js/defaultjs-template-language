@@ -30,7 +30,8 @@ A case that depends on the engine reads it from `server.browser` of `vitest/brow
 
 The suite mirrors `src/`: the cases of `src/<path>.js` stand in `test/tests/<path>.test.js`, one
 test file per source module — those of `src/directives/Foreach.js` in
-`test/tests/directives/Foreach.test.js`.
+`test/tests/directives/Foreach.test.js`. An entry at the root of the package follows the same rule:
+the cases of `browser.js` stand in `test/tests/browser.test.js`.
 
 `test/bench/` holds the benchmarks, `*.bench.js`. `npm run bench` runs them, `npm test` never does;
 `BENCHMARKS.md` describes them.

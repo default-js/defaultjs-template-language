@@ -23,6 +23,9 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ### Changed
 
+- `jstl-data` resolves a relative URL against `location`, the address of the page, as
+  `jstl-include` and `Template.fetch` do. It resolved it against the origin: in a page below the
+  root, `jstl-data="data.json"` loaded `/data.json` and now loads `data.json` beside the page.
 - `src/Element.js` is renamed to `src/DirectiveElement.js`, after the class it exports. A deep
   import of `src/Element.js` fails; import `DirectiveElement` from the package instead.
 
@@ -41,6 +44,7 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 - `src/index.js`, an empty module; a deep import of it fails.
 - The entry `directive` of `SCOPES` in `src/Renderer.js`; no resolver was named after it.
+- The attribute `jstl-text-prevent-format` is no longer read; it had no effect.
 
 ### Fixed
 

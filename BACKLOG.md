@@ -135,39 +135,6 @@ dependency and a build step.
 Agreed: as in the expression language — `npm run build:types` generates a `.d.ts` beside every
 source, they are committed, and the gate type-checks them.
 
-### B24 — behaviour `README.md` does not describe
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-The code does more than the README documents. Each item needs the maintainer's decision — document it
-(README first) or remove it:
-- `jstl-data-option` (fetch options for `remote`), `jstl-data-scope`; `remote` is the default mode;
-- `jstl-text-ignore`; `jstl-text-prevent-format` is read and has no effect;
-- `jstl-ignore-childs`; the `is` attribute for customized built-in elements; a `<template>` in a
-  template renders into its content;
-- event handlers: an object `{ eventHandle, capture, passive, once }` as handler, a string as
-  delegated event, the option `prevent-default` of `toggleClass` / `toggleAttribute`, the
-  separator `::` beside the old `:`;
-- `jstl-on-finished-async` and the names `$element`, `$root`, `$template` in `jstl-on-finished`;
-- `toAsyncTemplateLoader`, exported by `index.js`;
-- the global `defaultjs.tl` / `defaultjs.jstl` of `browser.js`.
-
-Agreed:
-- data: `jstl-data-option`, `jstl-data-scope` and `remote` as the default mode documented and tested.
-- text: `jstl-text-ignore` documented and tested; `jstl-text-prevent-format` removed — it called
-  `StringUtils.formatToHtml` until 2019 (`c3eeceb`) and has had no effect since the reimplementation.
-- elements: `jstl-ignore-childs`, the `is` attribute and rendering a `<template>` into its content
-  documented and tested.
-- events: the handler object `{ eventHandle, capture, passive, once }`, a string as delegated event,
-  the option `prevent-default` of `toggleClass` / `toggleAttribute` documented and tested. The
-  separator becomes configurable (B33).
-- the rest: `jstl-on-finished` with `-async` and `$element`, `$root`, `$template` (no longer
-  "experimental"), `toAsyncTemplateLoader`, the global `defaultjs.tl` / `defaultjs.jstl` documented
-  and tested.
-
-Done 2026-10-13: the loops — `-count`, `-start`, `-step`, `-condition` of `jstl-foreach` and
-`jstl-repeat` — documented as the code does it, the two modes of each directive apart, and tested.
-
 ### B25 — update a rendering when its data changes
 
 **Status:** open · **Kind:** idea

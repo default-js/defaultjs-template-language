@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { Template } from "../../index.js";
+import { describe, it, expect, vi } from "vitest";
+import { Template, toAsyncTemplateLoader } from "../../index.js";
 
 const TEMPLATE_URL = "/templates/Template/LoadFromURL.html";
 
@@ -159,5 +159,32 @@ describe("Template.load - cache", () => {
 		const result = await Template.load(nodelist, true, "test");
 
 		expect(result).toBe(expected);
+	});
+});
+
+describe("toAsyncTemplateLoader", () => {
+	it("loads the template on the first call only and answers it on every call", async () => {
+		const source = vi.fn(() => `<p></p>`);
+		const loader = toAsyncTemplateLoader(source);
+
+		const first = await loader();
+		const second = await loader();
+
+		expect(first).toBeInstanceOf(Template);
+		expect(second).toBe(first);
+		expect(source).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		{ kind: "a source", template: () => `<p></p>` },
+		{ kind: "a promise of a source", template: () => Promise.resolve(`<p></p>`) },
+		{ kind: "a function answering a source", template: () => () => `<p></p>` }
+	])("loads the template from $kind", async ({ template }) => {
+		const loader = toAsyncTemplateLoader(template());
+
+		const result = await loader();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
 	});
 });

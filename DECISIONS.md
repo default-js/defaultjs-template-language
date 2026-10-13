@@ -19,6 +19,32 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-13 — How are the scopes of `jstl-data` documented, and what is a relative URL of it resolved against?
+
+**Decision:** `README.md` documents `jstl-data-scope` with the scopes `container`, `render`,
+`data`, `application`, `jstl-foreach` and `jstl-repeat`, and marks the names of the scopes as
+experimental — an exception to "published files state facts" (`AGENTS.md`, Conventions). A
+relative URL of `jstl-data` is resolved against `location`. The maintainer's decisions, the first
+after the conflict with the convention was raised.
+
+**Reasoning:** The scope names are the names of the resolvers of the chain (`SCOPES` in
+`src/Renderer.js`, the names the directives give their resolvers); they are not settled, and the
+README says so rather than promising them. Measured 2026-10-13 in Chromium: without a scope the data
+reaches the element and its children; `container` the following elements of the parent, `render`
+the rest of the rendering, `data` later renderings of the same renderer, `application` every
+renderer, `jstl-foreach` the rest of the iteration; the data handed to `render` stays unchanged.
+`jstl-include` and `Template.fetch` resolve against `location`; `jstl-data` resolved against
+`location.origin`, so `data.json` in a page below the root loaded `/data.json`.
+
+**Alternatives:** Leaving `jstl-data-scope` undocumented until the names are settled — a function
+of 2.0.0 without description. Removing it from 2.0.0. Documenting the names without the mark — a
+promise the maintainer does not give. Keeping the origin — `jstl-data` alone among the loading
+functions would read a relative URL differently.
+
+**Consequences:** The README is the one published file that says something may change; the mark
+goes when the names are settled. A template below the root of its origin that loads data by a
+relative URL loads it from beside the page.
+
 ## 2026-10-13 — How do `jstl-foreach` and `jstl-repeat` iterate an object, and what does the status carry?
 
 **Decision:** An object is iterated by its own property names, `Object.getOwnPropertyNames`; the

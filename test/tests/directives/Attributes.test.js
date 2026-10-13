@@ -106,6 +106,37 @@ describe("event handler", () => {
 		expect(handle).toHaveBeenCalledOnce();
 	});
 
+	it("binds the eventHandle of an object with its options", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${ { eventHandle: action, once: true } }"></div>`);
+		const action = vi.fn();
+
+		await Renderer.render({ container, template, data: { action } });
+		container.children[0].trigger("click");
+		container.children[0].trigger("click");
+
+		expect(action).toHaveBeenCalledOnce();
+	});
+
+	it("prevents and stops the delegated event and hands it on as detail", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${action}"></div>`);
+		const handle = vi.fn();
+		const parent = vi.fn();
+
+		await Renderer.render({ container, template, data: { action: "event-delegate-test" } });
+		const element = container.children[0];
+		element.addEventListener("event-delegate-test", handle);
+		container.addEventListener("click", parent);
+		const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+		element.dispatchEvent(click);
+
+		expect(handle).toHaveBeenCalledOnce();
+		expect(handle.mock.calls[0][0].detail).toBe(click);
+		expect(click.defaultPrevented).toBe(true);
+		expect(parent).not.toHaveBeenCalled();
+	});
+
 	it("delegates an event triggered at a child from the element", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div @click:delegate="\${action}"><span>trigger</span></div>`);
@@ -177,6 +208,22 @@ describe("event handler toggleClass", () => {
 
 		expect(target.className).toBe(className);
 	});
+
+	it.each([
+		{ option: ":prevent-default", prevented: true },
+		{ option: "", prevented: false }
+	])("toggles the class and prevents the default action $prevented with the option '$option'", async ({ option, prevented }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click:toggleClass:test${option}=""></div>`);
+
+		await Renderer.render({ container, template });
+		const target = container.children[0];
+		const click = new MouseEvent("click", { cancelable: true });
+		target.dispatchEvent(click);
+
+		expect(target.className).toBe("test");
+		expect(click.defaultPrevented).toBe(prevented);
+	});
 });
 
 describe.each([
@@ -209,5 +256,21 @@ describe.each([
 		expect(target.getAttribute("test")).toBe("");
 		target.trigger("click");
 		expect(target.getAttribute("test")).toBeNull();
+	});
+
+	it.each([
+		{ option: "prevent-default", prevented: true },
+		{ option: "", prevented: false }
+	])("toggles the attribute and prevents the default action $prevented with the option '$option'", async ({ option, prevented }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click${separator}toggleAttribute${separator}test${option ? separator + option : ""}=""></div>`);
+
+		await Renderer.render({ container, template });
+		const target = container.children[0];
+		const click = new MouseEvent("click", { cancelable: true });
+		target.dispatchEvent(click);
+
+		expect(target.getAttribute("test")).toBe("");
+		expect(click.defaultPrevented).toBe(prevented);
 	});
 });

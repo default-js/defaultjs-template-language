@@ -16,6 +16,7 @@ defaultjs-template-language (`alias: jstl`)
     - [`jstl-data-mode="remote"`](#jstl-data-moderemote)
     - [`jstl-data-mode="set"`](#jstl-data-modeset)
     - [`jstl-data-mode="direct"`](#jstl-data-modedirect)
+    - [`jstl-data-var` and `jstl-data-scope`](#jstl-data-var-and-jstl-data-scope)
   - [jstl-include](#jstl-include)
     - [Additional option](#additional-option)
   - [jstl-attach-element](#jstl-attach-element)
@@ -29,6 +30,9 @@ defaultjs-template-language (`alias: jstl`)
   - [jstl-async](#jstl-async)
   - [jstl-tagname](#jstl-tagname)
   - [jstl-ignore](#jstl-ignore)
+  - [jstl-ignore-childs](#jstl-ignore-childs)
+  - [Template elements](#template-elements)
+  - [Customized built-in elements](#customized-built-in-elements)
   - [jstl-on-finished](#jstl-on-finished)
 - [Special Tags](#special-tags)
   - [Tag `jstl`](#tag-jstl)
@@ -38,6 +42,7 @@ defaultjs-template-language (`alias: jstl`)
     - [`load(template, cache, alias)` ⇒ `Template`](#loadtemplate-cache-alias--template)
     - [`fetch(url, cache, alias)` ⇒ `Template`](#fetchurl-cache-alias--template)
     - [`loadNodeTemplate(node, defaultTemplate, cache, alias)` ⇒ `Template`](#loadnodetemplatenode-defaulttemplate-cache-alias--template)
+    - [`toAsyncTemplateLoader(template)` ⇒ `() => Promise<Template>`](#toasynctemplateloadertemplate----promisetemplate)
   - [Renderer](#renderer)
     - [`new Renderer(option)`](#new-rendereroption)
     - [`Renderer.build(option)` ⇒ `Promise<Renderer>`](#rendererbuildoption--promiserenderer)
@@ -99,6 +104,11 @@ Renderer.render({container, template, data: {}});
     </body>
 </html>
 ```
+
+The browser bundle sets `defaultjs.tl`, alias `defaultjs.jstl`, on the global object to
+`{ VERSION, Template, Renderer, Context, Directive, DirectiveElement }`, `VERSION` the version of the
+package. Where `defaultjs.tl` is already set, by a second copy of the script for example, it is left
+as it is.
 
 **ES Module Bundle**
 
@@ -178,6 +188,19 @@ The execution engine is implemented with [defaultjs-expression-language](https:/
 
 <!--output-->
 <div>hello world</div>
+```
+
+**Example: text left as it is**
+
+`jstl-text-ignore` leaves the text directly inside the element as it is, its expressions
+unresolved. Attributes and child elements are rendered as usual.
+
+```html
+<!--template-->
+<div jstl-text-ignore>${hello} <span>${world}</span></div>
+
+<!--output-->
+<div>${hello} <span>world</span></div>
 ```
 
 **Example: long text with trim length**
@@ -519,11 +542,14 @@ loop stops, and that item is not rendered.
 
 ## jstl-data
 
-`jstl-data` provides the capability to load and manipulate the data at current data context. The different capabilities are activated by `jstl-data-mode` and one of these values `remote`, `set`, `direct`.
+`jstl-data` provides the capability to load and manipulate the data at current data context. The different capabilities are activated by `jstl-data-mode` and one of these values `remote` (the default), `set`, `direct`.
 
 ### `jstl-data-mode="remote"`
 
 The `remote` mode can be used to load a remote json data into data context.
+
+`remote` is the default mode, used when `jstl-data-mode` is missing. A relative URL is resolved
+against `location`, the address of the page.
 
 ```json
 //content of json file
@@ -537,6 +563,13 @@ The `remote` mode can be used to load a remote json data into data context.
 <div jstl-data="/path/to/json/file" jstl-data-mode="remote">${name}</div>
 <!-- load data with varname into context-->
 <div jstl-data="/path/to/json/file" jstl-data-mode="remote" jstl-data-var="file">${file.name}</div>
+```
+
+`jstl-data-option` takes the options of the request as JSON, the way `fetch` takes them; its
+expressions are resolved first.
+
+```html
+<div jstl-data="/path/to/json/file" jstl-data-option='{"method": "POST", "headers": {"x-token": "${token}"}}'>${name}</div>
 ```
 
 ### `jstl-data-mode="set"`
@@ -565,6 +598,28 @@ The `direct` are used to define a static value.
 
 <!-- output-->
 <div>hello world</div>
+```
+
+### `jstl-data-var` and `jstl-data-scope`
+
+With `jstl-data-var`, the data is available under that name; without it, the properties of the
+data are available under their own names. By default, the data is available to the element and its
+children only. `jstl-data-scope` names a scope that makes it available further. The names of the
+scopes are experimental.
+
+| Scope | The data is available to |
+|-|-|
+| `container` | the elements following the element in its parent, and their children |
+| `render` | the rest of the rendering |
+| `data` | every later rendering of the same renderer |
+| `application` | every rendering of every renderer |
+| `jstl-foreach`, `jstl-repeat` | the rest of the current iteration |
+
+```html
+<div>
+    <div jstl-data="${value}" jstl-data-mode="set" jstl-data-var="x" jstl-data-scope="container"></div>
+    <div>${x}</div>
+</div>
 ```
 
 ## jstl-include
@@ -633,16 +688,29 @@ To make the content interactive by user, it is possible to define event handler.
 
 ### add event handler
 
->syntax: @[event]="[action]"
+>syntax: @[event]="[expression]"
+
+The value is an expression, resolved when the element is rendered. Its result is bound to the event:
+
+| Result | Bound as |
+|-|-|
+| a function | the event handler |
+| a string | the name of an event: the event is prevented and stopped, and an event of that name is triggered at the element, with the original event as `detail` |
+| an object `{ eventHandle, capture, passive, once }` | `eventHandle` as event handler, with the options of `addEventListener` |
 
 ```html
-<div @click="alert('click')"></div>
-<div ?@click="${condition}" @click="alert('click')"></div>
+<!-- render context: { onClick: (event) => console.log(event), condition: true } -->
+<div @click="${onClick}"></div>
+<div ?@click="${condition}" @click="${onClick}"></div>
+<div @click="${ { eventHandle: onClick, once: true } }"></div>
 ```
 
 ### delegate events
 
 >syntax: @[event]:delegate="[target event name]"
+
+The event is prevented and stopped, and an event of the target name is triggered at the element,
+with the original event as `detail`.
 
 ```html
 <div @click:delegate="my-custom-event"></div>
@@ -658,6 +726,8 @@ To make the content interactive by user, it is possible to define event handler.
 <div ?@click:toggleAttribute:test-attribute="${condition}" @click:toggleAttribute:test-attribute="#id-of-target-element"></div>
 ```
 
+With `prevent-default` after the attribute name — `@click:toggleAttribute:test-attribute:prevent-default` — the default action of the event is prevented.
+
 ### toggle class by event
 
 >syntax: @[event]:toggleClass:[class name]="[selector of target element]"
@@ -667,6 +737,8 @@ To make the content interactive by user, it is possible to define event handler.
 <div @click:toggleClass:test-class="#id-of-target-element"></div>
 <div ?@click:toggleClass:test-class="${condition}" @click:toggleClass:test-class="#id-of-target-element"></div>
 ```
+
+With `prevent-default` after the class name — `@click:toggleClass:test-class:prevent-default` — the default action of the event is prevented.
 
 ## jstl-async
 
@@ -722,9 +794,61 @@ The `jstl-tagname` is useful to dynamiclly creates a tag or change the tagname b
 
 ```
 
+## jstl-ignore-childs
+
+`jstl-ignore-childs` renders the element itself, its attributes included, and includes its children
+unprocessed.
+
+```html
+<!-- render context: { text: "some text" } -->
+<div jstl-ignore-childs title="${text}">${text}</div>
+
+<!-- output -->
+<div title="some text">${text}</div>
+```
+
+## Template elements
+
+A `<template>` in a template is rendered into its content: the output holds a `<template>` whose
+content is rendered like any other part of the template.
+
+```html
+<!-- render context: { text: "some text" } -->
+<template id="row"><p>${text}</p></template>
+
+<!-- output -->
+<template id="row"><p>some text</p></template>
+```
+
+## Customized built-in elements
+
+The `is` attribute creates a customized built-in element; its value may be an expression. Safari
+does not support customized built-in elements (see [Browser support](#browser-support)).
+
+```html
+<!-- customElements.define("my-button", class extends HTMLButtonElement {}, { extends: "button" }) -->
+<button is="${name}">click</button>
+```
+
 ## jstl-on-finished
 
->experimentelle feature
+`jstl-on-finished` holds an expression that is resolved once the whole rendering is finished. Beside
+the data, the expression knows three names:
+
+| Name | Value |
+|-|-|
+| `$element` | the rendered element |
+| `$root` | the `root` of the rendering, by default its container |
+| `$template` | the element of the template the element was rendered from |
+
+The promise of the rendering resolves after the expression, and after a promise it results in.
+With `jstl-on-finished-async`, it does not wait for the expression.
+
+```html
+<!-- render context: { focus: (element) => element.focus(), load: async () => {} } -->
+<input jstl-on-finished="${focus($element)}">
+<div jstl-on-finished="${load()}" jstl-on-finished-async></div>
+```
 
 # Special Tags
 
@@ -845,6 +969,24 @@ This function makes several steps to attempting a `Template` by following order:
 | defaultTemplate  | `Template` | fallback `Template`, if no template found - `optional` | `null` |
 | cache | `boolean` | store the template at cache - `optional` | `true` |
 | alias | `string` | store the template at cache - `optional` | `null` |
+
+### `toAsyncTemplateLoader(template)` ⇒ `() => Promise<Template>`
+
+Creates a function that loads the template with `Template.load` on its first call and answers the
+same template on every call. It is exported by the package beside `Template`.
+
+**Kind**: function
+
+| Param     | Type                | Description  | Default |
+| --------- | ------------------- | ------------ | ------- |
+| template  | what `Template.load` takes, a `Promise` of it, or a function answering it | source of the template; a function is called on the first call only - `required` | |
+
+```javascript
+import { toAsyncTemplateLoader, Renderer } from "@default-js/defaultjs-template-language";
+
+const loadTemplate = toAsyncTemplateLoader(() => new URL("/path/to/a/template.tpl.html", location));
+await Renderer.render({ container, template: await loadTemplate(), data: {} });
+```
 
 ## Renderer
 

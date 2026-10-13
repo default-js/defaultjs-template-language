@@ -35,6 +35,19 @@ describe("text content", () => {
 		expect(container.children[0].textContent).toBe("test text ${dynamic} content");
 	});
 
+	it("renders attributes and child elements with jstl-text-ignore", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-ignore title="\${hello}">\${hello} <span>\${world}</span></div>`);
+
+		await Renderer.render({ container, template, data: { hello: "hello", world: "world" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.getAttribute("title")).toBe("hello");
+		expect(element.childNodes[0].textContent).toBe("${hello} ");
+		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["world"]);
+	});
+
 	it("trims a text to jstl-text-trim-length, the ellipsis included", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-text-trim-length="\${length}">\${longText}</div>`);

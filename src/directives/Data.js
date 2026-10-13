@@ -5,7 +5,7 @@ const MODES = {
 	"remote": async ({ data, context }) => {		
 		const {resolver, template} = context;
 		data = await resolver.resolveText(data);
-		data = new URL(data, location.origin);
+		data = new URL(data, location);
 		let option = await resolver.resolveText(template.attr("jstl-data-option") || "{}");
 		option = JSON.parse(option);
 

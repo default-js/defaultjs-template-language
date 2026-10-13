@@ -3,7 +3,6 @@ import Directive from "../Directive.js";
 const DEFAULT_OPTION = {
 	mode: "text",
 	unsecure: false,
-	preventFormat : false,
 	maxLength: 0	
 };
 
@@ -14,7 +13,6 @@ const readOption = async (parent, context) => {
 	return {
 		mode: await resolver.resolveText((parent.attr("jstl-text-content-type") || "text").trim().toLowerCase()),
 		unsecure: parent.hasAttribute("jstl-text-unsecure"),
-		preventFormat: !!parent.attr("jstl-text-prevent-format") || false,
 		maxLength: parseInt(await resolver.resolveText(parent.attr("jstl-text-trim-length") || "0"))
 	};
 };
