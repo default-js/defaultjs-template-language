@@ -80,10 +80,10 @@ export default class Template {
 
 	static async fetch(url, cache = true, alias = null) {
 		if (typeof url === "string") {
-			return Template.load(new URL(url, loaction), cache, alias);
+			return Template.load(new URL(url, location), cache, alias);
 		} else if (url instanceof URL) return Template.load(url, cache, alias);
 
-		new Error("The url isn't a allowed type! -> [String|URL] required!");
+		throw new Error("The url isn't a allowed type! -> [String|URL] required!");
 	}
 
 	static async load(template, cache = true, alias = null) {
@@ -96,7 +96,7 @@ export default class Template {
 		} else if (template instanceof URL) return await fromURL(template, cache, key);
 		else if (template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection || template instanceof HTMLTemplateElement) return fromElement(template, cache, key);
 
-		new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
+		throw new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
 	}
 
 	static async loadNodeTemplate(node, defaultTemplate, cache, alias) {

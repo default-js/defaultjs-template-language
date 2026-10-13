@@ -5,7 +5,8 @@ built this way in `DECISIONS.md`, how it is packaged in `DISTRIBUTION.md`.
 
 ## Components
 
-- **`index.js`** — the public API: `Template`, `Renderer`, `toAsyncTemplateLoader`.
+- **`index.js`** — the public API: `Template`, `Renderer`, `Context`, `Directive`,
+  `DirectiveElement`, `toAsyncTemplateLoader`.
 - **`src/Template.js`** — `Template` wraps an `HTMLTemplateElement`. `Template.load` takes a
   `Template`, an HTML string, a `URL` (fetched), or a `Node`, `NodeList`, `HTMLCollection` or
   `HTMLTemplateElement`, and caches the result under a hash of the alias, the source, the URL or
@@ -25,8 +26,9 @@ built this way in `DECISIONS.md`, how it is packaged in `DISTRIBUTION.md`.
   by phase, then rank.
 - **`src/directives/`** — the built-in directives, one module each; each registers itself on
   import, and `src/directives/index.js` imports them all.
-- **`src/Element.js`** — the base class of a custom element that renders itself instead of running
-  the directives. **`src/elements/`** holds the built-in one, `jstl-replace`.
+- **`src/DirectiveElement.js`** — `DirectiveElement`, the base class of a custom element that
+  renders itself instead of running the directives. **`src/elements/`** holds the built-in one,
+  `jstl-replace`.
 - **`src/Utils.js`** — helpers shared by more than one component.
 
 Importing `src/Renderer.js` — and with it either entry point — imports
@@ -36,7 +38,7 @@ Importing `src/Renderer.js` — and with it either entry point — imports
 
 For every node of a template, the renderer creates a `Context` and
 
-1. lets the node execute itself if it is an instance of the class in `src/Element.js`; otherwise
+1. lets the node execute itself if it is an instance of `DirectiveElement`; otherwise
    runs every registered directive in order, until one sets `stop`;
 2. renders the node's children into its `content` the same way, unless `ignore` is set;
 3. replaces a `<jstl>` element by its children.

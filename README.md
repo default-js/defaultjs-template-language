@@ -635,7 +635,7 @@ Additional to the constructor, the template class provide some static methods to
 
 ### `load(template, cache, alias)` ⇒ `Template`
 
-Create a instance of `Template` by `string`, `URL`, `Node`, `NodeList`, `HTMLCollection` or `Template`.
+Create a instance of `Template` by `string`, `URL`, `Node`, `NodeList`, `HTMLCollection` or `Template`. Any other type rejects with an `Error`.
 
 **Kind**: static function
 
@@ -647,7 +647,7 @@ Create a instance of `Template` by `string`, `URL`, `Node`, `NodeList`, `HTMLCol
 
 ### `fetch(url, cache, alias)` ⇒ `Template`
 
-Create a instance of `Template` by a url as `string` or `URL`.
+Create a instance of `Template` by a url as `string` or `URL`. A `string` is resolved against `location`, the address of the page. Any other type rejects with an `Error`.
 
 **Kind**: static function
 

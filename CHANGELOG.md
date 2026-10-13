@@ -13,7 +13,16 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ## [Unreleased]
 
+### Added
+
+- `index.js` exports `Context`, `Directive` and `DirectiveElement` beside `Template`, `Renderer`
+  and `toAsyncTemplateLoader`; the global `defaultjs.tl` of `browser.js` carries the same three
+  beside `Template` and `Renderer`.
+
 ### Changed
+
+- `src/Element.js` is renamed to `src/DirectiveElement.js`, after the class it exports. A deep
+  import of `src/Element.js` fails; import `DirectiveElement` from the package instead.
 
 - `package.json` declares `"type": "module"`: Node loads the `.js` files of the package as ES
   modules, without the warning `MODULE_TYPELESS_PACKAGE_JSON` and without parsing them twice.
@@ -28,6 +37,14 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ### Fixed
 
+- `Template.fetch` loads a template from a url given as `string`, resolved against `location`. It
+  rejected with a `ReferenceError`.
+- `Template.load` and `Template.fetch` reject with an `Error` when given a type they do not
+  support. They resolved to `undefined`.
+- A `Context` given a template as `string`, to its constructor or its `template` setter, holds
+  the nodes of that source. It held the string.
+- `Context.ready` with an array registers every function of it like a single one. It rejected with
+  a `TypeError`.
 - `dist/module-defaultjs-template-language.js` and its minified version are ES modules exporting
   what `index.js` exports. They ran `index.js` as a script and exported nothing.
 - `index.js` loads as an ES module without a bundler. `src/Context.js` imported an export

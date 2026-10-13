@@ -3,7 +3,7 @@ import ExpressionResolver from "@default-js/defaultjs-expression-language/src/Ex
 import Template from "./Template.js";
 import Context from "./Context.js";
 import Directive from "./Directive.js";
-import Element from "./Element.js";
+import Element from "./DirectiveElement.js";
 import "./directives/index.js";
 import "./elements/index.js";
 

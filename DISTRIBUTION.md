@@ -7,8 +7,8 @@ How `@default-js/defaultjs-template-language` reaches a consumer. How it is buil
 
 | Entry | Purpose |
 |---|---|
-| `index.js` | the ES module entry, `main` in `package.json` and `.` in its `exports`; exports `Template`, `Renderer`, `toAsyncTemplateLoader` |
-| `browser.js` | the browser script; sets `defaultjs.tl`, alias `defaultjs.jstl`, on the global object to `{ VERSION, Template, Renderer }` |
+| `index.js` | the ES module entry, `main` in `package.json` and `.` in its `exports`; exports `Template`, `Renderer`, `Context`, `Directive`, `DirectiveElement`, `toAsyncTemplateLoader` |
+| `browser.js` | the browser script; sets `defaultjs.tl`, alias `defaultjs.jstl`, on the global object to `{ VERSION, Template, Renderer, Context, Directive, DirectiveElement }` |
 
 `package.json` declares `"type": "module"` and opens in `exports`: `.` and `./index.js`,
 `./browser.js`, `./src/*`, `./dist/*` and `./package.json` — every published file that can be

@@ -19,6 +19,28 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-13 — Under which names does the package export the classes for extending it?
+
+**Decision:** `index.js` exports `Context`, `Directive` and `DirectiveElement` beside `Template`,
+`Renderer` and `toAsyncTemplateLoader`; the global `defaultjs.tl` of `browser.js` carries the same
+three beside `Template` and `Renderer`. The base class of a custom element is exported as
+`DirectiveElement`, and its module is `src/DirectiveElement.js`, formerly `src/Element.js`. The
+maintainer's decisions.
+
+**Reasoning:** A custom directive extends `Directive` and works with the `Context` it is handed, a
+custom element extends `DirectiveElement`, and `render` resolves to a `Context`: the extension API
+and the result of a rendering need all three reachable from the package. The class in
+`src/Element.js` was already named `DirectiveElement`; exported as `Element`, it would shadow the
+DOM's global `Element` in every module importing it under that name. The module now carries the
+name of its class, as `src/Directive.js`, `src/Context.js` and `src/Template.js` do.
+
+**Alternatives:** Exporting the class as `Element` — it shadows the DOM's `Element` wherever it is
+imported. Keeping the module at `src/Element.js` — a deep import of it keeps working, under a name
+that differs from its class.
+
+**Consequences:** A deep import of `src/Element.js` fails. `src/Renderer.js` still imports the class
+under the name `Element`.
+
 ## 2026-10-13 — How does git store the bundles?
 
 **Decision:** `.gitattributes` marks `dist/**` `-text`: git stores the bundles byte for byte, as

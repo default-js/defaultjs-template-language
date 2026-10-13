@@ -70,15 +70,30 @@ describe("Template.load", () => {
 		expect(content.children).toHaveLength(1);
 		expect(Array.from(content.children[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
 	});
+
+	it.each([
+		{ type: "number", value: 42 },
+		{ type: "plain object", value: {} },
+		{ type: "null", value: null }
+	])("rejects a $type with an Error", async ({ value }) => {
+		await expect(Template.load(value, false)).rejects.toBeInstanceOf(Error);
+	});
 });
 
 describe("Template.fetch", () => {
-	// defect: B2
-	it.fails("loads a template from a URL given as string", async () => {
+	it("loads a template from a URL given as string", async () => {
 		const result = await Template.fetch(TEMPLATE_URL, false);
 
 		expect(result).toBeInstanceOf(Template);
 		expect(result.template.content.children).toHaveLength(5);
+	});
+
+	it.each([
+		{ type: "number", value: 42 },
+		{ type: "plain object", value: {} },
+		{ type: "null", value: null }
+	])("rejects a $type with an Error", async ({ value }) => {
+		await expect(Template.fetch(value, false)).rejects.toBeInstanceOf(Error);
 	});
 });
 
@@ -99,8 +114,7 @@ describe("Template.load - cache", () => {
 		expect(result).toBe(expected);
 	});
 
-	// defect: B2
-	it.fails("returns the cached template for the same URL given as string", async () => {
+	it("returns the cached template for the same URL given as string", async () => {
 		const expected = await Template.fetch(TEMPLATE_URL);
 		const result = await Template.fetch(TEMPLATE_URL);
 

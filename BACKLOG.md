@@ -45,12 +45,12 @@ then it may still change.
 - **Type declarations (B21):** as in the expression language — `npm run build:types` generates a
   `.d.ts` beside every source, they are committed, and the gate type-checks them.
 - **Extension API (B32):** custom directives and elements become official API — `index.js` exports
-  `Directive` and `Element`, `README.md` documents extending (B11), tests cover it. Nothing new is
+  `Directive` and `DirectiveElement`, `README.md` documents extending (B11), tests cover it. Nothing new is
   built; the existing mechanism is made public.
 - **Defects**, decided one by one — fixed in 2.0.0: B2, B3, B4 (a string template works, as
   the JSDoc promises), B5 (an array of callbacks works like a single one), B7 (with the move to
   `webpack.config.mjs`), B18 (custom elements are repaired: the renderer recognizes one
-  through `customElements.get` and a class extending `Element`; `execute(context)` gets one
+  through `customElements.get` and a class extending `DirectiveElement`; `execute(context)` gets one
   signature), B22 (an object is iterated by its own properties — the item is the value, the
   status also carries the key; documented, README first), B6 (`jstl-async` implemented anew),
   B37 (loading `src/Directive.js` first). All defects are fixed.
@@ -76,42 +76,6 @@ then it may still change.
 - **Also in 2.0.0:** B20, measured with the first build. **Not in 2.0.0:** B25 and B26.
 
 ## Entries
-
-### B2 — `Template.fetch` with a string throws `ReferenceError`
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Template.js`, `Template.fetch`: `new URL(url, loaction)` — `loaction` is a typo for `location`.
-
-Two cases of `test/tests/Template.test.js` are marked `it.fails` for it; the fix starts by turning
-them into `it`.
-
-### B3 — `Template.fetch` and `Template.load` swallow unsupported types
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Template.js`: both end in `new Error(...)` without `throw`, so an unsupported argument
-resolves to `undefined` instead of failing.
-
-### B4 — `toTemplate` never converts a string
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Context.js`, `toTemplate`: `typeof template === String` compares against the constructor and
-is always false; a string template passes through unconverted.
-
-Agreed: a string template works, as the JSDoc promises. Inside the package no caller hands one
-over; a custom directive (B32) can.
-
-### B5 — `Context.ready` with an array throws
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Context.js`, `ready(callback)`: for an array it calls `this.wait.then(...)`; there is no
-`wait` property, only the private `#wait`, so this throws a `TypeError`.
-
-Agreed: an array registers each of its callbacks like a single one. Inside the package only
-functions are handed over (`AttachElement.js`, `OnFinished.js`); a custom directive can.
 
 ### B6 — `jstl-async` documented but disabled
 
@@ -157,11 +121,11 @@ Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extensi
 
 Agreed: removed.
 
-### B18 — `Element.execute` reads a parameter it is not given
+### B18 — `DirectiveElement.execute` reads a parameter it is not given
 
 **Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
 
-`src/Renderer.js`, `renderNode`, calls `template.execute(context)`; `src/Element.js` and
+`src/Renderer.js`, `renderNode`, calls `template.execute(context)`; `src/DirectiveElement.js` and
 `src/elements/Replace.js` declare `execute({ template, context })` and so destructure
 `context.context`, which does not exist. The base implementation then throws on
 `context.content = ...`.
@@ -174,8 +138,8 @@ template loaded through `Template`. `jstl-replace` is created only in the disabl
 `jstl-async` (B6).
 
 Agreed: repaired — the renderer recognizes a custom element through `customElements.get` and a
-class extending `Element`; `execute(context)` gets one signature. `Element` becomes public with the
-extension API (B32).
+class extending `DirectiveElement`; `execute(context)` gets one signature. `index.js` exports
+`DirectiveElement` since 2026-10-13 (B32).
 
 ### B21 — ship type declarations with 2.0.0
 
@@ -280,14 +244,15 @@ by one with its reason.
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
-Custom directives and elements become official API: `index.js` exports `Directive` and `Element`,
-`README.md` documents extending ("Custom Directives", "Custom Tags", B11), tests cover it. Nothing
-new is built; the existing mechanism is made public, with custom elements repaired (B18).
+Custom directives and elements become official API: `index.js` exports `Directive` and
+`DirectiveElement`, `README.md` documents extending ("Custom Directives", "Custom Tags", B11), tests
+cover it. Nothing new is built; the existing mechanism is made public, with custom elements
+repaired (B18).
 
-Open until this entry is worked on: the name under which the element class is exported. In
-`src/Element.js` it is `DirectiveElement`; exported as `Element` it would shadow the DOM's global
-`Element` in every module importing it — as `src/Renderer.js` already does with its default import
-named `Element`, while `src/directives/Initial.js` means the DOM's `Element` by `instanceof Element`.
+Done 2026-10-13, by the maintainer: `index.js` and the global `defaultjs.tl` of `browser.js` export
+`Directive` and `DirectiveElement`; `src/Element.js` is renamed to `src/DirectiveElement.js`
+(`DECISIONS.md`, 2026-10-13). Open: `README.md` and the tests. `src/Renderer.js` still imports the
+class under the name `Element`, which shadows the DOM's global `Element` there.
 
 ### B33 — configurable separator of event attributes
 
@@ -350,8 +315,9 @@ it.
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
 `src/Renderer.js`: `render(option)` and the static `Renderer.render` resolve to the `Context` of
-the rendering (measured 2026-10-12). `Context` is not exported by `index.js` and `README.md` does
-not describe the value.
+the rendering (measured 2026-10-12). `README.md` does not describe the value. `index.js` and the
+global `defaultjs.tl` of `browser.js` export `Context` since 2026-10-13, by the maintainer; open are
+`README.md`, the tests and the type declarations.
 
 Agreed 2026-10-12: the `Context` is documented — `index.js` exports it, `README.md` describes its
 public parts (README first), the type declarations of B21 cover it. Public is all of `Context`
@@ -371,3 +337,12 @@ bundles `<entry>-defaultjs-template-language.js` since `15061e2` (2022-08-21), a
 2026-10-13 with `npm run dev`: the dev server answers 404 for `/defaultjs-template-language.js`.
 `WebContent/js/Renderer.js`, loaded by the same page, reads `defaultjs.tl`, which the `browser`
 bundle sets. `WebContent/` is not published.
+
+### B45 — `Context.ready` with an array completes the context on an empty item
+
+**Status:** open · **Kind:** defect
+
+`src/Context.js`, `ready(callback)`: an array hands each item to `ready` again. An item that is
+falsy — `null`, `undefined` — reaches the branch of a call without argument, which runs the
+callbacks, waits for the subcontexts and resolves the context, before the rendering has finished.
+Found 2026-10-13 by reading the code; not measured.

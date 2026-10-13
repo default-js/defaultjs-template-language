@@ -1,4 +1,4 @@
-import Element from "../Element.js"
+import Element from "../DirectiveElement.js"
 
 export default class ReplaceElement extends Element{
 	constructor(){

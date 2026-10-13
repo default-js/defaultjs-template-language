@@ -41,7 +41,7 @@ const runObserver = () => {
 
 const toTemplate = (template) => {
 	if (template instanceof Template) return template.importContent();
-	else if (typeof template === String) return create(template);
+	else if (typeof template === "string") return create(template);
 	return template;
 };
 
@@ -166,7 +166,7 @@ export default class Context {
 	async ready(callback) {
 		const callbacks = this.#callbacks;
 		if (callback) {
-			if (callback instanceof Array) callback.forEach((callback) => this.wait.then(callback));
+			if (callback instanceof Array) callback.forEach((callback) => this.ready(callback));
 			else if (callback instanceof Promise) callbacks.push(async () => await callback);
 			else if (typeof callback === "function") callbacks.push(callback);
 		} else {
