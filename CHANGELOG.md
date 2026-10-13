@@ -18,6 +18,8 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 - `index.js` exports `Context`, `Directive` and `DirectiveElement` beside `Template`, `Renderer`
   and `toAsyncTemplateLoader`; the global `defaultjs.tl` of `browser.js` carries the same three
   beside `Template` and `Renderer`.
+- The status of `jstl-foreach` and `jstl-repeat` carries `key` — the index of the item in an
+  array, the name of the property in an object — and `first`, `last` and `step`.
 
 ### Changed
 
@@ -42,6 +44,8 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ### Fixed
 
+- `jstl-foreach` and `jstl-repeat` over an object render once per own property, with the value of
+  the property as item. The item was `undefined`.
 - `Template.fetch` loads a template from a url given as `string`, resolved against `location`. It
   rejected with a `ReferenceError`.
 - `Template.load` and `Template.fetch` reject with an `Error` when given a type they do not

@@ -258,7 +258,11 @@ This provide the capabillity to loop over an array. The content of element would
         {name: "item-1"},
         {name: "item-2"},
         {name: "item-3"}
-    ]
+    ],
+    object : {
+        a: "value-a",
+        b: "value-b"
+    }
 }
 ```
 
@@ -272,6 +276,20 @@ This provide the capabillity to loop over an array. The content of element would
     <div>item-1</div>
     <div>item-2</div>
     <div>item-3</div>
+</div>
+```
+
+An object is iterated by its own properties: the item is the value of a property, `status.key` its name.
+
+```html
+<div jstl-foreach="${object}">
+    <div>${status.key}: ${item}</div>
+</div>
+
+<!-- output -->
+<div>
+    <div>a: value-a</div>
+    <div>b: value-b</div>
 </div>
 ```
 
@@ -295,8 +313,12 @@ Set a varname for a meta data and state of the current iteration. The default va
 {
     index: 0, // item index (zero based)
     number: 1, // item number (one based)
+    key: 0, // the index of the item in an array, the name of the property in an object
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two iterations
     count: 10, // length of array,
-    data: [] // full array
+    data: [] // full array or object
 }
 ```
 
@@ -324,6 +346,26 @@ This provide the capabillity to loop over an array. The difference between `jstl
 <div>item-3</div>
 ```
 
+An object is iterated by its own properties: the item is the value of a property, `status.key` its name.
+
+```javascript
+//data used for example
+{
+    object : {
+        a: "value-a",
+        b: "value-b"
+    }
+}
+```
+
+```html
+<div jstl-repeat="${object}">${status.key}: ${item}</div>
+
+<!-- output -->
+<div>a: value-a</div>
+<div>b: value-b</div>
+```
+
 **additional parameter**
 
 **`jstl-repeat-var`**
@@ -342,8 +384,12 @@ Set a varname for a meta data and state of the current iteration. The default va
 {
     index: 0, // item index (zero based)
     number: 1, // item number (one based)
+    key: 0, // the index of the item in an array, the name of the property in an object
+    first: true, // true for the first iteration
+    last: false, // true for the last iteration
+    step: 1, // the distance between two iterations
     count: 10, // length of array,
-    data: [] // full array
+    data: [] // full array or object
 }
 ```
 

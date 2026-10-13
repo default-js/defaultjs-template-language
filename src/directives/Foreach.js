@@ -33,6 +33,8 @@ const doCount = async (option) => {
 		const iteration = {}
 		iteration[varname] = i;
 		iteration[status] = {
+			first: i === start,
+			last: i >= length - step,
 			index: i,
 			number: i + 1,
 			step,
@@ -60,19 +62,23 @@ const doForeach = async (option) => {
 
 	data = await resolver.resolve(data, []);
 	let array = data;
-	if (!(data instanceof Array))
-		array = Object.getOwnPropertyNames(data);
+	const isObject = !(data instanceof Array);
+	if (isObject) array = Object.getOwnPropertyNames(data);
 
 	count = count != "" ? await resolver.resolve(count, 0) : null;
 	const length = count ? Math.min(start + count, array.length) : array.length;
 	let stop = false;
 	for (let i = start; i < length && !stop; i = i + step) {
 		const iteration = {}
-		iteration[varname] = data[i];
+		iteration[varname] = isObject ? data[array[i]] : data[i];
 		iteration[status] = {
+			first: i === start,
+			last: i >= length - step,
+			step,
 			index: i,
 			number: i + 1,
 			count: length,
+			key: isObject ? array[i] : i,
 			data
 		};
 		stop = !(await iterate(iteration, option));

@@ -27,8 +27,9 @@ releases it. A decision here reaches `DECISIONS.md` when its entry is worked on,
 then it may still change.
 
 - **Character:** quality and modernization, like 3.0.0 of `@default-js/defaultjs-expression-language`
-  — toolchain, package shape, defects, documentation, tests. No new functions, with one exception
-  the maintainer decided: the configurable separator of event attributes (B33).
+  — toolchain, package shape, defects, documentation, tests. No new functions, with two exceptions
+  the maintainer decided: the configurable separator of event attributes (B33), and `first`,
+  `last` and `step` in the status of `jstl-foreach` and `jstl-repeat` (2026-10-13, with B22).
 - **Test runner (B28):** Vitest in browser mode through Playwright, replacing Karma and Jasmine
   (Karma is deprecated). The existing cases are ported 1:1 first, as a green
   baseline; then the suite is reorganized under rules written into `TESTING.md` (B39).
@@ -133,17 +134,6 @@ dependency and a build step.
 
 Agreed: as in the expression language — `npm run build:types` generates a `.d.ts` beside every
 source, they are committed, and the gate type-checks them.
-
-### B22 — `jstl-foreach` and `jstl-repeat` over an object yield `undefined`
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/directives/Foreach.js`, `doForeach`, and `src/directives/Repeat.js`, `doRepeat`: for data
-that is not an array, the loop runs over `Object.getOwnPropertyNames(data)`, but the item is
-`data[i]` — the value at the numeric index, not at the `i`-th property name.
-
-Agreed: an object is iterated by its own properties — the item is the value, the status also
-carries the key; documented in `README.md` first.
 
 ### B24 — behaviour `README.md` does not describe
 

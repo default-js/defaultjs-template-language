@@ -19,6 +19,28 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-13 — How do `jstl-foreach` and `jstl-repeat` iterate an object, and what does the status carry?
+
+**Decision:** An object is iterated by its own property names, `Object.getOwnPropertyNames`; the
+item is the value of a property. The status carries `key` — the name of the property in an
+object, the index of the item in an array — and `first`, `last` and `step` beside `index`,
+`number`, `count` and `data`. The counting loop of `-count` carries `first` and `last` too. The
+maintainer's decisions; `first`, `last` and `step` are an exception to "no new functions" in
+2.0.0.
+
+**Reasoning:** Both directives already ran over the property names of an object but read the item
+at the numeric index, so it was `undefined`. The value is what a template iterating an object
+needs, and its name has nowhere else to come from, hence `key`; for an array it is the index, so a
+template reads `status.key` the same way for both. `first` and `last` spare a template comparing
+`index` against `count`.
+
+**Alternatives:** The property name as item and the value in the status — the opposite of how an
+array is iterated. `key` for objects only — a template would need to know which of the two it
+iterates.
+
+**Consequences:** `Object.getOwnPropertyNames` includes the non-enumerable own properties of an
+object; inherited properties and those keyed by a symbol are not iterated.
+
 ## 2026-10-13 — Under which names does the package export the classes for extending it?
 
 **Decision:** `index.js` exports `Context`, `Directive` and `DirectiveElement` beside `Template`,
