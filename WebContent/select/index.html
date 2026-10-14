@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>select</title>
+</head>
+
+<body>
+	<h1>select</h1>
+	<p>Checked by hand: open each select and compare what it shows with what is expected. "render again" renders
+		every example again, alternating between the items <code>a, b, c</code> and <code>d, e</code>.</p>
+	<button id="render-again">render again</button>
+
+	<section>
+		<h2>jstl-foreach on the select</h2>
+		<p>expected: an option per item, the first one selected</p>
+		<template><select jstl-foreach="${items}"> <option>${item}</option></select></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>jstl tag with jstl-foreach in the select</h2>
+		<p>expected: an option per item, the first one selected</p>
+		<template><select><jstl jstl-foreach="${items}"><option>${item}</option></jstl></select></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>jstl-repeat on the option, with ?selected</h2>
+		<p>expected: an option per item, the second one selected</p>
+		<template><select><option jstl-repeat="${items}" value="${item}" ?selected="${item == current}">${item}</option></select></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>placeholder option before jstl-repeat</h2>
+		<p>expected: "choose" first and selected, then an option per item</p>
+		<template><select><option value="">choose</option><option jstl-repeat="${items}" value="${item}">${item}</option></select></template>
+		<div class="result"></div>
+	</section>
+
+	<script type="module" src="main.js"></script>
+</body>
+
+</html>

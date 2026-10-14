@@ -28,13 +28,25 @@ A case that depends on the engine reads it from `server.browser` of `vitest/brow
 
 ## Where a case belongs
 
-The suite mirrors `src/`: the cases of `src/<path>.js` stand in `test/tests/<path>.test.js`, one
-test file per source module — those of `src/directives/Foreach.js` in
-`test/tests/directives/Foreach.test.js`. An entry at the root of the package follows the same rule:
-the cases of `browser.js` stand in `test/tests/browser.test.js`.
+The suite mirrors `src/`, apart from the use cases: the cases of `src/<path>.js` stand in
+`test/tests/<path>.test.js`, one test file per source module — those of `src/directives/Foreach.js`
+in `test/tests/directives/Foreach.test.js`. An entry at the root of the package follows the same
+rule: the cases of `browser.js` stand in `test/tests/browser.test.js`.
 
 `test/bench/` holds the benchmarks, `*.bench.js`. `npm run bench` runs them, `npm test` never does;
 `BENCHMARKS.md` describes them.
+
+## Use cases
+
+`test/tests/usecases/` holds the use cases: functions combined, or one used beyond the example
+`README.md` gives, the way a consumer builds a page with them. A file there is named after its use
+case, not after a source module — `test/tests/usecases/Select.test.js` — and renders the way its
+use case needs. Every other rule of this file applies.
+
+The expectation of a use case follows from what `README.md` says about each function involved; a
+result deviating from it is a defect, marked as *Skipped and failing cases* describes. Where
+`README.md` gives no answer, as for a limitation of the HTML parser, the case asserts what the code
+does today, and a backlog entry decides whether `README.md` documents it.
 
 ## What a case asserts
 

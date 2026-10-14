@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>table</title>
+	<style>
+		td, th {
+			border: 1px solid gray;
+			padding: 0 0.5em;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>table</h1>
+	<p>Checked by hand: compare what each table shows with what is expected. "render again" renders every example
+		again, alternating between the items <code>a, b, c</code> and <code>d, e</code>.</p>
+	<button id="render-again">render again</button>
+
+	<section>
+		<h2>jstl-foreach on the tbody</h2>
+		<p>expected: a row per item</p>
+		<template><table><tbody jstl-foreach="${items}"><tr><td>${item}</td></tr></tbody></table></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>jstl-repeat on the tr, jstl-repeat on the td</h2>
+		<p>expected: a row per item, two cells per row</p>
+		<template><table><tr jstl-repeat="${rows}" jstl-repeat-var="row"><td jstl-repeat="${row}">${item}</td></tr></table></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>header row before jstl-repeat</h2>
+		<p>expected: the row "name" first, then a row per item</p>
+		<template><table><tr><th>name</th></tr><tr jstl-repeat="${items}"><td>${item}</td></tr></table></template>
+		<div class="result"></div>
+	</section>
+
+	<section>
+		<h2>jstl tag with jstl-foreach in the table</h2>
+		<p>expected: one row only — the HTML parser moves the jstl tag in front of the table, so the row is no part of the loop</p>
+		<template><table><jstl jstl-foreach="${items}"><tr><td>${item}</td></tr></jstl></table></template>
+		<div class="result"></div>
+	</section>
+
+	<script type="module" src="main.js"></script>
+</body>
+
+</html>

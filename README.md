@@ -134,6 +134,14 @@ Safari does not support customized built-in elements; there the `is` attribute h
 
 # Template functionality
 
+> The directives of an element are processed in a fixed order, not in the order of its attributes:
+> `jstl-ignore`, `jstl-ignore-childs`, `jstl-tagname` and `is` first, then `jstl-if`, `jstl-data`,
+> `jstl-include`, `jstl-choose`, `jstl-foreach`, `jstl-repeat`, then the attributes and event
+> handlers, the text and `jstl-attach-element`, and `jstl-on-finished` last — the table under
+> [Custom Directives](#custom-directives) gives the order. A directive sees only what the directives
+> before it have done: `jstl-if` beside `jstl-repeat` decides whether the element is repeated at all,
+> with the data outside the loop, where there is no `item`.
+
 ## Expressions
 
 The expression provide the capability make your content dynamic. The expression use properties from the data context and combine the property values with javascript. It is possible to execute all javascript, but you have not the complete access at all global properties. The execution engine for the expression support javascript `await async`.
@@ -904,6 +912,9 @@ The tag `jstl` to use rendering functicality without visual dom structures. The 
 </div>
 
 ```
+
+The HTML parser moves an element that does not belong into a `<table>`, a `<jstl>` too, in front of
+the table. In a table, put `jstl-foreach` on a `<tbody>`, or `jstl-repeat` on a `<tr>`.
 
 # Javascript API
 

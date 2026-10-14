@@ -46,7 +46,7 @@
 	"dependencies": {
 		"@default-js/defaultjs-common-utils": "^1.0.0",
 		"@default-js/defaultjs-expression-language": "^3.0.2",
-		"@default-js/defaultjs-extdom": "^2.0.0"
+		"@default-js/defaultjs-extdom": "^2.0.1"
 	},
 	"files": [
 		"index.js",

@@ -79,3 +79,6 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 - `index.js` loads as an ES module without a bundler. `src/Context.js` imported an export
   `src/Renderer.js` does not have, which the browser rejects with a `SyntaxError`.
 - `src/Directive.js` loads as the first module; it threw a `ReferenceError` through an import cycle.
+- `render` in mode `replace`, the default, ends for a container holding a `<select>`, as when the
+  same template is rendered into it again. It never ended, and the page stopped responding. The
+  package requires `@default-js/defaultjs-extdom` 2.0.1, whose `empty` removes a `<select>`.

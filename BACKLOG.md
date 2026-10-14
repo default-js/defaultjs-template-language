@@ -34,9 +34,8 @@ then it may still change.
 - **Test runner (B28):** Vitest in browser mode through Playwright, replacing Karma and Jasmine
   (Karma is deprecated). The existing cases are ported 1:1 first, as a green
   baseline; then the suite is reorganized under rules written into `TESTING.md` (B39).
-- **Use cases (B54):** before every other entry (the maintainer, 2026-10-14) — how the functions are
-  combined and used beyond the examples of `README.md` is tested in a directory of its own. Every
-  function `README.md` describes has a case since 2026-10-14.
+- **Use cases:** every function `README.md` describes has a case; how the functions are combined and
+  used beyond the examples of `README.md` is tested in `test/tests/usecases/` (2026-10-15).
 - **Coverage (B29):** complete, measured with v8 coverage; whatever stays untested on purpose is listed
   one by one with its reason.
 - **Package shape (B30):** `"type": "module"` and an `exports` field opening `.`, `./index.js`,
@@ -58,7 +57,8 @@ then it may still change.
   through `customElements.get` and a class extending `DirectiveElement`; `execute(context)` gets one
   signature), B22 (an object is iterated by its own properties — the item is the value, the
   status also carries the key; documented, README first), B6 (`jstl-async` implemented anew),
-  B37 (loading `src/Directive.js` first). All defects are fixed.
+  B37 (loading `src/Directive.js` first), B57 (with `@default-js/defaultjs-extdom` 2.0.1) are fixed;
+  B56, found with the use cases, is open (2026-10-15).
 - **README:** complete and correct at 2.0.0 — the errors of B23 fixed, the empty sections filled
   (B11), every function of the code documented or removed (B24, B40, B43, decided item by item). Code
   and README agree.
@@ -351,36 +351,6 @@ Measured 2026-10-14 in Chromium, Firefox and WebKit: `<div jstlmine="other" mine
 attribute of HTML has. The case "takes an attribute into the result beside one of the same name
 prefixed with jstl" in `test/tests/directives/Attributes.test.js` is marked `it.fails` for it.
 
-### B54 — use cases: functions combined and used beyond the examples of `README.md`
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-Decided by the maintainer 2026-10-14: comes before every other entry of this backlog.
-
-`README.md` describes each function with an example; how consumers combine the functions, or use
-one beyond its example, it cannot describe in full (the maintainer, 2026-10-14). The suite tests each
-directive on its own; combined are only `jstl-choose` in `jstl-foreach`, `jstl-include` after
-`jstl-if`, and `jstl-data-scope` in `jstl-foreach`. B46 and B48 lay at such points.
-
-Agreed 2026-10-14: the cases of use cases stand in a directory of their own, `test/tests/usecases/`;
-`TESTING.md` gets a rule for it, its wording agreed when the entry is worked on. Proposed: the
-expectation of a use case follows from what `README.md` says about each function involved, and a
-deviation is a defect — `it.fails`, backlog entry. Where it does not follow, such as a limitation of
-the HTML parser, the case asserts what the code does today, and a backlog entry decides whether
-`README.md` documents it.
-
-Known cases:
-
-- `jstl-foreach` whose content is a text node only, without an element. Every case of
-  `jstl-foreach` today has one `<div>` as its content.
-- `<select jstl-foreach="${items}"><option>${item}</option></select>`: does not work in most
-  browsers, as the maintainer reports; not measured yet. No case covers it — the only case with a
-  `<select>` renders `<option jstl-repeat-count>` into a `<select>` as container. To be measured
-  in the three engines, tested, and documented in `README.md` as a limitation if it is one.
-- Further candidates: `jstl-foreach` nested, reading the status of the outer loop; `jstl-if` and
-  `jstl-foreach` on one element; an event handler inside a loop, bound to the item; `jstl-include`
-  in `jstl-foreach`; the same template rendered again with other data.
-
 ### B55 — the parameter `key` of `new Template`
 
 **Status:** open · **Kind:** decision
@@ -391,3 +361,47 @@ it caches the template under, and `remove`, which `README.md` does not describe,
 template of that key. Through what `README.md` describes, `key` has no effect a consumer can see,
 so no case asserts it. Found 2026-10-14 while writing the cases of `new Template`: to be decided
 whether `README.md` describes `key` and `remove`, or drops `key`.
+
+### B56 — `jstl-repeat` places its elements ahead of their siblings
+
+**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
+
+Decided by the maintainer 2026-10-15: fixed in 2.0.0.
+
+`README.md` says `jstl-repeat` renders the element itself once per item. `src/directives/Repeat.js`,
+`iterate`, renders each item with `context.subContext({ resolver, template, mode: "append" })`
+into the `container` of the node — the element of the parent, at the top of a template the
+container of the rendering — at once, while `renderContainer` in `src/Renderer.js` collects the
+nodes of the siblings and adds them once the last sibling is rendered. Measured 2026-10-14 in
+Chromium, Firefox and WebKit, alike in all three, with `items: ["x", "y"]`:
+
+- `<ul><p></p><li jstl-repeat="${items}">${item}</li><i></i></ul>` gives
+  `<ul><li>x</li><li>y</li><p></p><i></i></ul>`; text alike: `<ul>head<li jstl-repeat…>…</li>foot</ul>`
+  gives `<ul><li>x</li><li>y</li>headfoot</ul>`. Inside `jstl-foreach`, each iteration puts the
+  elements of its `jstl-repeat` ahead of the other nodes of that iteration.
+- At the top of a template, rendered into a container holding `<a></a>`: alone, the elements are
+  appended in every mode — `replace` keeps `<a></a>`, so rendering again keeps the elements of the
+  last rendering; beside a sibling `<p></p>`, `replace` empties the container after the elements
+  are in it and leaves `<p></p>` only.
+
+`jstl-foreach` renders into its own element and is not affected. Marked `it.fails` for it, in
+`test/tests/usecases/`: "renders the elements of jstl-repeat between their siblings" (`Lists`),
+"keeps a header row before the rows of jstl-repeat" (`Table`), "keeps a placeholder option before
+the options of jstl-repeat, selected" (`Select`) and "replaces the elements of a jstl-repeat at the
+top of the template with fewer ones" (`Rerender`).
+
+### B60 — check `WebContent/select/` and `WebContent/table/` by hand
+
+**Status:** agreed · **Kind:** task
+
+What the maintainer saw (2026-10-14) was not a wrong DOM but a `<select>` whose options the UI of a
+Firefox did not show, possibly an older version, and something similar with a `<table>`. The suite
+sees the DOM only. `WebContent/select/` and `WebContent/table/` render the variants of each
+element, a section each with the expected result beside it, and a button "render again".
+
+Agreed 2026-10-15: checked by the maintainer when there is occasion — `npm run dev`, then
+`http://localhost:3000/select/` and `http://localhost:3000/table/` in Firefox, Chrome or Edge, and
+Safari where available; what each browser shows goes into this entry. Loaded through Playwright
+1.64.0 — Chromium 156, Firefox 157, WebKit (Safari 27.2) — both pages render their first round
+without an error and with the DOM the suite expects (2026-10-15). Until B56 is fixed, the
+sections with a placeholder option and with a header row show it.
