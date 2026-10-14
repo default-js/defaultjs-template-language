@@ -19,6 +19,34 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-15 — Where do the cases of use cases stand, and what do they assert?
+
+**Decision:** `test/tests/usecases/` holds the cases of functions combined, or of one used beyond
+the example `README.md` gives: a file per use case, not per source module, rendering the way its
+use case needs. Their expectation follows from what `README.md` says about each function
+involved; a deviation is a defect, marked `it.fails`. Where `README.md` gives no answer, as for a
+limitation of the HTML parser, the case asserts what the code does today, and a backlog entry
+decides whether `README.md` documents it. Beside them, every function `README.md` describes has at
+least one case in the file of its source module. The maintainer's decisions (2026-10-14).
+
+**Reasoning:** `README.md` describes each function with an example; how consumers combine the
+functions, or use one beyond its example, it cannot describe in full (the maintainer). The suite
+tested each directive on its own, and the defects found shortly before lay where functions meet —
+`jstl-include` and the content of its element, nested renderings and `target`. The first use cases
+found two more that no case of a single directive could: `jstl-repeat` placing its elements ahead
+of their siblings, and rendering into a container holding a `<select>` never ending, a defect of
+`empty` in `@default-js/defaultjs-extdom` 2.0.0, fixed in 2.0.1 (measured 2026-10-14 in Chromium,
+Firefox and WebKit).
+
+**Alternatives:** Use cases in the files mirroring `src/` — a combination belongs to no single
+module. Every combination described in `README.md` — not possible in full.
+
+**Consequences:** `test/tests/usecases/` breaks the mirror of `src/`: the coverage of a source file
+no longer points at one test file only. A use case asserting what the code does today can fix
+behaviour `README.md` does not describe; the backlog entry it needs keeps that visible. The suite
+sees the DOM only: what a browser draws, such as the options of a `<select>`, is checked by hand on
+the pages under `WebContent/`.
+
 ## 2026-10-14 — What does a custom directive rely on, and what does `Directive.define` check?
 
 **Decision:** `README.md` documents the built-in directives with their phase, rank and name: their
@@ -324,8 +352,8 @@ Cases of a directive depend on `Template.load` and the static `Renderer.render` 
 ## 2026-10-12 — How is the test suite organized?
 
 **Decision:** Vitest finds the test files, every `*.test.js` under `test/`, and runs each in a page
-of its own. The suite mirrors `src/`: the cases of `src/<path>.js` stand in
-`test/tests/<path>.test.js`. The maintainer's decisions.
+of its own. The suite mirrors `src/`, apart from the use cases (2026-10-15): the cases of
+`src/<path>.js` stand in `test/tests/<path>.test.js`. The maintainer's decisions.
 
 **Reasoning:** Until then `test/index.js` imported every test file into one page per engine. A
 file outside that import chain did not run, without anyone noticing; the cases shared the state of
