@@ -69,8 +69,13 @@ export default class Template {
 		this.key = key;
 	}
 
-	importContent(doc = document) {
-		let imported = doc.importNode(this.template, true);
+	/**
+	 * 
+	 * @param {Document} [aDocument=document] - the document where the template is imported	
+	 * @returns {NodeList} - the imported template content
+	 */
+	importContent(aDocument = document) {
+		let imported = aDocument.importNode(this.template, true);
 		return imported.content.childNodes;
 	}
 

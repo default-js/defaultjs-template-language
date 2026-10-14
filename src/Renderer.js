@@ -3,7 +3,7 @@ import ExpressionResolver from "@default-js/defaultjs-expression-language/src/Ex
 import Template from "./Template.js";
 import Context from "./Context.js";
 import Directive from "./Directive.js";
-import Element from "./DirectiveElement.js";
+import DirectiveElement from "./DirectiveElement.js";
 import "./directives/index.js";
 import "./elements/index.js";
 
@@ -43,12 +43,18 @@ const MODEWORKER = {
 	},
 };
 
-const loadTemplateContent = async (template, renderer) => {
-	if (template) {
-		template = await Template.load(template);
-		return template.importContent();
-	} else if (renderer.template) {
-		return await renderer.template.importContent();
+/**
+ * 
+ * @param {Template|string|URL|Node|NodeList|HTMLCollection} aTemplate - source of the template template 
+ * @param {Renderer} aRenderer 
+ * @returns {Promise<NodeList>} - the imported template content
+ */
+const loadTemplateContent = async (aTemplate, aRenderer) => {
+	if (aTemplate) {
+		aTemplate = await Template.load(aTemplate);
+		return aTemplate.importContent();
+	} else if (aRenderer.template) {
+		return await aRenderer.template.importContent();
 	}
 
 	throw new Error("No content template specified!");
@@ -84,31 +90,58 @@ const renderContainer = async (context) => {
 	return context;
 };
 
-const renderNode = async (context) => {
-	try {
-		let { template, renderer } = context;
-		if (template instanceof Element) await template.execute(context);
-		else await executeDirectives(context);
+/**
+ * Creates an element of the class of a custom tag, with the attributes of the tag and without its
+ * children. The node itself is not an element of its class: it comes from the content of a
+ * `<template>`, which has no custom element registry.
+ *
+ * @param {Node} aNode - a node of the template
+ * @returns {DirectiveElement|null} the element, or `null` if the node is no custom tag
+ */
+const toDirectiveElement = (aNode) => {
+	if (!(aNode instanceof Element)) return null;
+	const type = customElements.get(aNode.localName);
+	return type && type.prototype instanceof DirectiveElement ? document.importNode(aNode) : null;
+};
 
-		const { ignore, content } = context;
+/**
+ * @async
+ * @param {Context} aContext 
+ * @returns {Context} 
+ */
+const renderNode = async (aContext) => {
+	try {
+		const { template, renderer } = aContext;
+		const directiveElement = toDirectiveElement(template);
+		if (directiveElement) aContext = await directiveElement.execute(aContext, template, renderer);
+		else  aContext = await executeDirectives(aContext);
+
+		const { ignore, content } = aContext;
 
 		if (!ignore && content) {
-			let { resolver } = context;
-			const subTemplate = context.template.childNodes;
+			const { resolver } = aContext;
+			const subTemplate = aContext.template.childNodes;
 			if (subTemplate && subTemplate.length > 0) {
 				const containerResolver = new ExpressionResolver({ name: SCOPES.container, context: null, parent: resolver });
-				const subContext = await renderer.render(context.subContext({ container: content, template: subTemplate, resolver: containerResolver }));
+				const subContext = await renderer.render(aContext.subContext({ container: content, template: subTemplate, resolver: containerResolver, mode: "append" }));
 				await subContext.ready();
 			}
 		}
 
-		if (context.content && context.content.tagName && context.content.tagName == "JSTL") context.content = context.content.childNodes; //special case to support the old "<jstl>" tag.
+		if (aContext.content && aContext.content.tagName && aContext.content.tagName == "JSTL") aContext.content = aContext.content.childNodes; //special case to support the old "<jstl>" tag.
 	} catch (e) {
-		console.error("error at render node:", e, context);
+		console.error("error at render node:", e, aContext);
 	}
-	return context;
+	return aContext;
 };
 
+
+
+/**
+ * @async
+ * @param {Context} context 
+ * @returns {Context} 
+ */
 const executeDirectives = async (context) => {
 	const directives = Directive.directives;
 	const length = directives.length;
@@ -124,6 +157,10 @@ const executeDirectives = async (context) => {
 };
 
 export default class Renderer {
+
+	#template;
+	#resolver;
+
 	/**
 	 * Creates a renderer.
 	 *
@@ -135,34 +172,51 @@ export default class Renderer {
 	constructor({ template, data } = {}) {
 		if (template && !(template instanceof Template)) throw new Error("template must be an instance of Template!");
 
-		this.template = template;
-		this.resolver = new ExpressionResolver({ name: SCOPES.data, context: data ? data : {}, parent: APPLICATION_SCOPE_RESOLVER });
+		this.#template = template;
+		this.#resolver = new ExpressionResolver({ name: SCOPES.data, context: data ? data : {}, parent: APPLICATION_SCOPE_RESOLVER });
 	}
+
+	get template() {
+		return this.#template;
+	}
+	
+	get resolver() {
+		return this.#resolver;
+	}
+
+	/**
+	 *  @typedef {object} RenderOptions
+	 *  @property {HTMLElement} container - the container where the template is rendered
+	 *  @property {object} [data] - base data, available in every rendering
+	 *  @property {Template|string|URL|Node|NodeList|HTMLCollection} [template] - source of the template
+	 *  @property {MODETYPES} [mode] - how to add the content to the container: "replace", "append" or "prepend"
+	 *  @property {HTMLElement} [root] - the root element of the rendering, defaults to `container`
+	 *  @property {HTMLElement} [target] - the target element of the rendering, defaults to `null`
+	*/
 
 	/**
 	 * Renders a template into a container.
 	 * 
-	 * @param {object|Context} context 
-	 * @param {HTMLElement} context.container
-	 * @param {object} [context.data]
-	 * @param {Template|string|URL|Node|NodeList|HTMLCollection} [context.template]
-	 * @param {MODETYPES} [context.mode]
-	 * @param {HTMLElement} [context.root]
-	 * @param {HTMLElement} [context.target]
+	 * @param {RenderOptions|Context} aContext 
 	 * @returns {Promise<Context>}
 	 */
-	async render(context) {
-		const calledWithContext = context instanceof Context;
+	async render(aContext) {
+		/** @type {Context} */
+		let context = null;
+		const calledWithContext = aContext instanceof Context;
 		if (!calledWithContext) {
-			let { template = null, data = null, container, root, mode, target } = context;
+			let { template = null, data = null, container, root, mode, target } = aContext;
 			template = await loadTemplateContent(template, this);
 			const resolver = new ExpressionResolver({ name: SCOPES.render, context: data, parent: this.resolver });
 			context = new Context({ resolver, renderer: this, template: template, container, root: root ? root : container, mode: mode ? mode : "replace", target });
-		} else if (context.closed) throw new Error("calling with closed context", context);
+		} else if (aContext.closed) throw new Error("calling with closed context", aContext);
+		else context = aContext;
+
+		
 
 		const template = context.template;
-		if (template instanceof Node) await renderNode(context);
-		else await renderContainer(context);
+		if (template instanceof Node) context = await renderNode(context);
+		else context = await renderContainer(context);
 		
 		await addContent(context);
 

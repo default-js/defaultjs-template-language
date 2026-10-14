@@ -77,6 +77,8 @@ one row per state and engine.
 | Version | State | Change | Date |
 |---|---|---|---|
 | 1.7.20 | `011a2fa` | baseline: the sources of 1.7.20 with the import in `src/Context.js` fixed; expression language 3.0.2 | 2026-10-11 |
+| 2.0.0 | `5df2d54` + signature of `execute` | the development of 2.0.0 since the baseline: the commits up to `5df2d54`; uncommitted, the signature of `DirectiveElement.execute` | 2026-10-14 |
+| 2.0.0 | `5df2d54` + custom tags executed | `renderNode` looks every element of a template up in the custom element registry and executes a custom tag; the children of an element are rendered with the mode `append` | 2026-10-14 |
 
 ### Cases 1–3
 
@@ -85,6 +87,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 1200 | 2399 | 278 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1911 | 13973 | 1421 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 1253 | 2854 | 293 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 1124 | 2150 | 245 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 1765 | 12568 | 1261 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 1219 | 2536 | 281 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 1124 | 2198 | 247 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1756 | 12760 | 1284 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 1163 | 2452 | 250 |
 
 ### `if`
 
@@ -93,6 +101,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.241 | 3.52 | 55.8 | 0.206 | 2.08 | 19.9 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1.45 | 15.9 | 139 | 1.19 | 13.6 | 137 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.236 | 3.07 | 39.6 | 0.237 | 2.16 | 21.9 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.199 | 2.94 | 49.7 | 0.185 | 1.84 | 18.2 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 1.30 | 14.6 | 130 | 1.08 | 12.2 | 122 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.222 | 2.81 | 37.7 | 0.204 | 2.00 | 20.6 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.205 | 3.11 | 50.7 | 0.190 | 1.81 | 18.6 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.34 | 14.4 | 128 | 1.08 | 12.7 | 126 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.206 | 2.70 | 36.1 | 0.201 | 2.01 | 19.7 |
 
 ### `choose`
 
@@ -101,6 +115,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.222 | 4.31 | 124 | 0.399 | 3.84 | 39.3 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1.22 | 15.3 | 236 | 2.35 | 23.3 | 231 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.258 | 4.66 | 93.5 | 0.574 | 4.68 | 47.7 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.192 | 3.88 | 116 | 0.351 | 3.55 | 35.5 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 1.09 | 14.1 | 218 | 2.09 | 20.9 | 210 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.242 | 4.30 | 91.3 | 0.468 | 4.27 | 42.3 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.191 | 3.84 | 115 | 0.355 | 3.48 | 34.9 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.14 | 14.3 | 222 | 2.17 | 20.9 | 213 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.238 | 4.37 | 85.4 | 0.473 | 4.17 | 40.3 |
 
 ### Attributes
 
@@ -109,6 +129,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.153 | 2.50 | 44.1 | 0.118 | 1.14 | 11.4 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1.01 | 11.4 | 117 | 0.712 | 6.64 | 66.9 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.188 | 2.31 | 34.2 | 0.149 | 1.40 | 13.5 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.138 | 2.25 | 41.2 | 0.109 | 1.05 | 10.5 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 0.891 | 10.3 | 108 | 0.639 | 6.07 | 59.7 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.159 | 2.17 | 32.2 | 0.132 | 1.28 | 12.5 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.137 | 2.26 | 40.8 | 0.112 | 1.07 | 10.6 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 0.914 | 10.6 | 110 | 0.654 | 6.18 | 61.6 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.152 | 2.11 | 31.7 | 0.132 | 1.25 | 12.7 |
 
 ### Events
 
@@ -117,6 +143,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.131 | 1.82 | 26.7 | 0.106 | 1.05 | 9.91 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 0.903 | 9.71 | 81.2 | 0.676 | 6.64 | 62.6 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.142 | 1.83 | 22.0 | 0.123 | 1.14 | 11.3 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.118 | 1.65 | 23.8 | 0.0932 | 0.883 | 8.77 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 0.803 | 8.79 | 76.1 | 0.608 | 5.95 | 56.9 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.132 | 1.68 | 21.1 | 0.110 | 1.02 | 10.5 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.120 | 1.65 | 23.8 | 0.0954 | 0.915 | 8.96 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 0.806 | 9.02 | 77.8 | 0.663 | 6.31 | 58.6 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.128 | 1.65 | 20.6 | 0.109 | 1.03 | 10.2 |
 
 ### `include`
 
@@ -125,6 +157,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.402 | 4.95 | 44.7 | 0.415 | 3.99 | 40.4 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 3.12 | 32.5 | 207 | 3.26 | 32.9 | 299 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.451 | 5.36 | 48.1 | 0.452 | 4.27 | 43.8 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.360 | 4.33 | 41.3 | 0.364 | 3.59 | 36.3 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 2.77 | 28.4 | 184 | 2.97 | 28.9 | 271 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.414 | 4.58 | 44.0 | 0.406 | 3.86 | 39.2 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.364 | 4.28 | 41.6 | 0.361 | 3.57 | 36.3 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 2.84 | 29.7 | 191 | 2.98 | 28.9 | 275 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.401 | 4.49 | 42.0 | 0.384 | 3.82 | 37.8 |
 
 ### `foreach`
 
@@ -133,6 +171,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.222 | 2.06 | 20.6 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1.66 | 16.5 | 151 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.228 | 1.94 | 18.7 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.202 | 1.82 | 18.4 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 1.52 | 13.9 | 141 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.196 | 1.71 | 16.9 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.208 | 1.92 | 19.1 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.51 | 14.0 | 137 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.191 | 1.68 | 16.8 |
 
 ### `repeat`
 
@@ -141,6 +185,12 @@ one row per state and engine.
 | `011a2fa` | Chromium 156.0.8078.4, Windows 11 | 0.217 | 1.95 | 19.3 |
 | `011a2fa` | Firefox 157.0, Windows 11 | 1.54 | 14.2 | 138 |
 | `011a2fa` | WebKit 27.2, Windows 11 | 0.219 | 1.93 | 18.2 |
+| `5df2d54` + signature of `execute` | Chromium 156.0.8078.4, Windows 11 | 0.191 | 1.69 | 16.9 |
+| `5df2d54` + signature of `execute` | Firefox 157.0, Windows 11 | 1.41 | 12.5 | 124 |
+| `5df2d54` + signature of `execute` | WebKit 27.2, Windows 11 | 0.194 | 1.68 | 16.1 |
+| `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.196 | 1.76 | 17.8 |
+| `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.43 | 12.7 | 123 |
+| `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.194 | 1.64 | 16.1 |
 
 ## Expression language and executer compared
 

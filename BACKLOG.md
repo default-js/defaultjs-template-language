@@ -27,9 +27,10 @@ releases it. A decision here reaches `DECISIONS.md` when its entry is worked on,
 then it may still change.
 
 - **Character:** quality and modernization, like 3.0.0 of `@default-js/defaultjs-expression-language`
-  — toolchain, package shape, defects, documentation, tests. No new functions, with two exceptions
-  the maintainer decided: the configurable separator of event attributes (B33), and `first`,
-  `last` and `step` in the status of `jstl-foreach` and `jstl-repeat` (2026-10-13, with B22).
+  — toolchain, package shape, defects, documentation, tests. No new functions, with the exceptions
+  the maintainer decided: the configurable separator of event attributes (B33), `first`,
+  `last` and `step` in the status of `jstl-foreach` and `jstl-repeat` (2026-10-13, with B22), and
+  iterables and `Map`s as data of `jstl-foreach` and `jstl-repeat` (2026-10-14, B47).
 - **Test runner (B28):** Vitest in browser mode through Playwright, replacing Karma and Jasmine
   (Karma is deprecated). The existing cases are ported 1:1 first, as a green
   baseline; then the suite is reorganized under rules written into `TESTING.md` (B39).
@@ -90,7 +91,8 @@ empty — falsy — for `<div jstl-async>` as the README writes it, so the featu
 `43ac9e0` switched to `hasAttribute`; `6c6de76` (2025-08-07, "usage of jstl-ignore improved")
 disabled the branch three weeks later, without a reason in the message. No test covers it. The
 branch also removes the attribute before reading its value as the delay, so the delay is always
-250 ms.
+250 ms. The branch puts a `jstl-replace` into the result as a placeholder, while an element extending
+`DirectiveElement` found in a template is not taken into the result (`DECISIONS.md`, 2026-10-14).
 
 Agreed: implemented anew — first reproduce in a test what broke when it was enabled,
 then implement it as `README.md` describes.
@@ -103,26 +105,7 @@ then implement it as `README.md` describes.
 content.
 
 Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extension API (B32).
-
-### B18 — `DirectiveElement.execute` reads a parameter it is not given
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-`src/Renderer.js`, `renderNode`, calls `template.execute(context)`; `src/DirectiveElement.js` and
-`src/elements/Replace.js` declare `execute({ template, context })` and so destructure
-`context.context`, which does not exist. The base implementation then throws on
-`context.content = ...`.
-
-The path is not reached either. Measured 2026-10-11 in headless Chromium: a custom element parsed
-into a `<template>` and taken from the content of `document.importNode(template, true)` — what
-`Template.importContent` hands the renderer — is not an instance of its class; the same markup
-parsed into a live element is. So `template instanceof Element` in `renderNode` is never true for a
-template loaded through `Template`. `jstl-replace` is created only in the disabled branch of
-`jstl-async` (B6).
-
-Agreed: repaired — the renderer recognizes a custom element through `customElements.get` and a
-class extending `DirectiveElement`; `execute(context)` gets one signature. `index.js` exports
-`DirectiveElement` since 2026-10-13 (B32).
+"Custom Tags" is filled since 2026-10-14.
 
 ### B21 — ship type declarations with 2.0.0
 
@@ -167,8 +150,11 @@ repaired (B18).
 
 Done 2026-10-13, by the maintainer: `index.js` and the global `defaultjs.tl` of `browser.js` export
 `Directive` and `DirectiveElement`; `src/Element.js` is renamed to `src/DirectiveElement.js`
-(`DECISIONS.md`, 2026-10-13). Open: `README.md` and the tests. `src/Renderer.js` still imports the
-class under the name `Element`, which shadows the DOM's global `Element` there.
+(`DECISIONS.md`, 2026-10-13). Custom elements are repaired, and "Custom Tags" in `README.md` and
+`test/tests/DirectiveElement.test.js` cover them since 2026-10-14 (`DECISIONS.md`, 2026-10-14).
+Open: "Custom Directives" and its tests. The constructor of `DirectiveElement` takes
+`{ hidden = true }` since 2026-10-14 (by the maintainer, not committed); `README.md` does not
+describe it.
 
 ### B33 — configurable separator of event attributes
 
@@ -195,6 +181,15 @@ the `ReferenceError` ("Execution error on statement!") and the directive goes on
 resolver logs it and passes it on, and `jstl-foreach` logs it a second time ("error at
 jstl-foreach"). The expectation of the case holds with both. Version 3 hands a failing expression
 to the directive, where version 2 kept it.
+
+A custom tag whose `execute` throws, such as one whose class does not implement it, is one of
+the cases: by the code, `renderNode` in `src/Renderer.js` logs "error at render node" and the tag
+leaves nothing in the result. So is an `execute` that resolves to something other than the context:
+`renderNode` goes on with what `execute` resolves to. Measured 2026-10-14 in Chromium, Firefox and
+WebKit with `<div><probe-noreturn></probe-noreturn><p></p></div>`, its `execute` setting a
+`<section>` and returning nothing: `render` resolves, and the `<div>` is empty — the `<p>` after
+the tag is missing too. By the code, `renderContainer` calls `ready()` on the `undefined` that
+`renderNode` returns, and the `TypeError` ends the rendering of the children of the `<div>`.
 
 ### B35 — supported browsers and migration guide
 
@@ -274,3 +269,69 @@ gives the same result as `replace`. Measured 2026-10-13 in Chromium, Firefox and
 `<div jstl-include="…" jstl-include-mode="append"><p></p></div>`: the `<p>` is missing. The cases
 "keeps the content of the element in mode append/prepend" in
 `test/tests/directives/Include.test.js` are marked `it.fails` for it.
+
+### B47 — iterables and `Map`s in `jstl-foreach` and `jstl-repeat`
+
+**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
+
+`src/directives/Foreach.js`, `doForeach`, and `src/directives/Repeat.js`, `doRepeat`, iterate an
+`Array` by index and anything else by `Object.getOwnPropertyNames`. Decided by the maintainer
+2026-10-14, as two new functions of 2.0.0:
+
+- **Iterable** — any value with `Symbol.iterator` that is not a `Map` is iterated like an array:
+  the item is the value, `status.key` its index; `start`, `step` and `count` apply as to an array.
+- **`Map`** — iterated like an object: the item is the value of an entry, `status.key` its key.
+
+`status.data` is the iterable or the `Map` itself. README first: the sections `jstl-foreach` and
+`jstl-repeat` describe both, including the status.
+
+To clarify when worked on: `status.count` and `status.last` need the length, so an iterable is read
+completely before the first item renders — what an endless iterable does then; whether a string,
+iterable by its characters, stays iterated by its properties as today; whether async iterables are
+in scope.
+
+### B48 — nested renderings take the `mode` and `target` of the rendering
+
+**Status:** open · **Kind:** defect
+
+`src/Context.js`, `subContext`, hands on `mode` and `target` unless the caller sets them.
+`src/Renderer.js`, `renderNode`, renders the children of an element with `mode: "append"` since
+2026-10-14; `jstl-foreach` and `jstl-repeat` set `mode: "append"` too, `jstl-include` its mode, the
+`<template>` branch of `src/directives/Initial.js` none — every one hands on the `target` of the
+rendering. Measured
+2026-10-14 in Chromium, Firefox and WebKit, alike in all three:
+
+- **`target`** — `README.md` says `replace` replaces the target with the result, `append` inserts it
+  after, `prepend` before. With a container `<span></span><i></i>` and the `<span>` as target,
+  `<div><p>x</p></div>` gives `<span></span><div></div><p></p>x<i></i>` with `append` and
+  `x<p></p><div></div><span></span><i></i>` with `prepend`: the children of each element are placed
+  at the target instead of into the element. With `replace` the text `x` replaces the target and
+  the promise rejects with a `TypeError`, since the target is gone when the `<div>` replaces it.
+  Only a template whose elements have no children renders as described.
+- **`mode`** — the children of an element were rendered with the mode of the rendering, so they
+  removed what the element held with `replace`, and went after it with `append`, before it with
+  `prepend`. Measured with a custom directive putting a `<b>` into the element before its `<p>`
+  child is rendered. Fixed 2026-10-14 in `renderNode`, for custom tags delivering content of their
+  own (`DECISIONS.md`, 2026-10-14); the `<template>` branch of `src/directives/Initial.js` still
+  hands on the mode, into the empty content of the new `<template>`.
+
+### B49 — unclear types of `template` and `content` in `Renderer` and `Context`
+
+**Status:** open · **Kind:** task
+
+Raised by the maintainer 2026-10-14: `src/Renderer.js` and `src/Context.js` are hard to read, in
+their API and their implementation, because the types of `template` and `content` are unclear in
+the definitions. To be reviewed. Found in the JSDoc as of 2026-10-14:
+
+- **`template`** — `Context`: the constructor documents `Template|string`, `toTemplate` takes
+  `Template|NodeList|Node|string` and accepts an `HTMLCollection` too, the field is typed
+  `Iterable<Node>`, the getter `Iterable<Node>|Node`. `Renderer`: the constructor takes a
+  `Template`, `render` a `Template|string|URL|Node|NodeList|HTMLCollection`, `Renderer.build` that
+  or a `Promise` of it, the static `Renderer.render` a `Template`; `loadTemplateContent` returns a
+  `NodeList`. A directive reads `context.template` as one node, `renderContainer` iterates it.
+- **`content`** — the constructor of `Context` documents a `NodeList`; the directives set an
+  element, a node imported from the template, a `DocumentFragment` (the mode `html` of
+  `src/directives/Text.js`) or `null`, `renderContainer` an `Array` of nodes, the special case of
+  the tag `jstl` a `NodeList`. `renderNode` hands it on as the `container` of the children, which
+  `Context` documents as an `HTMLElement`.
+- `renderNode` and `executeDirectives` are `async` and document `@returns {Context}`.

@@ -3,10 +3,18 @@ import Directive from "./Directive.js";
 import Template from "./Template.js";
 import { ExpressionResolver } from "@default-js/defaultjs-expression-language/index.js";
 
+/**
+ * 
+ * @param {Template|NodeList|Node|string} template 
+ * @returns {Iterable<Node>|Node} - the template content as NodeList or Node
+ */
 const toTemplate = (template) => {
 	if (template instanceof Template) return template.importContent();
 	else if (typeof template === "string") return create(template);
-	return template;
+	else if (template instanceof Node) return template;
+	else if (template instanceof NodeList) return template;
+	else if (template instanceof HTMLCollection) return template;
+	else throw new Error("Template type is not supported!");
 };
 
 let id = 0;
@@ -16,6 +24,7 @@ export default class Context {
 	#parent;
 	#renderer;
 	#root;
+	/** @type {Iterable<Node>} */ 
 	#template;
 	#mode;
 	#subcontexts;
@@ -92,6 +101,9 @@ export default class Context {
 	get root() {
 		return this.#root;
 	}
+	/**
+	 * @returns {Iterable<Node>|Node} 
+	 */
 	get template() {
 		return this.#template;
 	}

@@ -19,6 +19,44 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-14 — How does the renderer execute a custom tag?
+
+**Decision:** An element of a class extending `DirectiveElement` — a custom tag — is an instruction
+of the template and is not taken into the result. `renderNode` recognizes it through
+`customElements.get` of its local name and a class whose prototype is a `DirectiveElement`, creates
+an element of that class with `document.importNode` of the tag, without its children, and calls the
+element's `execute(context, template, renderer)` — `template` the tag in the template, with its
+children, `renderer` the `Renderer` of the rendering. The node `execute` sets as `context.content`
+takes the place of the tag; the children of the tag are rendered into it with the mode `append`, unless `execute` sets
+`context.ignore`. No directive runs on the tag. `DirectiveElement.execute` throws an `Error`: a
+class extending it has to implement `execute`. The maintainer's decisions.
+
+**Reasoning:** The renderer gets a template as the content of a `<template>`, whose document has no
+browsing context and so no custom element registry. Measured 2026-10-14 in Chromium, Firefox and
+WebKit: a custom tag there is a plain `HTMLElement` without `execute`, `customElements.upgrade`
+leaves it so, and `instanceof` its class never holds; `customElements.get` finds the class by the
+name of the tag, and `document.importNode` of the node gives an element of the class. Calling
+`execute` on that element gives the author of a tag an ordinary custom element: its constructor
+has run, its private fields and methods work. The children stay in the template, where the
+renderer renders them from in any case; `execute` gets the tag of the template, children
+included, as an argument beside the context, and the renderer with it. They are appended because the content a tag delivers may
+hold nodes of its own: rendered with the mode of the rendering, `replace` removed them (measured
+2026-10-14 in all three engines). A class that does not implement `execute` is an error of its
+author, and the `Error` of the base class says so.
+
+**Alternatives:** Calling the `execute` of the prototype on the node of the template — no
+constructor runs, and a private field throws a `TypeError`. A static `execute` on the class — a
+change of the extension API exported since 2026-10-13. Importing the tag with its children — `this`
+would carry them, at the cost of a second copy of the subtree per occurrence. Taking the tag into
+the result, as the former `DirectiveElement.execute` did with a copy of it — the tag would stand in
+the result, hidden by the constructor of `DirectiveElement`. A base `execute` delivering no content
+— a tag whose class lacks `execute` would vanish without a trace.
+
+**Consequences:** Every element of a template costs a lookup in the custom element registry, every
+occurrence of a custom tag the creation of an element and a run of its constructor, in every
+rendering. No directive works on a custom tag, and its `connectedCallback` never runs. A
+`jstl-replace` written into a template leaves nothing in the result.
+
 ## 2026-10-13 — How are the scopes of `jstl-data` documented, and what is a relative URL of it resolved against?
 
 **Decision:** `README.md` documents `jstl-data-scope` with the scopes `container`, `render`,
@@ -86,8 +124,7 @@ name of its class, as `src/Directive.js`, `src/Context.js` and `src/Template.js`
 imported. Keeping the module at `src/Element.js` — a deep import of it keeps working, under a name
 that differs from its class.
 
-**Consequences:** A deep import of `src/Element.js` fails. `src/Renderer.js` still imports the class
-under the name `Element`.
+**Consequences:** A deep import of `src/Element.js` fails.
 
 ## 2026-10-13 — How does git store the bundles?
 

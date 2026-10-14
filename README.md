@@ -1067,3 +1067,42 @@ The promise is rejected, if `template` is not a `Template`; load one with `Templ
 ## Custom Directives
 
 ## Custom Tags
+
+A custom tag is a custom element whose class extends `DirectiveElement`, defined with
+`customElements.define` before the rendering. It is an instruction of the template, not part of
+the result: where the renderer meets one, it runs no directive on it, creates an element of its
+class and calls the element's `execute(context, template, renderer)`, which resolves to the
+context. The node `execute` sets as `context.content` takes the place of the tag in the result, and
+the children of the tag are rendered into it, after what it already holds, unless `execute` sets
+`context.ignore`. Without `content`, the tag and its children leave nothing in the result. A class
+has to implement `execute`: that of `DirectiveElement` throws an `Error`.
+
+The element is created anew for each occurrence of the tag in each rendering, and the renderer
+never inserts it into the document: its constructor runs every time, `connectedCallback` never. It
+carries the attributes of the tag as the template writes them, expressions unresolved, and no
+children. `template` is the tag in the template, with its children — the node `context.template`
+holds — and `renderer` the `Renderer` of the rendering; `context.resolver` resolves an expression.
+
+```javascript
+import { DirectiveElement } from "@default-js/defaultjs-template-language";
+
+class Card extends DirectiveElement {
+    async execute(context) {
+        const section = document.createElement("section");
+        const title = document.createElement("h2");
+        title.textContent = await context.resolver.resolveText(this.getAttribute("title"));
+        section.append(title);
+        context.content = section;
+        return context;
+    }
+}
+customElements.define("my-card", Card);
+```
+
+```html
+<!-- render context: { name: "Card", text: "some text" } -->
+<my-card title="${name}"><p>${text}</p></my-card>
+
+<!-- output -->
+<section><h2>Card</h2><p>some text</p></section>
+```
