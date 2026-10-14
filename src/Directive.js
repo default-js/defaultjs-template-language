@@ -5,32 +5,48 @@ const DEFINED_DIRECTIVES = [];
 
 
 /**
- * @param {object} options
- * @param {Directive} options.directive 
+ * Checks a directive and sorts it into the defined directives: by phase, then by rank, at the same
+ * rank after those defined before.
+ *
+ * @param {object} anOption
+ * @param {Directive} anOption.directive - the directive to define
+ * @throws {Error} if `directive` is not a `Directive`, or one of its members does not meet its description
  */
 const defineDirective = ({ directive }) => {
 	if (!(directive instanceof Directive))
-		throw new Error("Implementation dosn't extend Directive class!");
+		throw new Error("The directive does not extend the class Directive!");
 
-	if (directive.rank < Directive.MIN_RANK)
-		throw new Error("The rank of a directive can't be lower as " + Directive.MIN_RANK + "!");
+	const { name, rank, phase } = directive;
+	if (typeof name !== "string" || name.length == 0)
+		throw new Error("The name of a directive must be a non-empty string!");
 
-	if (directive.rank > Directive.MAX_RANK)
-		throw new Error("The rank of a directive can't be grater as " + Directive.MAX_RANK + "!");
+	if (DEFINED_DIRECTIVES.some((aDirective) => aDirective.name == name))
+		throw new Error(`A directive named "${name}" is already defined!`);
+
+	if (typeof rank !== "number" || !(rank >= Directive.MIN_RANK && rank <= Directive.MAX_RANK))
+		throw new Error(`The rank of the directive "${name}" must be a number from ${Directive.MIN_RANK} to ${Directive.MAX_RANK}!`);
+
+	if (!Object.values(PHASE).includes(phase))
+		throw new Error(`The phase of the directive "${name}" must be one of Directive.PHASE!`);
+
+	if (directive.execute === Directive.prototype.execute)
+		throw new Error(`The directive "${name}" does not implement execute!`);
 
 	DEFINED_DIRECTIVES.push(directive);
 	DEFINED_DIRECTIVES.sort((a, b) => {
 		const phase = a.phase - b.phase;
 		if(phase == 0)
 			return a.rank - b.rank;
-			
+
 		return phase;
 	});
 };
 
 /**
+ * The phases the directives of a node run in, in this order.
+ *
  * @readonly
- * @enum {number}	
+ * @enum {number}
  */
 export const PHASE = {
 	init: 0,
@@ -40,56 +56,81 @@ export const PHASE = {
 	finish: 4
 };
 
+/**
+ * The base class of a directive. A class extending it implements `name`, `rank` and `execute`, and
+ * `phase` for a phase other than `finish`.
+ */
 export default class Directive {
 
-	/** @enum {PHASE} */
+	/**
+	 * The phases the directives of a node run in.
+	 *
+	 * @returns {typeof PHASE}
+	 */
 	static get PHASE() { return PHASE };
-	/** @enum {number} */
+	/**
+	 * The lowest rank of a directive.
+	 *
+	 * @returns {number}
+	 */
 	static get MIN_RANK() { return 0 };
-	/** @enum {number} */
+	/**
+	 * The highest rank of a directive.
+	 *
+	 * @returns {number}
+	 */
 	static get MAX_RANK() { return 100000 };
 
 	constructor() { };
 
 	/**
-	 * @abstract 
-	 * @enum {string} 
+	 * The name of the directive, unique among the defined directives.
+	 *
+	 * @abstract
+	 * @returns {string}
 	 */
 	get name() { }
-	/** 
+	/**
+	 * The order of the directive within its phase, from `Directive.MIN_RANK` to `Directive.MAX_RANK`.
+	 *
 	 * @abstract
-	 * @enum {number} 
+	 * @returns {number}
 	 */
 	get rank() { }
 	/**
-	 * @abstract 
-	 * @enum {PHASE} 
+	 * The phase the directive runs in; `Directive.PHASE.finish` unless a class implements it.
+	 *
+	 * @returns {PHASE}
 	 */
 	get phase() {return PHASE.finish}
 
 	/**
+	 * Runs the directive on the node of a context.
+	 *
 	 * @abstract
-	 * @param {Context} context 
-	 * @returns 
+	 * @param {Context} aContext - the context of the node
+	 * @returns {Promise<Context>} the context
 	 */
-	async execute(context) {
-		return context;
+	async execute(aContext) {
+		return aContext;
 	}
 
 	/**
-	 * @static
-	 * @param {object} options
-	 * @param {Directive} options.directive 
+	 * Defines a directive: from then on it runs in every rendering.
+	 *
+	 * @param {object} anOption
+	 * @param {Directive} anOption.directive - the directive to define
+	 * @throws {Error} if `directive` is not a `Directive`, or one of its members does not meet its description
 	 */
-	static define(option) {
-		defineDirective(option);
+	static define(anOption) {
+		defineDirective(anOption);
 	}
 
-	
+
 	/**
-	 * @static
-	 * @readonly
-	 * @type {Array<Directive>}
+	 * The defined directives, in the order they run.
+	 *
+	 * @returns {Array<Directive>}
 	 */
 	static get directives() {
 		return DEFINED_DIRECTIVES;

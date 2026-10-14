@@ -91,12 +91,12 @@ const renderContainer = async (context) => {
 };
 
 /**
- * Creates an element of the class of a custom tag, with the attributes of the tag and without its
- * children. The node itself is not an element of its class: it comes from the content of a
- * `<template>`, which has no custom element registry.
+ * Creates an element of the class of a directive element, with the attributes of the tag and
+ * without its children. The node itself is not an element of its class: it comes from the content
+ * of a `<template>`, which has no custom element registry.
  *
  * @param {Node} aNode - a node of the template
- * @returns {DirectiveElement|null} the element, or `null` if the node is no custom tag
+ * @returns {DirectiveElement|null} the element, or `null` if the node is no directive element
  */
 const toDirectiveElement = (aNode) => {
 	if (!(aNode instanceof Element)) return null;

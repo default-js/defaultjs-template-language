@@ -49,7 +49,7 @@ defaultjs-template-language (`alias: jstl`)
     - [`render(option)` ⇒ `Promise`](#renderoption--promise)
     - [`Renderer.render(option)` ⇒ `Promise`](#rendererrenderoption--promise)
   - [Custom Directives](#custom-directives)
-  - [Custom Tags](#custom-tags)
+  - [Directive Elements](#directive-elements)
 
 ---
 
@@ -1066,9 +1066,81 @@ The promise is rejected, if `template` is not a `Template`; load one with `Templ
 
 ## Custom Directives
 
-## Custom Tags
+A custom directive is an instance of a class extending `Directive`, defined with
+`Directive.define({ directive })`. From then on it runs in every rendering, on every node of the
+template — elements, text and comments — except a [directive element](#directive-elements); which
+nodes it acts on, `execute` decides.
 
-A custom tag is a custom element whose class extends `DirectiveElement`, defined with
+| Member | Description |
+|-|-|
+| `name` | getter, a non-empty string no other defined directive carries, the built-in ones included - `required` |
+| `rank` | getter, a number from `Directive.MIN_RANK` (0) to `Directive.MAX_RANK` (100000), the order within its phase - `required` |
+| `phase` | getter, one of `Directive.PHASE`: `init`, `data`, `template`, `content`, `finish` - `optional`, default `finish` |
+| `execute(context)` | runs the directive on a node; the rendering of the node goes on once its promise resolves - `required` |
+
+`Directive.define` throws an `Error` if `directive` is not a `Directive`, or if one of its members
+does not meet its description.
+
+The directives of a node run in the order of their phase, within a phase by rank, at the same rank
+in the order they were defined, and only as long as none of them sets `context.stop` — `jstl-if`
+does for a false condition. The built-in directives:
+
+| Phase | Rank | Name | Handles |
+|-|-|-|-|
+| `init` | 0 | `initial` | creates the node of the result; `jstl-ignore`, `jstl-ignore-childs`, `jstl-tagname`, `is`, `<template>` |
+| `init` | 1000 | `if` | `jstl-if` |
+| `data` | 1000 | `data` | `jstl-data` |
+| `template` | 0 | `include` | `jstl-include` |
+| `template` | 1 | `choose` | `jstl-choose` |
+| `template` | 2 | `foreach` | `jstl-foreach` |
+| `template` | 3 | `jstl-repeat` | `jstl-repeat` |
+| `content` | 0 | `attribute` | attributes and event handlers |
+| `content` | 1 | `text` | text content |
+| `content` | 1 | `attach-element` | `jstl-attach-element` |
+| `finish` | 100000 | `on-finished` | `jstl-on-finished` |
+
+`execute` works on the context it is handed:
+
+- `context.template` — the node of the template
+- `context.content` — the node of the result, created by `initial`; `null` leaves nothing in the result
+- `context.resolver` — resolves an expression
+- `context.stop` — `true`: no further directive runs on the node
+- `context.ignore` — `true`: the children of the node are not rendered
+
+After the directives, the children of the node are rendered into `context.content`. The `attribute`
+directive takes every attribute whose name does not begin with `jstl` into the result, as
+[Attribute manipulation](#attribute-manipulation) and [Event handler](#event-handler) describe —
+the attribute of a custom directive included.
+
+```javascript
+import { Directive } from "@default-js/defaultjs-template-language";
+
+class Hidden extends Directive {
+    get name() { return "my-hidden"; }
+    get rank() { return Directive.MIN_RANK + 2000; }
+    get phase() { return Directive.PHASE.init; }
+
+    async execute(context) {
+        const { template, content, resolver } = context;
+        if (template instanceof Element && template.hasAttribute("my-hidden"))
+            content.hidden = await resolver.resolve(template.getAttribute("my-hidden"), false);
+        return context;
+    }
+}
+Directive.define({ directive: new Hidden() });
+```
+
+```html
+<!-- render context: { empty: true } -->
+<p my-hidden="${empty}">nothing found</p>
+
+<!-- output -->
+<p hidden="" my-hidden="true">nothing found</p>
+```
+
+## Directive Elements
+
+A directive element is a custom element whose class extends `DirectiveElement`, defined with
 `customElements.define` before the rendering. It is an instruction of the template, not part of
 the result: where the renderer meets one, it runs no directive on it, creates an element of its
 class and calls the element's `execute(context, template, renderer)`, which resolves to the
@@ -1077,11 +1149,11 @@ the children of the tag are rendered into it, after what it already holds, unles
 `context.ignore`. Without `content`, the tag and its children leave nothing in the result. A class
 has to implement `execute`: that of `DirectiveElement` throws an `Error`.
 
-The element is created anew for each occurrence of the tag in each rendering, and the renderer
-never inserts it into the document: its constructor runs every time, `connectedCallback` never. It
-carries the attributes of the tag as the template writes them, expressions unresolved, and no
-children. `template` is the tag in the template, with its children — the node `context.template`
-holds — and `renderer` the `Renderer` of the rendering; `context.resolver` resolves an expression.
+The element is created anew for each occurrence of the tag in each rendering, so its constructor
+runs every time; by default, the renderer does not take the element itself as content. It carries
+the attributes of the tag as the template writes them, expressions unresolved, and no children.
+`template` is the tag in the template, with its children — the node `context.template` holds — and
+`renderer` the `Renderer` of the rendering; `context.resolver` resolves an expression.
 
 ```javascript
 import { DirectiveElement } from "@default-js/defaultjs-template-language";

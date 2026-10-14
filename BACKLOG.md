@@ -101,11 +101,10 @@ then implement it as `README.md` describes.
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
 
-`README.md`: "Use Template File", "Custom Directives" and "Custom Tags" have a heading and no
-content.
+`README.md`: "Use Template File" has a heading and no content.
 
-Agreed: all three filled; "Custom Directives" and "Custom Tags" with the extension API (B32).
-"Custom Tags" is filled since 2026-10-14.
+Agreed: filled. "Custom Directives" and "Directive Elements", formerly "Custom Tags", are filled
+since 2026-10-14 with the extension API.
 
 ### B21 — ship type declarations with 2.0.0
 
@@ -139,23 +138,6 @@ goal of 2.0.0 (2026-10-11).
 Coverage is complete, measured with v8 coverage; whatever stays untested on purpose is listed one
 by one with its reason.
 
-### B32 — extension API
-
-**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
-
-Custom directives and elements become official API: `index.js` exports `Directive` and
-`DirectiveElement`, `README.md` documents extending ("Custom Directives", "Custom Tags", B11), tests
-cover it. Nothing new is built; the existing mechanism is made public, with custom elements
-repaired (B18).
-
-Done 2026-10-13, by the maintainer: `index.js` and the global `defaultjs.tl` of `browser.js` export
-`Directive` and `DirectiveElement`; `src/Element.js` is renamed to `src/DirectiveElement.js`
-(`DECISIONS.md`, 2026-10-13). Custom elements are repaired, and "Custom Tags" in `README.md` and
-`test/tests/DirectiveElement.test.js` cover them since 2026-10-14 (`DECISIONS.md`, 2026-10-14).
-Open: "Custom Directives" and its tests. The constructor of `DirectiveElement` takes
-`{ hidden = true }` since 2026-10-14 (by the maintainer, not committed); `README.md` does not
-describe it.
-
 ### B33 — configurable separator of event attributes
 
 **Status:** agreed · **Kind:** task · **Blocks 2.0.0**
@@ -182,14 +164,20 @@ resolver logs it and passes it on, and `jstl-foreach` logs it a second time ("er
 jstl-foreach"). The expectation of the case holds with both. Version 3 hands a failing expression
 to the directive, where version 2 kept it.
 
-A custom tag whose `execute` throws, such as one whose class does not implement it, is one of
-the cases: by the code, `renderNode` in `src/Renderer.js` logs "error at render node" and the tag
-leaves nothing in the result. So is an `execute` that resolves to something other than the context:
+A directive element whose `execute` throws, such as one whose class does not implement it, is one
+of the cases: by the code, `renderNode` in `src/Renderer.js` logs "error at render node" and the
+tag leaves nothing in the result. So is an `execute` that resolves to something other than the context:
 `renderNode` goes on with what `execute` resolves to. Measured 2026-10-14 in Chromium, Firefox and
 WebKit with `<div><probe-noreturn></probe-noreturn><p></p></div>`, its `execute` setting a
 `<section>` and returning nothing: `render` resolves, and the `<div>` is empty — the `<p>` after
 the tag is missing too. By the code, `renderContainer` calls `ready()` on the `undefined` that
 `renderNode` returns, and the `TypeError` ends the rendering of the children of the `<div>`.
+
+A custom directive that sets `context.content` to `null` before the phase `content` without setting
+`context.stop` is another: by the code, `attribute` then sets each attribute of the element on
+`null`, and `executeDirectives` logs "error at directive" for the `TypeError` once per element with
+attributes; the node leaves nothing in the result, as `README.md` says. Found 2026-10-14 by reading
+the code; not measured.
 
 ### B35 — supported browsers and migration guide
 
@@ -235,7 +223,7 @@ public parts (README first), the type declarations of B21 cover it. Public is al
 (the maintainer, 2026-10-12): the constructor, the methods `ignoreDirective`, `acceptDirective`,
 `finished`, `ready`, `subContext`, `clone`, `toRenderOption`, the getters `id`, `depth`, `parent`,
 `renderer`, `root`, `template` (with its setter), `mode`, `subcontexts`, `closed`, and the fields
-`content`, `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives (B32) work with
+`content`, `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives work with
 the same members.
 
 ### B44 — a page of `WebContent/` loads a bundle the build does not emit
@@ -311,9 +299,9 @@ rendering. Measured
 - **`mode`** — the children of an element were rendered with the mode of the rendering, so they
   removed what the element held with `replace`, and went after it with `append`, before it with
   `prepend`. Measured with a custom directive putting a `<b>` into the element before its `<p>`
-  child is rendered. Fixed 2026-10-14 in `renderNode`, for custom tags delivering content of their
-  own (`DECISIONS.md`, 2026-10-14); the `<template>` branch of `src/directives/Initial.js` still
-  hands on the mode, into the empty content of the new `<template>`.
+  child is rendered. Fixed 2026-10-14 in `renderNode`, for directive elements delivering content of
+  their own (`DECISIONS.md`, 2026-10-14); the `<template>` branch of `src/directives/Initial.js`
+  still hands on the mode, into the empty content of the new `<template>`.
 
 ### B49 — unclear types of `template` and `content` in `Renderer` and `Context`
 
@@ -335,3 +323,25 @@ the definitions. To be reviewed. Found in the JSDoc as of 2026-10-14:
   the tag `jstl` a `NodeList`. `renderNode` hands it on as the `container` of the children, which
   `Context` documents as an `HTMLElement`.
 - `renderNode` and `executeDirectives` are `async` and document `@returns {Context}`.
+
+### B51 — `Directive.directives` is not documented
+
+**Status:** open · **Kind:** decision
+
+`src/Directive.js`: the static getter `directives` returns the internal array of the defined
+directives, sorted in the order they run; `src/Renderer.js`, `executeDirectives`, reads it for
+every node. A `push` or `splice` on it changes the directives of every rendering past the checks of
+`Directive.define`. `README.md` does not describe it, decided by the maintainer 2026-10-14:
+to be decided whether it is documented or removed.
+
+### B52 — an attribute `jstl<name>` keeps the attribute `<name>` out of the result
+
+**Status:** open · **Kind:** defect
+
+`README.md` says the `attribute` directive takes every attribute whose name does not begin with
+`jstl` into the result. `src/directives/Attributes.js`, `Attribute.execute`, notes the name of each
+attribute as processed with the prefix `jstl` cut off, so a later attribute of that name is skipped.
+Measured 2026-10-14 in Chromium, Firefox and WebKit: `<div jstlmine="other" mine="mine">` renders a
+`<div>` without attributes. A name beginning with `jstl-` leaves a name beginning with `-`, which no
+attribute of HTML has. The case "takes an attribute into the result beside one of the same name
+prefixed with jstl" in `test/tests/directives/Attributes.test.js` is marked `it.fails` for it.

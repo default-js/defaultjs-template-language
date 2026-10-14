@@ -19,22 +19,57 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
-## 2026-10-14 — How does the renderer execute a custom tag?
+## 2026-10-14 — What does a custom directive rely on, and what does `Directive.define` check?
 
-**Decision:** An element of a class extending `DirectiveElement` — a custom tag — is an instruction
-of the template and is not taken into the result. `renderNode` recognizes it through
+**Decision:** `README.md` documents the built-in directives with their phase, rank and name: their
+order is public API. `Directive.define` throws an `Error` for a directive that is not a
+`Directive`, whose `name` is not a non-empty string or is already defined — the names of the
+built-in directives included —, whose `rank` is not a number from `Directive.MIN_RANK` to
+`Directive.MAX_RANK`, whose `phase` is none of `Directive.PHASE`, or whose class does not implement
+`execute`. `Directive.directives` is not documented. The maintainer's decisions.
+
+**Reasoning:** A custom directive takes its place among the built-in ones by phase and rank: in
+phase `init` after `initial` it works on the node `initial` created, in phase `content` after
+`attribute` it finds the attributes taken into the result (measured 2026-10-14 in Chromium, Firefox
+and WebKit). Without their ranks a consumer cannot place a directive reliably. `define` accepted a
+directive without `name` or `rank`: the range check compared `undefined` false both times and the
+sort compared `NaN`, so where it ran was undetermined. `Context.ignoreDirective` addresses a
+directive by its name, which a directive without one, or sharing one, defeats; one defined twice
+ran twice. A class without `execute` ran the `execute` of `Directive`, which does nothing, on every
+node — an error of its author, as for `DirectiveElement` (entry below), reported where it is
+defined. `Directive.directives` returns the internal array, which a `push` changes past these
+checks; whether it is documented or removed is open.
+
+**Alternatives:** Only the phases documented — the order within a phase not promised. No list —
+the built-in directives an implementation detail, a custom one placed by trial. `Directive.execute`
+throwing, as `DirectiveElement.execute` does — the error once per node in every rendering, logged
+and rendered on. `Directive.directives` returning a copy — a copy per node, since the renderer reads
+it for each.
+
+**Consequences:** Changing the phase or rank of a built-in directive changes public API, and so
+does a new built-in one, whose name a custom directive may already carry. A directive accepted
+before may now throw where it is defined, as its module loads. Whether a class implements
+`execute` is decided against `Directive.prototype.execute`: an `execute` that is an own property of
+the directive counts as implemented.
+
+## 2026-10-14 — How does the renderer execute a directive element?
+
+**Decision:** An element of a class extending `DirectiveElement` — a directive element — is an
+instruction of the template and is not taken into the result. `renderNode` recognizes it through
 `customElements.get` of its local name and a class whose prototype is a `DirectiveElement`, creates
 an element of that class with `document.importNode` of the tag, without its children, and calls the
 element's `execute(context, template, renderer)` — `template` the tag in the template, with its
 children, `renderer` the `Renderer` of the rendering. The node `execute` sets as `context.content`
 takes the place of the tag; the children of the tag are rendered into it with the mode `append`, unless `execute` sets
-`context.ignore`. No directive runs on the tag. `DirectiveElement.execute` throws an `Error`: a
-class extending it has to implement `execute`. The maintainer's decisions.
+`context.ignore`. No directive runs on the tag. What `execute` does is not defined; by default the
+renderer does not take the element itself as content. `DirectiveElement.execute` throws an
+`Error`: a class extending it has to implement `execute`. `DirectiveElement` does not hide its
+element. The maintainer's decisions.
 
 **Reasoning:** The renderer gets a template as the content of a `<template>`, whose document has no
 browsing context and so no custom element registry. Measured 2026-10-14 in Chromium, Firefox and
-WebKit: a custom tag there is a plain `HTMLElement` without `execute`, `customElements.upgrade`
-leaves it so, and `instanceof` its class never holds; `customElements.get` finds the class by the
+WebKit: a directive element there is a plain `HTMLElement` without `execute`,
+`customElements.upgrade` leaves it so, and `instanceof` its class never holds; `customElements.get` finds the class by the
 name of the tag, and `document.importNode` of the node gives an element of the class. Calling
 `execute` on that element gives the author of a tag an ordinary custom element: its constructor
 has run, its private fields and methods work. The children stay in the template, where the
@@ -42,7 +77,9 @@ renderer renders them from in any case; `execute` gets the tag of the template, 
 included, as an argument beside the context, and the renderer with it. They are appended because the content a tag delivers may
 hold nodes of its own: rendered with the mode of the rendering, `replace` removed them (measured
 2026-10-14 in all three engines). A class that does not implement `execute` is an error of its
-author, and the `Error` of the base class says so.
+author, and the `Error` of the base class says so. The constructor of `DirectiveElement` set
+`hidden` since 1.x, when a copy of the tag stood in the result; with the tag out of the result, it
+had no purpose left.
 
 **Alternatives:** Calling the `execute` of the prototype on the node of the template — no
 constructor runs, and a private field throws a `TypeError`. A static `execute` on the class — a
@@ -50,12 +87,13 @@ change of the extension API exported since 2026-10-13. Importing the tag with it
 would carry them, at the cost of a second copy of the subtree per occurrence. Taking the tag into
 the result, as the former `DirectiveElement.execute` did with a copy of it — the tag would stand in
 the result, hidden by the constructor of `DirectiveElement`. A base `execute` delivering no content
-— a tag whose class lacks `execute` would vanish without a trace.
+— a tag whose class lacks `execute` would vanish without a trace. Describing what `execute` may
+deliver, the element itself among it — a promise about the code of the author of a tag.
 
 **Consequences:** Every element of a template costs a lookup in the custom element registry, every
-occurrence of a custom tag the creation of an element and a run of its constructor, in every
-rendering. No directive works on a custom tag, and its `connectedCallback` never runs. A
-`jstl-replace` written into a template leaves nothing in the result.
+occurrence of a directive element the creation of an element and a run of its constructor, in
+every rendering. No directive works on a directive element. A `jstl-replace` written into a
+template leaves nothing in the result.
 
 ## 2026-10-13 — How are the scopes of `jstl-data` documented, and what is a relative URL of it resolved against?
 

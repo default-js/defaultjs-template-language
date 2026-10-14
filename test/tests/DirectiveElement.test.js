@@ -81,7 +81,7 @@ customElements.define("test-arguments", ArgumentsTag);
 customElements.define("test-counted", CountedTag);
 customElements.define("test-card", Card);
 
-describe("custom tag", () => {
+describe("directive element", () => {
 	it("puts the content execute delivers in place of the tag", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div><test-section></test-section></div>`);
@@ -205,6 +205,12 @@ describe("custom tag", () => {
 		expect(section.children[0].textContent).toBe("Card");
 		expect(section.children[1].tagName).toBe("P");
 		expect(section.children[1].textContent).toBe("some text");
+	});
+});
+
+describe("new DirectiveElement", () => {
+	it("creates an element that is not hidden", () => {
+		expect(new SectionTag().hidden).toBe(false);
 	});
 });
 

@@ -76,6 +76,27 @@ describe("attribute manipulation", () => {
 		expect(element.getAttribute("data-test-3")).toBeNull();
 		expect(element.getAttribute("data-test-4")).toBe("data-test-4");
 	});
+
+	it("does not take an attribute whose name begins with jstl into the result", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-mine="mine" jstlother="other" mine="mine"></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].attributes, ({ name, value }) => [name, value])).toEqual([["mine", "mine"]]);
+	});
+
+	// defect: B52
+	it.fails("takes an attribute into the result beside one of the same name prefixed with jstl", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstlmine="other" mine="mine"></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].attributes, ({ name, value }) => [name, value])).toEqual([["mine", "mine"]]);
+	});
 });
 
 describe("event handler", () => {

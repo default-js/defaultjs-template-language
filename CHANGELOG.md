@@ -34,6 +34,12 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 - `Renderer` holds `template` and `resolver` as read-only properties; they were writable fields.
   Assigning either has no effect, and in strict mode code, such as an ES module, it throws a
   `TypeError`. Hand the template to `new Renderer` or to `render` instead.
+- `Directive.define` throws an `Error` for a directive whose `name` is not a non-empty string or is
+  already defined, whose `rank` is not a number from `Directive.MIN_RANK` to `Directive.MAX_RANK`,
+  whose `phase` is none of `Directive.PHASE`, or whose class does not implement `execute`. It
+  accepted each of them; without a `rank`, the order of the directives was undetermined.
+- An element of a class extending `DirectiveElement` is no longer hidden: the constructor of
+  `DirectiveElement` set `hidden` to `true`.
 
 - `package.json` declares `"type": "module"`: Node loads the `.js` files of the package as ES
   modules, without the warning `MODULE_TYPELESS_PACKAGE_JSON` and without parsing them twice.
@@ -54,10 +60,10 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 
 ### Fixed
 
-- A custom tag, an element of a class extending `DirectiveElement` in a template, is executed: the
-  node its `execute` delivers takes the place of the tag, and the children of the tag are rendered
-  into it. It was rendered like any other element, hidden, with the directives run on it and its
-  `execute` never called.
+- A directive element, an element of a class extending `DirectiveElement` in a template, is
+  executed: the node its `execute` delivers takes the place of the tag, and the children of the tag
+  are rendered into it. It was rendered like any other element, hidden, with the directives run on
+  it and its `execute` never called.
 - `jstl-foreach` and `jstl-repeat` over an object render once per own property, with the value of
   the property as item. The item was `undefined`.
 - `Template.fetch` loads a template from a url given as `string`, resolved against `location`. It
