@@ -14,6 +14,18 @@ describe("jstl-if", () => {
 		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
 	});
 
+	it.each([
+		{ render: true, tagNames: ["DIV"] },
+		{ render: false, tagNames: [] }
+	])("awaiting an async function resolving to $render renders $tagNames", async ({ render, tagNames }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-if="\${await check()}"></div>`);
+
+		await Renderer.render({ container, template, data: { check: async () => render } });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
+	});
+
 	it("evaluating to false executes no other directive of the element", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-if="\${render}" attr="\${executed()}"></div>`);

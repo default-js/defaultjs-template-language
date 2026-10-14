@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, onTestFinished } from "vitest";
 import { Renderer, Template } from "../../../index.js";
 
 describe("attribute manipulation", () => {
@@ -20,6 +20,16 @@ describe("attribute manipulation", () => {
 		const template = await Template.load(`<div attr="\${attr}"></div>`);
 
 		await Renderer.render({ container, template, data: { attr: "attr" } });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].getAttribute("attr")).toBe("attr");
+	});
+
+	it("sets the value of an attribute by an expression awaiting an async function", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div attr="\${await load()}"></div>`);
+
+		await Renderer.render({ container, template, data: { load: async () => "attr" } });
 
 		expect(container.children).toHaveLength(1);
 		expect(container.children[0].getAttribute("attr")).toBe("attr");
@@ -112,6 +122,44 @@ describe("event handler", () => {
 		expect(action.mock.calls[0][0].type).toBe("click");
 	});
 
+	it("binds a global function as handler", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${attributesTestAction}"></div>`);
+		const action = vi.fn();
+		globalThis.attributesTestAction = action;
+		onTestFinished(() => delete globalThis.attributesTestAction);
+
+		await Renderer.render({ container, template });
+		container.children[0].trigger("click");
+
+		expect(action).toHaveBeenCalledOnce();
+	});
+
+	it("binds the function an expression awaiting an async function results in", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${await load()}"></div>`);
+		const action = vi.fn();
+
+		await Renderer.render({ container, template, data: { load: async () => action } });
+		container.children[0].trigger("click");
+
+		expect(action).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		{ condition: true, calls: 1 },
+		{ condition: false, calls: 0 }
+	])("with a condition evaluating to $condition binds a function as handler $calls times", async ({ condition, calls }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div ?@click="\${condition}" @click="\${action}"></div>`);
+		const action = vi.fn();
+
+		await Renderer.render({ container, template, data: { action, condition } });
+		container.children[0].trigger("click");
+
+		expect(action).toHaveBeenCalledTimes(calls);
+	});
+
 	it.each([
 		{ kind: "with :delegate", attribute: "@click:delegate" },
 		{ kind: "implied by a string", attribute: "@click" }
@@ -137,6 +185,38 @@ describe("event handler", () => {
 		container.children[0].trigger("click");
 
 		expect(action).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		{ capture: true, order: ["element", "child"] },
+		{ capture: false, order: ["child", "element"] }
+	])("binds the eventHandle of an object with capture $capture", async ({ capture, order }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${ { eventHandle: action, capture } }"><span @click="\${child}"></span></div>`);
+		const calls = [];
+		const action = vi.fn(() => calls.push("element"));
+		const child = vi.fn(() => calls.push("child"));
+
+		await Renderer.render({ container, template, data: { action, child, capture } });
+		container.children[0].children[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+		expect(calls).toEqual(order);
+	});
+
+	it.each([
+		{ passive: true, prevented: false },
+		{ passive: false, prevented: true }
+	])("binds the eventHandle of an object with passive $passive", async ({ passive, prevented }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div @click="\${ { eventHandle: action, passive } }"></div>`);
+		const action = vi.fn((anEvent) => anEvent.preventDefault());
+
+		await Renderer.render({ container, template, data: { action, passive } });
+		const click = new MouseEvent("click", { cancelable: true });
+		container.children[0].dispatchEvent(click);
+
+		expect(action).toHaveBeenCalledOnce();
+		expect(click.defaultPrevented).toBe(prevented);
 	});
 
 	it("prevents and stops the delegated event and hands it on as detail", async () => {
@@ -277,6 +357,21 @@ describe.each([
 		expect(target.getAttribute("test")).toBe("");
 		target.trigger("click");
 		expect(target.getAttribute("test")).toBeNull();
+	});
+
+	it.each([
+		{ condition: true, value: "" },
+		{ condition: false, value: null }
+	])("with a condition evaluating to $condition sets the attribute to $value on a click", async ({ condition, value }) => {
+		const container = document.createElement("div");
+		const name = `@click${separator}toggleAttribute${separator}test`;
+		const template = await Template.load(`<div ?${name}="\${condition}" ${name}=""></div>`);
+
+		await Renderer.render({ container, template, data: { condition } });
+		const target = container.children[0];
+		target.trigger("click");
+
+		expect(target.getAttribute("test")).toBe(value);
 	});
 
 	it.each([

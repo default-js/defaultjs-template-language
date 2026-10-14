@@ -34,6 +34,9 @@ then it may still change.
 - **Test runner (B28):** Vitest in browser mode through Playwright, replacing Karma and Jasmine
   (Karma is deprecated). The existing cases are ported 1:1 first, as a green
   baseline; then the suite is reorganized under rules written into `TESTING.md` (B39).
+- **Use cases (B54):** before every other entry (the maintainer, 2026-10-14) — how the functions are
+  combined and used beyond the examples of `README.md` is tested in a directory of its own. Every
+  function `README.md` describes has a case since 2026-10-14.
 - **Coverage (B29):** complete, measured with v8 coverage; whatever stays untested on purpose is listed
   one by one with its reason.
 - **Package shape (B30):** `"type": "module"` and an `exports` field opening `.`, `./index.js`,
@@ -291,11 +294,13 @@ rendering. Measured
 
 - **`target`** — `README.md` says `replace` replaces the target with the result, `append` inserts it
   after, `prepend` before. With a container `<span></span><i></i>` and the `<span>` as target,
-  `<div><p>x</p></div>` gives `<span></span><div></div><p></p>x<i></i>` with `append` and
-  `x<p></p><div></div><span></span><i></i>` with `prepend`: the children of each element are placed
-  at the target instead of into the element. With `replace` the text `x` replaces the target and
-  the promise rejects with a `TypeError`, since the target is gone when the `<div>` replaces it.
-  Only a template whose elements have no children renders as described.
+  `<div><p>x</p></div>` gives `<div></div><p></p>x<i></i>` with `replace`,
+  `<span></span><div></div><p></p>x<i></i>` with `append` and
+  `<div></div><span></span><p></p>x<i></i>` with `prepend`, the promise resolving in every mode
+  (measured again 2026-10-14, after the fix of `renderNode` below): the children of each element are
+  placed after the target instead of into the element. Only a template whose elements have no
+  children renders as described. The cases "$mode with a target renders an element with its
+  children as $tagNames" in `test/tests/Renderer.test.js` are marked `it.fails` for it.
 - **`mode`** — the children of an element were rendered with the mode of the rendering, so they
   removed what the element held with `replace`, and went after it with `append`, before it with
   `prepend`. Measured with a custom directive putting a `<b>` into the element before its `<p>`
@@ -345,3 +350,44 @@ Measured 2026-10-14 in Chromium, Firefox and WebKit: `<div jstlmine="other" mine
 `<div>` without attributes. A name beginning with `jstl-` leaves a name beginning with `-`, which no
 attribute of HTML has. The case "takes an attribute into the result beside one of the same name
 prefixed with jstl" in `test/tests/directives/Attributes.test.js` is marked `it.fails` for it.
+
+### B54 — use cases: functions combined and used beyond the examples of `README.md`
+
+**Status:** agreed · **Kind:** task · **Blocks 2.0.0**
+
+Decided by the maintainer 2026-10-14: comes before every other entry of this backlog.
+
+`README.md` describes each function with an example; how consumers combine the functions, or use
+one beyond its example, it cannot describe in full (the maintainer, 2026-10-14). The suite tests each
+directive on its own; combined are only `jstl-choose` in `jstl-foreach`, `jstl-include` after
+`jstl-if`, and `jstl-data-scope` in `jstl-foreach`. B46 and B48 lay at such points.
+
+Agreed 2026-10-14: the cases of use cases stand in a directory of their own, `test/tests/usecases/`;
+`TESTING.md` gets a rule for it, its wording agreed when the entry is worked on. Proposed: the
+expectation of a use case follows from what `README.md` says about each function involved, and a
+deviation is a defect — `it.fails`, backlog entry. Where it does not follow, such as a limitation of
+the HTML parser, the case asserts what the code does today, and a backlog entry decides whether
+`README.md` documents it.
+
+Known cases:
+
+- `jstl-foreach` whose content is a text node only, without an element. Every case of
+  `jstl-foreach` today has one `<div>` as its content.
+- `<select jstl-foreach="${items}"><option>${item}</option></select>`: does not work in most
+  browsers, as the maintainer reports; not measured yet. No case covers it — the only case with a
+  `<select>` renders `<option jstl-repeat-count>` into a `<select>` as container. To be measured
+  in the three engines, tested, and documented in `README.md` as a limitation if it is one.
+- Further candidates: `jstl-foreach` nested, reading the status of the outer loop; `jstl-if` and
+  `jstl-foreach` on one element; an event handler inside a loop, bound to the item; `jstl-include`
+  in `jstl-foreach`; the same template rendered again with other data.
+
+### B55 — the parameter `key` of `new Template`
+
+**Status:** open · **Kind:** decision
+
+`README.md` describes the second parameter of `new Template(template, key)` as "identifire at
+cache". `src/Template.js`: the constructor only keeps it as `key`; `Template.load` passes the key
+it caches the template under, and `remove`, which `README.md` does not describe, deletes the cached
+template of that key. Through what `README.md` describes, `key` has no effect a consumer can see,
+so no case asserts it. Found 2026-10-14 while writing the cases of `new Template`: to be decided
+whether `README.md` describes `key` and `remove`, or drops `key`.

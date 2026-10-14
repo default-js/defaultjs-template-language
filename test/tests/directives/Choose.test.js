@@ -52,6 +52,39 @@ describe("jstl-choose", () => {
 		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["1", "ignore", "ignore", "ignore"]);
 	});
 
+	it("renders only the first of several jstl-when evaluating to true", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-choose><div jstl-when="\${true}">1</div><div jstl-when="\${true}">2</div><div jstl-otherwise>otherwise</div></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.textContent)).toEqual(["1"]);
+	});
+
+	it("renders no branch when no jstl-when evaluates to true and there is no jstl-otherwise", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-choose><div jstl-when="\${false}">1</div><div jstl-when="\${false}">2</div></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].childNodes).toHaveLength(0);
+	});
+
+	it.each([
+		{ result: true, text: "1" },
+		{ result: false, text: "otherwise" }
+	])("renders the branch \"$text\" for a jstl-when awaiting an async function resolving to $result", async ({ result, text }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-choose><div jstl-when="\${await check()}">1</div><div jstl-otherwise>otherwise</div></div>`);
+
+		await Renderer.render({ container, template, data: { check: async () => result } });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.textContent)).toEqual([text]);
+	});
+
 	it("chooses per item inside jstl-foreach", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`

@@ -14,6 +14,19 @@ describe("jstl-include", () => {
 		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
 	});
 
+	it.each([
+		{ kind: "an expression", attribute: "${url}", data: { url: INCLUDE_URL } },
+		{ kind: "an expression awaiting an async function", attribute: "${await url()}", data: { url: async () => INCLUDE_URL } }
+	])("renders the template loaded from a URL given by $kind", async ({ attribute, data }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-include="${attribute}"></div>`);
+
+		await Renderer.render({ container, template, data });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
+	});
+
 	it("replaces the content of the element in mode replace", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-include="${INCLUDE_URL}" jstl-include-mode="replace"><p></p></div>`);

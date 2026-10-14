@@ -18,6 +18,19 @@ describe("jstl-attach-element", () => {
 		expect(element.children[0]).toBe(span);
 	});
 
+	it("attaches the element an expression awaiting an async function results in", async () => {
+		const container = document.createElement("div");
+		const span = document.createElement("span");
+		const template = await Template.load(`<div jstl-attach-element="\${await element()}"></div>`);
+
+		await Renderer.render({ container, template, data: { element: async () => span } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.children).toHaveLength(1);
+		expect(element.children[0]).toBe(span);
+	});
+
 	it("appends the element in mode append", async () => {
 		const container = document.createElement("div");
 		const span = document.createElement("span");

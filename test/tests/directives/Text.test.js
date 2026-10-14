@@ -25,6 +25,16 @@ describe("text content", () => {
 		expect(container.children[0].textContent).toBe("test text dynamic content");
 	});
 
+	it("renders an expression awaiting an async function", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div>\${ await fn() }</div>`);
+
+		await Renderer.render({ container, template, data: { fn: async () => "hello world" } });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].textContent).toBe("hello world");
+	});
+
 	it("leaves the text unrendered with jstl-text-ignore", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-text-ignore>test text \${dynamic} content</div>`);

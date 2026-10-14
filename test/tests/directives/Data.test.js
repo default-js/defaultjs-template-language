@@ -12,6 +12,16 @@ describe("jstl-data", () => {
 		expect(container.children[0].textContent).toBe("value-1");
 	});
 
+	it("loads data from a URL in mode remote under the name of jstl-data-var", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-data="/data/directives/Data/remote-data.json" jstl-data-mode="remote" jstl-data-var="file">\${file.test1}</div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].textContent).toBe("value-1");
+	});
+
 	it("sets a static value as variable in mode direct", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-data="value-1" jstl-data-var="test1" jstl-data-mode="direct">\${test1}</div>`);
@@ -37,6 +47,16 @@ describe("jstl-data", () => {
 		const template = await Template.load(`<div jstl-data="\${test}" jstl-data-var="test1" jstl-data-mode="set">\${test1.data}</div>`);
 
 		await Renderer.render({ container, template, data: { test: { data: "value-1" } } });
+
+		expect(container.children).toHaveLength(1);
+		expect(container.children[0].textContent).toBe("value-1");
+	});
+
+	it("sets the result of an expression awaiting an async function as variable in mode set", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-data="\${await load()}" jstl-data-var="test1" jstl-data-mode="set">\${test1.data}</div>`);
+
+		await Renderer.render({ container, template, data: { load: async () => ({ data: "value-1" }) } });
 
 		expect(container.children).toHaveLength(1);
 		expect(container.children[0].textContent).toBe("value-1");
@@ -170,5 +190,15 @@ describe("jstl-data-scope", () => {
 
 		const element = container.children[0];
 		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["", "1", "", "2"]);
+	});
+
+	it("makes the data available to the rest of the current iteration with scope jstl-repeat", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-repeat="\${list}"><b jstl-data="\${item}" jstl-data-mode="set" jstl-data-var="y" jstl-data-scope="jstl-repeat"></b><i>\${y}</i></div>`);
+
+		await Renderer.render({ container, template, data: { list: ["1", "2"] } });
+
+		expect(container.children).toHaveLength(2);
+		expect(Array.from(container.children, (anElement) => Array.from(anElement.children, (aChild) => aChild.textContent))).toEqual([["", "1"], ["", "2"]]);
 	});
 });

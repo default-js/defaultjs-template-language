@@ -83,6 +83,31 @@ describe("jstl-foreach", () => {
 		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["0-true-false-1", "1-false-false-1", "2-false-true-1"]);
 	});
 
+	it.each([
+		{ kind: "an array", data: ["x", "y"] },
+		{ kind: "an object", data: { a: "x", b: "y" } }
+	])("carries number and data in the status of $kind", async ({ data }) => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-foreach="\${data}"><div>\${item}-\${status.number}-\${status.data === data}</div></div>`);
+
+		await Renderer.render({ container, template, data: { data } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["x-1-true", "y-2-true"]);
+	});
+
+	it("iterates the data an expression awaiting an async function results in", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-foreach="\${await load()}"><div>\${item}</div></div>`);
+
+		await Renderer.render({ container, template, data: { load: async () => ["a", "b"] } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["a", "b"]);
+	});
+
 	it("renders its content count times with jstl-foreach-count", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-foreach-count="\${count}" jstl-foreach-var="entry" jstl-foreach-status="state"><div>\${entry}-\${state.index}</div></div>`);

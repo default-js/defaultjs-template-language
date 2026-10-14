@@ -86,7 +86,8 @@ describe("jstl-tagname", () => {
 	it.each([
 		{ source: "div", template: `<div jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></div>`, data: {} },
 		{ source: "jstl", template: `<jstl jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: {} },
-		{ source: "an expression", template: `<jstl jstl-tagname="\${tagname}" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: { tagname: "span" } }
+		{ source: "an expression", template: `<jstl jstl-tagname="\${tagname}" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: { tagname: "span" } },
+		{ source: "an expression awaiting an async function", template: `<jstl jstl-tagname="\${await tagname()}" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: { tagname: async () => "span" } }
 	])("renders the element as span, given by $source", async ({ template: source, data }) => {
 		const container = document.createElement("div");
 		const template = await Template.load(source);
@@ -98,6 +99,25 @@ describe("jstl-tagname", () => {
 		expect(element).toBeInstanceOf(HTMLSpanElement);
 		expect(element.getAttribute("test-attr")).toBe("attr");
 		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SPAN", "SPAN", "SPAN"]);
+	});
+});
+
+describe("jstl-ignore", () => {
+	it("includes the element and its children unprocessed", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div>\${text1}<div jstl-ignore title="\${text2}">\${text2}<span jstl-if="\${false}"></span></div></div>`);
+
+		await Renderer.render({ container, template, data: { text1: "some text", text2: "another text" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.childNodes[0].textContent).toBe("some text");
+		expect(element.children).toHaveLength(1);
+		const ignored = element.children[0];
+		expect(Array.from(ignored.attributes, ({ name, value }) => [name, value])).toEqual([["title", "${text2}"]]);
+		expect(ignored.childNodes[0].textContent).toBe("${text2}");
+		expect(Array.from(ignored.children, (aChild) => aChild.tagName)).toEqual(["SPAN"]);
+		expect(ignored.children[0].getAttribute("jstl-if")).toBe("${false}");
 	});
 });
 
@@ -120,11 +140,14 @@ describe("jstl-ignore-childs", () => {
 });
 
 describe("is", () => {
-	it.skipIf(server.browser === "webkit")("renders the customized built-in element named by an expression", async () => {
+	it.skipIf(server.browser === "webkit").each([
+		{ kind: "an expression", attribute: "${name}", data: { name: "test-div" } },
+		{ kind: "an expression awaiting an async function", attribute: "${await name()}", data: { name: async () => "test-div" } }
+	])("renders the customized built-in element named by $kind", async ({ attribute, data }) => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div is="\${name}"></div>`);
+		const template = await Template.load(`<div is="${attribute}"></div>`);
 
-		await Renderer.render({ container, template, data: { name: "test-div" } });
+		await Renderer.render({ container, template, data });
 
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];

@@ -1,9 +1,30 @@
-import { describe, it, expect, vi } from "vitest";
-import { Template, toAsyncTemplateLoader } from "../../index.js";
+import { describe, it, expect, vi, onTestFinished } from "vitest";
+import { Renderer, Template, toAsyncTemplateLoader } from "../../index.js";
 
 const TEMPLATE_URL = "/templates/Template/LoadFromURL.html";
 
+describe("new Template", () => {
+	it("creates a template rendering the content of an HTMLTemplateElement", async () => {
+		const container = document.createElement("div");
+		const element = document.createElement("template");
+		element.innerHTML = `<p>\${text}</p>`;
+
+		await Renderer.render({ container, template: new Template(element), data: { text: "text" } });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["P"]);
+		expect(container.children[0].textContent).toBe("text");
+	});
+});
+
 describe("Template.load", () => {
+	it("answers a Template as it is", async () => {
+		const template = await Template.load(`<p></p>`, false);
+
+		const result = await Template.load(template);
+
+		expect(result).toBe(template);
+	});
+
 	it("loads a template from source code", async () => {
 		const result = await Template.load(`<div><div></div><span></span></div>`, false);
 
@@ -88,6 +109,25 @@ describe("Template.fetch", () => {
 		expect(result.template.content.children).toHaveLength(5);
 	});
 
+	it("loads a template from a URL", async () => {
+		const result = await Template.fetch(new URL(TEMPLATE_URL, location), false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template.content.children).toHaveLength(5);
+	});
+
+	it("resolves a relative URL given as string against location", async () => {
+		// the page lies in the root of the origin, where location and origin resolve alike
+		const page = location.href;
+		history.replaceState(history.state, "", "/templates/Template/page.html");
+		onTestFinished(() => history.replaceState(history.state, "", page));
+
+		const result = await Template.fetch("LoadFromURL.html", false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template.content.children).toHaveLength(5);
+	});
+
 	it.each([
 		{ type: "number", value: 42 },
 		{ type: "plain object", value: {} },
@@ -159,6 +199,55 @@ describe("Template.load - cache", () => {
 		const result = await Template.load(nodelist, true, "test");
 
 		expect(result).toBe(expected);
+	});
+});
+
+describe("Template.loadNodeTemplate", () => {
+	it("loads the template of a child template element", async () => {
+		const node = create(`<div><template><p></p></template></div>`).first();
+
+		const result = await Template.loadNodeTemplate(node, null, false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+	});
+
+	it("loads the template of the element the attribute template selects", async () => {
+		const element = create(`<template id="load-node-template-test"><p></p></template>`).first();
+		document.body.append(element);
+		onTestFinished(() => element.remove());
+		const node = create(`<div template="#load-node-template-test"></div>`).first();
+
+		const result = await Template.loadNodeTemplate(node, null, false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+	});
+
+	it("loads the template from the URL of the attribute template", async () => {
+		const node = create(`<div template="${TEMPLATE_URL}"></div>`).first();
+
+		const result = await Template.loadNodeTemplate(node, null, false);
+
+		expect(result).toBeInstanceOf(Template);
+		expect(result.template.content.children).toHaveLength(5);
+	});
+
+	it("prefers a child template element to the attribute template", async () => {
+		const node = create(`<div template="${TEMPLATE_URL}"><template><p></p></template></div>`).first();
+
+		const result = await Template.loadNodeTemplate(node, null, false);
+
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+	});
+
+	it("answers the defaultTemplate when the node names no template", async () => {
+		const defaultTemplate = await Template.load(`<p></p>`, false);
+		const node = create(`<div></div>`).first();
+
+		const result = await Template.loadNodeTemplate(node, defaultTemplate, false);
+
+		expect(result).toBe(defaultTemplate);
 	});
 });
 
