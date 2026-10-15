@@ -1087,7 +1087,7 @@ nodes it acts on, `execute` decides.
 | `name` | getter, a non-empty string no other defined directive carries, the built-in ones included - `required` |
 | `rank` | getter, a number from `Directive.MIN_RANK` (0) to `Directive.MAX_RANK` (100000), the order within its phase - `required` |
 | `phase` | getter, one of `Directive.PHASE`: `init`, `data`, `template`, `content`, `finish` - `optional`, default `finish` |
-| `execute(context)` | runs the directive on a node; the rendering of the node goes on once its promise resolves - `required` |
+| `execute(context)` | runs the directive on a node and resolves to the context the rendering of the node goes on with: the context it was handed, or another one; resolving to nothing, it goes on with the one it was handed. The rendering of the node goes on once the promise resolves - `required` |
 
 `Directive.define` throws an `Error` if `directive` is not a `Directive`, or if one of its members
 does not meet its description.
@@ -1117,6 +1117,9 @@ does for a false condition. The built-in directives:
 - `context.resolver` — resolves an expression
 - `context.stop` — `true`: no further directive runs on the node
 - `context.ignore` — `true`: the children of the node are not rendered
+
+A directive that resolves to another context hands the node over to it: the directives after it and
+the rendering of the children work on that context.
 
 After the directives, the children of the node are rendered into `context.content`. The `attribute`
 directive takes every attribute whose name does not begin with `jstl` into the result, as

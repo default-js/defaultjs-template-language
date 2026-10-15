@@ -13,8 +13,7 @@ describe("rendering again", () => {
 		expect(Array.from(container.children[0].children, (anElement) => anElement.textContent)).toEqual(["d"]);
 	});
 
-	// defect: B56
-	it.fails("replaces the elements of a jstl-repeat at the top of the template with fewer ones", async () => {
+	it("replaces the elements of a jstl-repeat at the top of the template with fewer ones", async () => {
 		const container = document.createElement("div");
 		const renderer = new Renderer({ template: await Template.load(`<li jstl-repeat="\${items}">\${item}</li>`) });
 

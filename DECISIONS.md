@@ -19,6 +19,27 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-15 — What does the `execute` of a directive resolve to?
+
+**Decision:** The context the rendering of the node goes on with. `executeDirectives` in
+`src/Renderer.js` hands the directives after it, and `renderNode`, the context an `execute`
+resolves to; resolving to nothing, the context it was handed stays. `README.md` documents it under
+"Custom Directives". The maintainer's decisions.
+
+**Reasoning:** A directive manipulates the processing of a node by handing it over to another
+context, not only by changing the one it was handed, and a context a directive does not change in
+place can later be made immutable (the maintainer). A directive element already works this way:
+`renderNode` goes on with the context its `execute` resolves to (entry 2026-10-14 below). Every
+built-in directive resolves to the context it was handed, so none of them changes its behaviour.
+
+**Alternatives:** Ignoring the value, as before — a directive can only change the context it was
+handed, which rules out an immutable context.
+
+**Consequences:** The order of the directives decides which context a directive works on: the ones
+after a handover work on the new context. A value other than a context is not checked; the
+renderer goes on with it as the context. A directive that resolved to such a value without effect
+before has to resolve to its context or to nothing.
+
 ## 2026-10-15 — Where do the cases of use cases stand, and what do they assert?
 
 **Decision:** `test/tests/usecases/` holds the cases of functions combined, or of one used beyond

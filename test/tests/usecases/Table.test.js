@@ -30,8 +30,7 @@ describe("table", () => {
 		expect(toCells(container.children[0])).toEqual([["a", "b"], ["c", "d"]]);
 	});
 
-	// defect: B56
-	it.fails("keeps a header row before the rows of jstl-repeat", async () => {
+	it("keeps a header row before the rows of jstl-repeat", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<table><tr><th>name</th></tr><tr jstl-repeat="\${items}"><td>\${item}</td></tr></table>`);
 

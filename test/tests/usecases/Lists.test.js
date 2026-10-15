@@ -69,8 +69,7 @@ describe("list", () => {
 		expect(container.children[0].childNodes).toHaveLength(0);
 	});
 
-	// defect: B56
-	it.fails("renders the elements of jstl-repeat between their siblings", async () => {
+	it("renders the elements of jstl-repeat between their siblings", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<ul><li>first</li><li jstl-repeat="\${items}">\${item}</li><li>last</li></ul>`);
 
@@ -78,6 +77,21 @@ describe("list", () => {
 
 		expect(container.children).toHaveLength(1);
 		expect(Array.from(container.children[0].children, (anItem) => anItem.textContent)).toEqual(["first", "a", "b", "last"]);
+	});
+
+	it.each([
+		{ mode: "replace", children: ["LI:a", "LI:b", "I:"] },
+		{ mode: "append", children: ["SPAN:", "LI:a", "LI:b", "I:"] },
+		{ mode: "prepend", children: ["LI:a", "LI:b", "SPAN:", "I:"] }
+	])("places the elements of a jstl-repeat at the top of the template by the target with mode $mode", async ({ mode, children }) => {
+		const container = document.createElement("div");
+		container.innerHTML = "<span></span><i></i>";
+		const template = await Template.load(`<li jstl-repeat="\${items}">\${item}</li>`);
+
+		await Renderer.render({ container, template, data: { items: ["a", "b"] }, mode, target: container.children[0] });
+
+		expect(Array.from(container.children, (anElement) => `${anElement.tagName}:${anElement.textContent}`)).toEqual(children);
+		expect(container.textContent).toBe("ab");
 	});
 
 	it("renders no element of jstl-repeat for an empty list", async () => {

@@ -88,6 +88,19 @@ defineDirective({
 });
 defineDirective({ name: "test-await-check", rank: 50, phase: Directive.PHASE.content, attribute: "test-await", execute: (aContext) => awaited(aContext.content.hasAttribute("data-awaited")) });
 
+class Handover extends Directive {
+	get name() { return "test-handover"; }
+	get rank() { return Directive.MIN_RANK + 6000; }
+	get phase() { return Directive.PHASE.init; }
+
+	async execute(aContext) {
+		const { template } = aContext;
+		if (!(template instanceof Element && template.hasAttribute("test-handover"))) return aContext;
+		return aContext.clone({ content: document.createElement("section") });
+	}
+}
+Directive.define({ directive: new Handover() });
+
 class Hidden extends Directive {
 	get name() { return "my-hidden"; }
 	get rank() { return Directive.MIN_RANK + 2000; }
@@ -226,6 +239,20 @@ describe("custom directive", () => {
 
 		expect(awaited).toHaveBeenCalledOnce();
 		expect(awaited).toHaveBeenCalledWith(true);
+	});
+
+	it("hands the node over to the context execute resolves to", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<p test-handover title="\${text}"><b>\${text}</b></p>`);
+
+		await Renderer.render({ container, template, data: { text: "some text" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.tagName).toBe("SECTION");
+		expect(Array.from(element.attributes, ({ name, value }) => [name, value])).toEqual([["test-handover", ""], ["title", "some text"]]);
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["B"]);
+		expect(element.textContent).toBe("some text");
 	});
 
 	it("renders the example of the README", async () => {

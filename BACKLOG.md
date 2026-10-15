@@ -57,8 +57,8 @@ then it may still change.
   through `customElements.get` and a class extending `DirectiveElement`; `execute(context)` gets one
   signature), B22 (an object is iterated by its own properties — the item is the value, the
   status also carries the key; documented, README first), B6 (`jstl-async` implemented anew),
-  B37 (loading `src/Directive.js` first), B57 (with `@default-js/defaultjs-extdom` 2.0.1) are fixed;
-  B56, found with the use cases, is open (2026-10-15).
+  B37 (loading `src/Directive.js` first), B57 (with `@default-js/defaultjs-extdom` 2.0.1), B56
+  (`jstl-repeat` renders its elements in the place of the element) are fixed.
 - **README:** complete and correct at 2.0.0 — the errors of B23 fixed, the empty sections filled
   (B11), every function of the code documented or removed (B24, B40, B43, decided item by item). Code
   and README agree.
@@ -362,34 +362,6 @@ template of that key. Through what `README.md` describes, `key` has no effect a 
 so no case asserts it. Found 2026-10-14 while writing the cases of `new Template`: to be decided
 whether `README.md` describes `key` and `remove`, or drops `key`.
 
-### B56 — `jstl-repeat` places its elements ahead of their siblings
-
-**Status:** agreed · **Kind:** defect · **Blocks 2.0.0**
-
-Decided by the maintainer 2026-10-15: fixed in 2.0.0.
-
-`README.md` says `jstl-repeat` renders the element itself once per item. `src/directives/Repeat.js`,
-`iterate`, renders each item with `context.subContext({ resolver, template, mode: "append" })`
-into the `container` of the node — the element of the parent, at the top of a template the
-container of the rendering — at once, while `renderContainer` in `src/Renderer.js` collects the
-nodes of the siblings and adds them once the last sibling is rendered. Measured 2026-10-14 in
-Chromium, Firefox and WebKit, alike in all three, with `items: ["x", "y"]`:
-
-- `<ul><p></p><li jstl-repeat="${items}">${item}</li><i></i></ul>` gives
-  `<ul><li>x</li><li>y</li><p></p><i></i></ul>`; text alike: `<ul>head<li jstl-repeat…>…</li>foot</ul>`
-  gives `<ul><li>x</li><li>y</li>headfoot</ul>`. Inside `jstl-foreach`, each iteration puts the
-  elements of its `jstl-repeat` ahead of the other nodes of that iteration.
-- At the top of a template, rendered into a container holding `<a></a>`: alone, the elements are
-  appended in every mode — `replace` keeps `<a></a>`, so rendering again keeps the elements of the
-  last rendering; beside a sibling `<p></p>`, `replace` empties the container after the elements
-  are in it and leaves `<p></p>` only.
-
-`jstl-foreach` renders into its own element and is not affected. Marked `it.fails` for it, in
-`test/tests/usecases/`: "renders the elements of jstl-repeat between their siblings" (`Lists`),
-"keeps a header row before the rows of jstl-repeat" (`Table`), "keeps a placeholder option before
-the options of jstl-repeat, selected" (`Select`) and "replaces the elements of a jstl-repeat at the
-top of the template with fewer ones" (`Rerender`).
-
 ### B60 — check `WebContent/select/` and `WebContent/table/` by hand
 
 **Status:** agreed · **Kind:** task
@@ -403,5 +375,15 @@ Agreed 2026-10-15: checked by the maintainer when there is occasion — `npm run
 `http://localhost:3000/select/` and `http://localhost:3000/table/` in Firefox, Chrome or Edge, and
 Safari where available; what each browser shows goes into this entry. Loaded through Playwright
 1.64.0 — Chromium 156, Firefox 157, WebKit (Safari 27.2) — both pages render their first round
-without an error and with the DOM the suite expects (2026-10-15). Until B56 is fixed, the
-sections with a placeholder option and with a header row show it.
+without an error and with the DOM the suite expects (2026-10-15).
+
+### B61 — `replace` with an empty result leaves the container as it is
+
+**Status:** open · **Kind:** defect
+
+`README.md` says that `replace` replaces the content of the container with the result, or the
+target where one is given. `src/Renderer.js`: `renderContainer` sets `context.content` to `null`
+when no node of the template leaves anything in the result, and `addContent` runs the mode only for
+a content that is set, so a rendering with an empty result leaves the container, or the target, as
+it was. `<li jstl-repeat="${items}">${item}</li>`, rendered again with an empty `items`, keeps the
+elements of the last rendering. Found 2026-10-15 by reading the code; not measured.

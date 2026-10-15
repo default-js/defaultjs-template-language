@@ -63,13 +63,13 @@ const doRepeat = async (option) => {
 };
 
 const iterate = async (data, option) => {
-	let { template, resolver, renderer, condition, context } = option;
+	let { template, resolver, renderer, condition, context, container } = option;
 	resolver = new ExpressionResolver({ context: data, name: DIRECTIVENAME, parent: resolver });
 
 	condition = condition ? await resolver.resolve(condition, false) : false;
 	if (condition) return false;
 
-	const itemContext =  context.subContext({ resolver, template, mode: "append", ignoreDirective: IGNOREDIRECTIVE })
+	const itemContext = context.subContext({ resolver, template, container, target: null, mode: "append", ignoreDirective: IGNOREDIRECTIVE });
 	await renderer.render(itemContext);
 	await itemContext.ready();
 
@@ -94,8 +94,9 @@ class Repeat extends Directive {
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || (!context.template.attr(ATTRIBUTE.DATA) && !context.template.attr(ATTRIBUTE.COUNT))) return context;
 
+		const container = new DocumentFragment();
 		try {
-			const { template, resolver, renderer, content, container } = context;
+			const { template, resolver, renderer, content } = context;
 			const option = {
 				data: (template.attr(ATTRIBUTE.DATA) || "").trim(),
 				count: (template.attr(ATTRIBUTE.COUNT) || "").trim(),
@@ -117,7 +118,7 @@ class Repeat extends Directive {
 			console.error("error at jstl-repeat:", error);
 		}
 
-		context.content = null;
+		context.content = Array.from(container.childNodes);
 		context.stop = true;
 		context.ignore = true;
 		return context;

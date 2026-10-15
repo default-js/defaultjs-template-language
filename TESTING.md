@@ -9,7 +9,10 @@ A rule gets its section here once the maintainer has agreed it.
 ## What the suite runs on
 
 Vitest in browser mode, through Playwright, in three engines: Chromium, Firefox and WebKit —
-headless for `npm test`, with windows for `npm run test:live`. Configuration in `vitest.config.mjs`.
+headless for `npm test`. `npm run test:live` runs Chromium alone, with a window and in watch mode,
+for debugging: it opens the debugger port 9229, to which the configuration "Attach to npm run
+test:live" of `.vscode/launch.json` attaches VS Code. With that port open, Vitest does not report
+an unhandled error in the browser; `npm test` does. Configuration in `vitest.config.mjs`.
 The sources are served unbundled, as ES modules; so are the `@default-js` packages, which vite
 does not pre-bundle. The suite tests the sources, never the bundles under `dist/`: `npm run build`
 runs it before it bundles.

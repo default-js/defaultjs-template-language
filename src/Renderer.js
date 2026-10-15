@@ -128,7 +128,7 @@ const renderNode = async (aContext) => {
 			}
 		}
 
-		if (aContext.content && aContext.content.tagName && aContext.content.tagName == "JSTL") aContext.content = aContext.content.childNodes; //special case to support the old "<jstl>" tag.
+		if (aContext?.content?.tagName == "JSTL") aContext.content = aContext.content.childNodes; //special case to support the old "<jstl>" tag.
 	} catch (e) {
 		console.error("error at render node:", e, aContext);
 	}
@@ -148,7 +148,7 @@ const executeDirectives = async (context) => {
 	for (let i = 0; i < length && !context.stop; i++) {
 		const directive = directives[i];
 		try {
-			if (context.acceptDirective(directive)) await directive.execute(context);
+			if (context.acceptDirective(directive)) context = await directive.execute(context) || context;
 		} catch (e) {
 			console.error("error at directive:", e, directive, context);
 		}

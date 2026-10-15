@@ -85,8 +85,7 @@ describe("select", () => {
 		expect(toState(container.children[0])).toEqual({ options: ["c"], selectedIndex: 0, value: "c" });
 	});
 
-	// defect: B56
-	it.fails("keeps a placeholder option before the options of jstl-repeat, selected", async () => {
+	it("keeps a placeholder option before the options of jstl-repeat, selected", async () => {
 		const container = createContainer();
 		const template = await Template.load(`<select><option value="">choose</option><option jstl-repeat="\${items}" value="\${item}">\${item}</option></select>`);
 

@@ -40,6 +40,9 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
   accepted each of them; without a `rank`, the order of the directives was undetermined.
 - An element of a class extending `DirectiveElement` is no longer hidden: the constructor of
   `DirectiveElement` set `hidden` to `true`.
+- The rendering of a node goes on with the context the `execute` of a directive resolves to; the
+  value was ignored. A directive resolving to nothing leaves the context as it was. A directive that
+  resolves to another value, such as `true`, has to resolve to its context or to nothing instead.
 
 - `package.json` declares `"type": "module"`: Node loads the `.js` files of the package as ES
   modules, without the warning `MODULE_TYPELESS_PACKAGE_JSON` and without parsing them twice.
@@ -82,3 +85,6 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 - `render` in mode `replace`, the default, ends for a container holding a `<select>`, as when the
   same template is rendered into it again. It never ended, and the page stopped responding. The
   package requires `@default-js/defaultjs-extdom` 2.0.1, whose `empty` removes a `<select>`.
+- `jstl-repeat` renders its elements in the place of the element, between its siblings. They were
+  put ahead of the siblings; at the top of a template they were appended to the container whatever
+  the mode, and placed after the target one by one, without their content.

@@ -79,6 +79,7 @@ one row per state and engine.
 | 1.7.20 | `011a2fa` | baseline: the sources of 1.7.20 with the import in `src/Context.js` fixed; expression language 3.0.2 | 2026-10-11 |
 | 2.0.0 | `5df2d54` + signature of `execute` | the development of 2.0.0 since the baseline: the commits up to `5df2d54`; uncommitted, the signature of `DirectiveElement.execute` | 2026-10-14 |
 | 2.0.0 | `5df2d54` + custom tags executed | `renderNode` looks every element of a template up in the custom element registry and executes a custom tag; the children of an element are rendered with the mode `append` | 2026-10-14 |
+| 2.0.0 | `12ae281` + `jstl-repeat` in place | the commits up to `12ae281`; uncommitted, `jstl-repeat` renders its items into a fragment of its own and delivers them as its content, and the rendering of a node goes on with the context a directive resolves to | 2026-10-15 |
 
 ### Cases 1–3
 
@@ -93,6 +94,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 1124 | 2198 | 247 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1756 | 12760 | 1284 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 1163 | 2452 | 250 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 1156 | 2308 | 256 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 1773 | 12935 | 1314 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 1212 | 2608 | 271 |
 
 ### `if`
 
@@ -107,6 +111,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.205 | 3.11 | 50.7 | 0.190 | 1.81 | 18.6 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.34 | 14.4 | 128 | 1.08 | 12.7 | 126 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.206 | 2.70 | 36.1 | 0.201 | 2.01 | 19.7 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.207 | 3.14 | 51.5 | 0.188 | 1.86 | 19.3 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 1.33 | 15.0 | 132 | 1.12 | 12.5 | 129 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.230 | 2.81 | 37.1 | 0.213 | 2.22 | 22.4 |
 
 ### `choose`
 
@@ -121,6 +128,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.191 | 3.84 | 115 | 0.355 | 3.48 | 34.9 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.14 | 14.3 | 222 | 2.17 | 20.9 | 213 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.238 | 4.37 | 85.4 | 0.473 | 4.17 | 40.3 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.196 | 3.97 | 117 | 0.372 | 3.61 | 36.3 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 1.13 | 14.3 | 223 | 2.20 | 21.8 | 220 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.246 | 4.59 | 98.9 | 0.547 | 4.45 | 41.5 |
 
 ### Attributes
 
@@ -135,6 +145,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.137 | 2.26 | 40.8 | 0.112 | 1.07 | 10.6 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 0.914 | 10.6 | 110 | 0.654 | 6.18 | 61.6 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.152 | 2.11 | 31.7 | 0.132 | 1.25 | 12.7 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.143 | 2.32 | 41.5 | 0.113 | 1.08 | 10.6 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 0.907 | 10.5 | 110 | 0.675 | 6.12 | 59.8 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.162 | 2.19 | 32.9 | 0.147 | 1.32 | 13.8 |
 
 ### Events
 
@@ -149,6 +162,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.120 | 1.65 | 23.8 | 0.0954 | 0.915 | 8.96 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 0.806 | 9.02 | 77.8 | 0.663 | 6.31 | 58.6 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.128 | 1.65 | 20.6 | 0.109 | 1.03 | 10.2 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.154 | 1.78 | 26.0 | 0.107 | 0.985 | 10.2 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 0.814 | 8.97 | 78.4 | 0.660 | 6.39 | 61.3 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.144 | 1.71 | 21.1 | 0.121 | 1.09 | 10.7 |
 
 ### `include`
 
@@ -163,6 +179,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.364 | 4.28 | 41.6 | 0.361 | 3.57 | 36.3 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 2.84 | 29.7 | 191 | 2.98 | 28.9 | 275 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.401 | 4.49 | 42.0 | 0.384 | 3.82 | 37.8 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.387 | 4.61 | 44.5 | 0.367 | 4.28 | 40.7 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 2.95 | 30.2 | 193 | 2.87 | 30.0 | 288 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.426 | 4.85 | 46.1 | 0.435 | 3.93 | 39.0 |
 
 ### `foreach`
 
@@ -177,6 +196,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.208 | 1.92 | 19.1 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.51 | 14.0 | 137 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.191 | 1.68 | 16.8 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.207 | 1.98 | 22.5 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 1.57 | 14.2 | 141 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.222 | 1.84 | 17.7 |
 
 ### `repeat`
 
@@ -191,6 +213,9 @@ one row per state and engine.
 | `5df2d54` + custom tags executed | Chromium 156.0.8078.4, Windows 11 | 0.196 | 1.76 | 17.8 |
 | `5df2d54` + custom tags executed | Firefox 157.0, Windows 11 | 1.43 | 12.7 | 123 |
 | `5df2d54` + custom tags executed | WebKit 27.2, Windows 11 | 0.194 | 1.64 | 16.1 |
+| `12ae281` + `jstl-repeat` in place | Chromium 156.0.8078.4, Windows 11 | 0.236 | 1.95 | 19.5 |
+| `12ae281` + `jstl-repeat` in place | Firefox 157.0, Windows 11 | 1.46 | 13.2 | 127 |
+| `12ae281` + `jstl-repeat` in place | WebKit 27.2, Windows 11 | 0.222 | 1.86 | 17.6 |
 
 ## Expression language and executer compared
 
