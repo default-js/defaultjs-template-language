@@ -387,3 +387,22 @@ when no node of the template leaves anything in the result, and `addContent` run
 a content that is set, so a rendering with an empty result leaves the container, or the target, as
 it was. `<li jstl-repeat="${items}">${item}</li>`, rendered again with an empty `items`, keeps the
 elements of the last rendering. Found 2026-10-15 by reading the code; not measured.
+
+### B62 — whose share the slowdown up to `7dfd381` is
+
+**Status:** open · **Kind:** task
+
+`BENCHMARKS.md`, measured 2026-10-15 on the sources committed as `7dfd381`: from the state
+"`5df2d54` + custom tags executed" to "`12ae281` + `jstl-repeat` in place", rendering got slower.
+Over every case, as the geometric mean of the time against the baseline, from 90.5 to 96.0 % in
+Chromium, from 91.8 to 93.2 % in Firefox and from 88.5 to 95.5 % in WebKit — +6.1 %, +1.5 % and
++7.9 %. `foreach`, whose directive did not change, rose too: 1000 items from 19.1 to 22.5 ms in
+Chromium. Between the two states lie the commits `c4ee6bc` to `12ae281`, never measured, and the
+changes of `7dfd381`: `jstl-repeat` renders its items into a fragment of its own, and
+`executeDirectives` goes on with the context a directive resolves to. Which part is whose is not
+known.
+
+To do: measure `12ae281` as a state of its own — three runs of `npm run bench`, about 8 minutes
+each — so that the step splits into the commits up to `12ae281` and those of `7dfd381`. Exported
+with its own `node_modules` outside the working copy, the measurement leaves the working copy as it
+is.
