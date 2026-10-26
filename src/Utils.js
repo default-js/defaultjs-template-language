@@ -5,3 +5,7 @@ export const isUndefinedOrNull = (value) => {
 export const isUndefinedOrNullOrBlank = (value) => {
   return isUndefinedOrNull(value) || typeof value === 'string' && value.trim().length == 0;
 };
+
+export const isIterable  = (value) => {
+  return value != null && typeof value[Symbol.iterator] === 'function'
+}

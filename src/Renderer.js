@@ -14,6 +14,7 @@ import "./directives/index.js";
 import "./elements/index.js";
 import Context from "./Context.js";
 import { isUndefinedOrNull } from "./Utils.js";
+import { isNullOrUndefined } from "@default-js/defaultjs-common-utils/src/ObjectUtils.js";
 
 /**
  *  @typedef {object} RenderOptions
@@ -96,15 +97,14 @@ const applyMode = ({ container, target, content, mode }) => {
 	MODEWORKER[mode]({ container, target, content });
 };
 
-
 /**
  * find the event target by mode, container and target definition
  *
- * @param {EVENTS} event 
- * @param {HTMLElement} container 
- * @param {HTMLElement} target 
- * @param {MODETYPES} mode 
- * @returns {HTMLElement} 
+ * @param {EVENTS} event
+ * @param {HTMLElement} container
+ * @param {HTMLElement} target
+ * @param {MODETYPES} mode
+ * @returns {HTMLElement}
  */
 const findEventTarget = (event, container, target, mode) => {
 	if (
@@ -127,12 +127,12 @@ const findEventTarget = (event, container, target, mode) => {
  * @param {Context} context
  */
 const fireEvent = (target, event, context) => {
-	if (isUndefinedOrNull(target)) target.trigger(event, context);
+	if (target instanceof EventTarget) target.trigger(event, context);
 };
 
 /**
  * transform render options into a context object
- * 
+ *
  * @param {RenderOptions} renderOptions
  * @param {Renderer} renderer
  */
@@ -140,13 +140,21 @@ const toContext = (renderOptions, renderer) => {
 	const { data, template } = renderOptions;
 	const resolver = new ExpressionResolver({
 		name: SCOPE__RENDER,
-		context: isUndefinedOrNull(data) ? {} : data,
+		context: data,
 		parent: renderer.resolver,
 	});
-	template = isUndefinedOrNull(template) ? renderer.template : template;
 
-	return new Context({ template, resolver });
+	return new Context({ template: template || renderer.template, resolver });
 };
+
+
+/**
+ * @param {HTMLElement} element 
+ * @returns {HTMLElement} 
+ */
+const cloneNode = (element) => {
+	return document.createElement(element.nodeName);
+}
 
 /**
  * interal method to render a template into a container, called by `render`.
@@ -155,7 +163,19 @@ const toContext = (renderOptions, renderer) => {
  * @returns {Promise<Context>} the context of the rendering
  */
 const renderNodes = async (context) => {
-	const { template, resolver } = context;
+	const { /**@type {Array<Node>} */ template, resolver } = context;
+	/**@type {Array<Promise<Context>>} */
+	const promises = template.map((template) =>
+		renderNode(new Context({ template, resolver })),
+	);
+	context.content = (await Promise.all(promises))
+		.map((context) => context.content)
+		.filter(content => !isNullOrUndefined(content))
+		.flat();
+
+		
+	console.log("final content:", context.content)
+	return context;
 };
 
 /**
@@ -165,7 +185,13 @@ const renderNodes = async (context) => {
  * @returns {Promise<Context>} the context of the rendering
  */
 const renderNode = async (context) => {
-	const { template, resolver } = context;
+	const { /**@type {Node} */ template, resolver } = context;
+
+	context.content =[cloneNode(template)];
+	context = await context.waitForReady();
+
+
+	return context;
 };
 
 export default class Renderer {
@@ -242,7 +268,7 @@ export default class Renderer {
 	 * @returns {Promise<Context>} the context of the rendering
 	 */
 	async #render(context) {
-		const { container, target, mode } = toContext(context);
+		const { container, target, mode } = context;
 		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
 
 		fireEvent(eventTarget, EVENT__RENDER, context);
@@ -251,7 +277,7 @@ export default class Renderer {
 			? renderNodes(context)
 			: renderNode(context));
 
-		await context.ready;
+		context = await context.waitForReady();
 		eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
 		applyMode({
 			container,
