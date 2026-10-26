@@ -7,7 +7,5 @@ export const SCOPE__RENDER = "render";
 export const SCOPE__CONTAINER = "container";
 export const SCOPE__NODE = "node";
 
-export const EVENT__RENDER = "render";
-export const EVENT__RENDERED = "rendered";
 
 export const APPLICATION_SCOPE_RESOLVER = new ExpressionResolver({ name: SCOPE__APPLICATION });

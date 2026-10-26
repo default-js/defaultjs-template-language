@@ -5,8 +5,6 @@ import {
 	SCOPE__CONTAINER,
 	SCOPE__NODE,
 	APPLICATION_SCOPE_RESOLVER,
-	EVENT__RENDER,
-	EVENT__RENDERED,
 } from "./Constants.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 import Template from "./Template.js";
@@ -18,18 +16,41 @@ import Context from "./Context.js";
 import { isUndefinedOrNull } from "./Utils.js";
 
 /**
+ *  @typedef {object} RenderOptions
+ *  @property {HTMLElement} container - the container where the template is rendered
+ *  @property {object} [data] - base data, available in every rendering
+ *  @property {Template|string|URL|Node|NodeList|HTMLCollection} [template] - source of the template
+ *  @property {MODETYPES} [mode] - how to add the content to the container: "replace", "append" or "prepend"
+ *  @property {HTMLElement} [root] - the root element of the rendering, defaults to `container`
+ *  @property {HTMLElement} [target] - the target element of the rendering, defaults to `null`
+ */
+
+export const EVENT__RENDER = "render";
+export const EVENT__RENDERED = "rendered";
+/**
+ * @readonly
+ * @enum {string}
+ */
+export const EVENTS = { render: EVENT__RENDER, rendered: EVENT__RENDERED };
+
+export const MODE__REPLACE = "replace";
+export const MODE__APPEND = "append";
+export const MODE__PREPEND = "prepand";
+export const MODE__NONE = "NONE";
+
+/**
  * @readonly
  * @enum {string}
  */
 export const MODETYPES = {
-	replace: "replace",
-	append: "append",
-	prepend: "prepend",
-	none: "none",
+	replace: MODE__REPLACE,
+	append: MODE__APPEND,
+	prepend: MODE__PREPEND,
+	none: MODE__NONE,
 };
 
 const MODEWORKER = {
-	replace: ({
+	[MODE__REPLACE]: ({
 		/**@type {HTMLElement} */ container,
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
@@ -41,7 +62,7 @@ const MODEWORKER = {
 			container.append(content);
 		}
 	},
-	append: ({
+	[MODE__APPEND]: ({
 		/**@type {HTMLElement} */ container,
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
@@ -49,7 +70,7 @@ const MODEWORKER = {
 		if (target) target.after(content);
 		else container.append(content);
 	},
-	prepend: ({
+	[MODE__PREPEND]: ({
 		/**@type {HTMLElement} */ container,
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
@@ -57,7 +78,7 @@ const MODEWORKER = {
 		if (target) target.before(content);
 		else container.prepend(content);
 	},
-	none: () => {},
+	[MODE__NONE]: () => {},
 };
 
 /**
@@ -67,7 +88,7 @@ const MODEWORKER = {
  * @param {HTMLElement} options.container
  * @param {HTMLElement} options.target
  * @param {Node|Array<Node>} options.content
- * @param {string} options.mode
+ * @param {MODETYPES} options.mode
  */
 const applyMode = ({ container, target, content, mode }) => {
 	if (!mode || !MODEWORKER[mode])
@@ -75,8 +96,22 @@ const applyMode = ({ container, target, content, mode }) => {
 	MODEWORKER[mode]({ container, target, content });
 };
 
+
+/**
+ * find the event target by mode, container and target definition
+ *
+ * @param {EVENTS} event 
+ * @param {HTMLElement} container 
+ * @param {HTMLElement} target 
+ * @param {MODETYPES} mode 
+ * @returns {HTMLElement} 
+ */
 const findEventTarget = (event, container, target, mode) => {
-	if (mode == MODETYPES.none) return null;
+	if (
+		mode == MODETYPES.none ||
+		(isUndefinedOrNull(container) && isUndefinedOrNull(target))
+	)
+		return null;
 
 	const useTarget = isUndefinedOrNull(target);
 	if (useTarget && event == EVENT__RENDER && mode == MODETYPES.replace)
@@ -85,10 +120,23 @@ const findEventTarget = (event, container, target, mode) => {
 };
 
 /**
+ * fires an event
+ *
+ * @param {HTMLElement} target
+ * @param {EVENTS} event
+ * @param {Context} context
+ */
+const fireEvent = (target, event, context) => {
+	if (isUndefinedOrNull(target)) target.trigger(event, context);
+};
+
+/**
+ * transform render options into a context object
+ * 
  * @param {RenderOptions} renderOptions
  * @param {Renderer} renderer
  */
-const toRenderContext = (renderOptions, renderer) => {
+const toContext = (renderOptions, renderer) => {
 	const { data, template } = renderOptions;
 	const resolver = new ExpressionResolver({
 		name: SCOPE__RENDER,
@@ -122,7 +170,7 @@ const renderNode = async (context) => {
 
 export default class Renderer {
 	static MODETYPES = MODETYPES;
-	static EVENTS = { EVENT__RENDER, EVENT__RENDERED };
+	static EVENTS = EVENTS;
 
 	#template;
 	#resolver;
@@ -165,61 +213,54 @@ export default class Renderer {
 	}
 
 	/**
-	 *  @typedef {object} RenderOptions
-	 *  @property {HTMLElement} container - the container where the template is rendered
-	 *  @property {object} [data] - base data, available in every rendering
-	 *  @property {Template|string|URL|Node|NodeList|HTMLCollection} [template] - source of the template
-	 *  @property {MODETYPES} [mode] - how to add the content to the container: "replace", "append" or "prepend"
-	 *  @property {HTMLElement} [root] - the root element of the rendering, defaults to `container`
-	 *  @property {HTMLElement} [target] - the target element of the rendering, defaults to `null`
-	 */
-
-	/**
 	 * Renders a template into a container.
 	 *
-	 * @param {RenderOptions|Context} aContext
+	 * @param {RenderOptions|Context} context
 	 * @returns {Promise<Context>} the context of the rendering
 	 */
-	async render(aContext) {
-		const isRenderContext = aContext instanceof Context;
-		let context = isRenderContext
-			? aContext
-			: toRenderContext(aContext, this);
-		if (!isRenderContext) {
-			const { container, target, mode } = aContext;
-			const eventTarget = findEventTarget(
-				EVENT__RENDER,
-				container,
-				target,
-				mode,
-			);
-			eventTarget.trigger(EVENT__RENDER, context);
-		}
+	render(context) {
+		if (context instanceof Context) return this.#renderAsChildProcess(context);
+		return this.#render(context);
+	}
 
-		if (context.template instanceof Array) context = renderNodes(context);
-		else context = renderNode(context);
+	/**
+	 * render as a child rendering process
+	 *
+	 * @async
+	 * @param {Context} context
+	 * @returns {Promise<Context>}
+	 */
+	async #renderAsChildProcess(context) {
+		if (context.template instanceof Array) return renderNodes(context);
+		return renderNode(context);
+	}
 
-		if (!isRenderContext) {
-			const { container, target, mode } = aContext;
-			const eventTarget = findEventTarget(
-				EVENT__RENDERED,
-				container,
-				target,
-				mode,
-			);
-			context = await context;
-			await context.ready;
+	/**
+	 * render as external usage
+	 *
+	 * @param {RenderOptions} context
+	 * @returns {Promise<Context>} the context of the rendering
+	 */
+	async #render(context) {
+		const { container, target, mode } = toContext(context);
+		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
 
-			applyMode({
-				container,
-				target,
-				content: context.content,
-				mode: mode || MODETYPES.replace,
-			});
+		fireEvent(eventTarget, EVENT__RENDER, context);
+		context = toContext(context, this);
+		context = await (context.template instanceof Array
+			? renderNodes(context)
+			: renderNode(context));
 
-			eventTarget.trigger(EVENT__RENDERED, context);
-		}
+		await context.ready;
+		eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
+		applyMode({
+			container,
+			target,
+			content: context.content,
+			mode: mode || MODETYPES.replace,
+		});
 
+		fireEvent(eventTarget, EVENT__RENDERED, context);
 		return context;
 	}
 
