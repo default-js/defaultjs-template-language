@@ -19,6 +19,37 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-10-18 — Which types do the `template` and the `content` of a `Context` have?
+
+**Decision:** A `Node` or an `Array<Node>`, the `content` also `null`. The constructor and the
+setter of `template` convert a `Template` and a `string` into an array of their nodes, keep a node
+and an array, and throw an `Error` for anything else, a `NodeList` and an `HTMLCollection`
+included: a caller converts a list itself. `content` is a private field whose setter throws an
+`Error` for anything but a node, an array of nodes or `null`; the items of an array are not
+checked. `text` in the mode `html` delivers an array. The children of a node are rendered into its
+`content` only if it is a node. `README.md` documents `content` under "Custom Directives" and
+"Directive Elements". The maintainer's decisions.
+
+**Reasoning:** The type says what is rendered and what the result is — one node in, many nodes
+out, as `jstl-repeat` does (the maintainer). `template` held a node, a `NodeList` or an
+`HTMLCollection`; `content` an element, a `DocumentFragment`, an `Array`, a `NodeList` or `null`;
+the JSDoc gave three different types for `template` and a `NodeList` for `content`. An array, not
+any iterable: the insert functions of `@default-js/defaultjs-extdom` take a node, a `NodeList`, an
+`HTMLCollection` or an array, no other iterable, and only a list has a `length`. A fragment is
+empty once it is inserted, so a callback reading `content` afterwards found nothing. Children
+rendered into an array failed with a `TypeError`, "container.append is not a function", logged as
+"error at render node" (measured 2026-10-18 in Chromium).
+
+**Alternatives:** Any `Iterable<Node>`, held as given — every reader converts before inserting.
+An array held, any iterable accepted and converted — a `NodeList` passed silently. Only a node or
+an array accepted as `template` — loading and converting a source left to `Template.load` and
+`Renderer.render`. The fragment kept — a node by type, many nodes by meaning.
+
+**Consequences:** An `Array.from` per element with children, per `jstl-foreach`, per `<template>`
+and per html text, and a type check per `content` set, in every rendering (`BENCHMARKS.md`). A
+directive setting a `NodeList` as `content` throws, and `executeDirectives` logs it. The type
+declarations of `Context` carry these types.
+
 ## 2026-10-15 — What does the `execute` of a directive resolve to?
 
 **Decision:** The context the rendering of the node goes on with. `executeDirectives` in
@@ -108,9 +139,9 @@ instruction of the template and is not taken into the result. `renderNode` recog
 `customElements.get` of its local name and a class whose prototype is a `DirectiveElement`, creates
 an element of that class with `document.importNode` of the tag, without its children, and calls the
 element's `execute(context, template, renderer)` — `template` the tag in the template, with its
-children, `renderer` the `Renderer` of the rendering. The node `execute` sets as `context.content`
-takes the place of the tag; the children of the tag are rendered into it with the mode `append`, unless `execute` sets
-`context.ignore`. No directive runs on the tag. What `execute` does is not defined; by default the
+children, `renderer` the `Renderer` of the rendering. The node, or the array of nodes, `execute`
+sets as `context.content` takes the place of the tag; the children of the tag are rendered into a
+node with the mode `append`, unless `execute` sets `context.ignore` (entry 2026-10-18 above). No directive runs on the tag. What `execute` does is not defined; by default the
 renderer does not take the element itself as content. `DirectiveElement.execute` throws an
 `Error`: a class extending it has to implement `execute`. `DirectiveElement` does not hide its
 element. The maintainer's decisions.

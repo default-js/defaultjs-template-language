@@ -1,8 +1,24 @@
-import { describe, it, expect } from "vitest";
-import { Renderer, Template } from "../../../index.js";
+import { describe, it, expect, vi } from "vitest";
+import { Renderer, Template, Directive } from "../../../index.js";
 
 const UNSECURE = `<script></script><html></html><head></head><object></object><style></style><link></link>`;
 const UNSECURE_SELECTOR = "script, style, body, html, head, object, link";
+
+const delivered = vi.fn();
+
+/** Hands on the content of a text whose element carries `test-content`, running after `text`. */
+class ContentProbe extends Directive {
+	get name() { return "test-content"; }
+	get rank() { return Directive.MIN_RANK + 2; }
+	get phase() { return Directive.PHASE.content; }
+
+	async execute(aContext) {
+		const { template } = aContext;
+		if (template instanceof Text && template.parentElement?.hasAttribute("test-content")) delivered(aContext.content);
+		return aContext;
+	}
+}
+Directive.define({ directive: new ContentProbe() });
 
 describe("text content", () => {
 	it("renders plain text", async () => {
@@ -107,6 +123,18 @@ describe("jstl-text-content-type html", () => {
 		expect(element.childNodes[1]).toBeInstanceOf(HTMLDivElement);
 		expect(element.childNodes[2]).toBeInstanceOf(Text);
 		expect(element.childNodes[2].textContent).toBe(" test");
+	});
+
+	it("delivers the nodes of the html as an array", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-text-content-type="html" test-content>\${content}</div>`);
+
+		await Renderer.render({ container, template, data: { content: "<b></b><i></i>" } });
+
+		expect(delivered).toHaveBeenCalledOnce();
+		const [content] = delivered.mock.calls[0];
+		expect(content).toBeInstanceOf(Array);
+		expect(content.map((aNode) => aNode.tagName)).toEqual(["B", "I"]);
 	});
 
 	it("does not resolve the expressions in the html", async () => {

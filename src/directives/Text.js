@@ -39,12 +39,10 @@ const MODES = {
 		content = create(content,true);		
 		content = document.importNode(content.content, true);
 		
-		if(option.unsecure)
-			context.content = content;			
-		else{
-			content.find(SECURE_HTML_FILTER).remove();			
-			context.content = content;
-		}
+		if(!option.unsecure)
+			content.find(SECURE_HTML_FILTER).remove();
+
+		context.content = Array.from(content.childNodes);
 	}
 };
 

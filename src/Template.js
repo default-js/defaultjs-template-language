@@ -31,7 +31,11 @@ const fromElement = async (element, cache, key) => {
 	if (element instanceof HTMLTemplateElement) template = new Template(element, key);
 	else {
 		template = document.createElement("template");
-		if (element instanceof Node || element instanceof NodeList || element instanceof HTMLCollection || element instanceof Array) template.content.append(element.cloneNode(true));
+		if (element instanceof Node 
+			|| element instanceof NodeList 
+			|| element instanceof HTMLCollection 
+			|| element instanceof DocumentFragment 
+			|| element instanceof Array) template.content.append(element.cloneNode(true));
 		else throw new Error("Template type is not supported!");
 
 		template = new Template(template, key);
@@ -99,9 +103,15 @@ export default class Template {
 		else if (typeof template === "string") {
 			return fromSource(template, cache, key);
 		} else if (template instanceof URL) return await fromURL(template, cache, key);
-		else if (template instanceof Node || template instanceof NodeList || template instanceof HTMLCollection || template instanceof HTMLTemplateElement) return fromElement(template, cache, key);
+		else if (template instanceof Node 
+			|| template instanceof NodeList 
+			|| template instanceof HTMLCollection 
+			|| template instanceof DocumentFragment 
+			|| template instanceof HTMLTemplateElement
+			|| template instanceof Array
+		) return fromElement(template, cache, key);
 
-		throw new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template] required!");
+		throw new Error("The template isn't a allowed type! -> [String|URL|Node|NodeList|HTMLCollection|Template|HTMLTemplateElement] required!");
 	}
 
 	static async loadNodeTemplate(node, defaultTemplate, cache, alias) {

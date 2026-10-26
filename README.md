@@ -1113,7 +1113,8 @@ does for a false condition. The built-in directives:
 `execute` works on the context it is handed:
 
 - `context.template` — the node of the template
-- `context.content` — the node of the result, created by `initial`; `null` leaves nothing in the result
+- `context.content` — the result of the node: the node created by `initial`, or an array of nodes;
+  `null` leaves nothing in the result. Setting anything else throws an `Error`
 - `context.resolver` — resolves an expression
 - `context.stop` — `true`: no further directive runs on the node
 - `context.ignore` — `true`: the children of the node are not rendered
@@ -1121,7 +1122,8 @@ does for a false condition. The built-in directives:
 A directive that resolves to another context hands the node over to it: the directives after it and
 the rendering of the children work on that context.
 
-After the directives, the children of the node are rendered into `context.content`. The `attribute`
+After the directives, the children of the node are rendered into `context.content`, if it is a node;
+an array of nodes takes no children. The `attribute`
 directive takes every attribute whose name does not begin with `jstl` into the result, as
 [Attribute manipulation](#attribute-manipulation) and [Event handler](#event-handler) describe —
 the attribute of a custom directive included.
@@ -1158,9 +1160,9 @@ A directive element is a custom element whose class extends `DirectiveElement`, 
 `customElements.define` before the rendering. It is an instruction of the template, not part of
 the result: where the renderer meets one, it runs no directive on it, creates an element of its
 class and calls the element's `execute(context, template, renderer)`, which resolves to the
-context. The node `execute` sets as `context.content` takes the place of the tag in the result, and
-the children of the tag are rendered into it, after what it already holds, unless `execute` sets
-`context.ignore`. Without `content`, the tag and its children leave nothing in the result. A class
+context. The node, or the array of nodes, `execute` sets as `context.content` takes the place of the
+tag in the result; the children of the tag are rendered into a node, after what it already holds,
+unless `execute` sets `context.ignore`. Without `content`, the tag and its children leave nothing in the result. A class
 has to implement `execute`: that of `DirectiveElement` throws an `Error`.
 
 The element is created anew for each occurrence of the tag in each rendering, so its constructor

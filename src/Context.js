@@ -1,186 +1,214 @@
+import "@default-js/defaultjs-extdom";
 import { lazyPromise } from "@default-js/defaultjs-common-utils/src/PromiseUtils.js";
+import { ExpressionResolver } from "@default-js/defaultjs-expression-language";
 import Directive from "./Directive.js";
-import Template from "./Template.js";
-import { ExpressionResolver } from "@default-js/defaultjs-expression-language/index.js";
+import DirectiveElement from "./DirectiveElement.js";
+
+export const CREATEHTML = document.create;
 
 /**
- * 
- * @param {Template|NodeList|Node|string} template 
- * @returns {Iterable<Node>|Node} - the template content as NodeList or Node
+ * Converts a template into one of the two types a context holds: a node, or an array of nodes.
+ *
+ * @param {Template|string|Node|NodeList|HTMLCollection|Array<Node>} aTemplate
+ * @returns {Node|Array<Node>} a node or an array as it is, the nodes of a `Template` or a `string` as an array
+ * @throws {Error} if `aTemplate` is none of these types
  */
-const toTemplate = (template) => {
-	if (template instanceof Template) return template.importContent();
-	else if (typeof template === "string") return create(template);
-	else if (template instanceof Node) return template;
-	else if (template instanceof NodeList) return template;
-	else if (template instanceof HTMLCollection) return template;
+export const toTemplate = (aTemplate) => {
+	if (aTemplate instanceof Node || aTemplate instanceof Array) return aTemplate;
+	else if (aTemplate instanceof NodeList) return Array.from(aTemplate);
+	else if (aTemplate instanceof HTMLCollection) return Array.from(aTemplate);
+	else if (aTemplate instanceof Template)
+		return Array.from(aTemplate.importContent());
+	else if (aTemplate instanceof DocumentFragment)
+		return Array.from(aTemplate.childNodes);
+	else if (aTemplate instanceof HTMLTemplateElement)
+		return Array.from(aTemplate.content.childNodes);
+	else if (typeof aTemplate === "string")
+		return Array.from(CREATEHTML(aTemplate));
 	else throw new Error("Template type is not supported!");
 };
 
-let id = 0;
-export default class Context {
-	#id;
-	#depth;
-	#parent;
-	#renderer;
-	#root;
-	/** @type {Iterable<Node>} */ 
+export default class RenderContext {
+	/** @type {RenderContext|null} */
+	#parent = null;
+	/** @type {ExpressionResolver} */
+	#resolver;
+	/** @type {Node|Array<Node>} */
 	#template;
-	#mode;
-	#subcontexts;
-	#wait;
+	/** @type {Node|Array<Node>|null} */
+	#content;
+	/** @type {Set<Directive|DirectiveElement|string>} */
 	#ignoreDirectives;
-	#callbacks;
+	/** @type {Promise<RenderContext>} */
+	#ready = lazyPromise();
+	/** @type {Array<Promise>} */
+	#blocks = [];
+	/** @type {Array<Function>} */
+	#callbacks = [];
 
-	
+	// attributes that can be set by directives to control the rendering
+	stop = false;
+	ignoreChildren = false;
+	ignoreSelf = false;
+
 	/**
 	 * Creates an instance of Context.
 	 *
 	 * @constructor
 	 * @param {object} options
-	 * @param {NodeList} [options.content=null] 
-	 * @param {ExpressionResolver} options.resolver 
-	 * @param {import("./Renderer.js").default} options.renderer 
-	 * @param {Template|string} options.template 
-	 * @param {HTMLElement} options.container 
-	 * @param {HTMLElement} options.root 
-	 * @param {string} [options.mode="replace"] 
-	 * @param {HTMLElement} [options.target=null] 
-	 * @param {Context} [options.parent=null] 
-	 * @param {Promise<>} [options.wait=null] 
-	 * @param {Array<Function>} [options.callbacks=null] 
-	 * @param {Set<Directive|string>} options.ignoreDirective 
+	 * @param {ExpressionResolver} options.resolver
+	 * @param {Template|string|Node|NodeList|HTMLCollection|Array<Node>} options.template
+	 * @param {RenderContext|null} [options.parent=null]
 	 */
-	constructor({ content = null, resolver, renderer, template, container, root, mode = "replace", target = null, parent = null, wait = null, callbacks = null, ignoreDirective }) {
-		if (!resolver) throw new Error('Parameter "resolver" is required!');
-		if (!renderer) throw new Error('Parameter "renderer" is required!');
+	constructor({ template, resolver, parent = null } = {}) {
+		if (!resolver || !(resolver instanceof ExpressionResolver))
+			throw new Error(
+				'Parameter "resolver" is required and must be an ExpressionResolver!',
+			);
 		if (!template) throw new Error('Parameter "template" is required!');
-		if (!container) throw new Error('Parameter "container" is required!');
-		if (!root) throw new Error('Parameter "root" is required!');
+		if (parent && !(parent instanceof RenderContext))
+			throw new Error('Parameter "parent" must be a RenderContext or null!');
 
-		this.#id = parent ? `${parent.id}->${id++}` : `root::${id++}`;
-		this.#depth = parent ? parent.depth + 1 : 0;
 		this.#parent = parent;
-		this.#renderer = renderer;
-		this.#root = root;
 		this.#template = toTemplate(template);
-		this.#mode = mode;
-		this.#subcontexts = new Set();
-		this.#wait = wait ? wait : lazyPromise();
-		this.#ignoreDirectives = ignoreDirective instanceof Set ? ignoreDirective : new Set();
-		this.#callbacks = callbacks instanceof Array ? callbacks : [];
+		this.#resolver = resolver;
+		this.#ignoreDirectives =
+			ignoreDirective instanceof Set
+				? ignoreDirective
+				: ignoreDirective instanceof Iterable
+					? new Set(ignoreDirective)
+					: new Set();
 
 		this.content = content;
-		this.container = container;
-		this.target = target;
-		this.resolver = resolver;
-
-		/* execution flags */
-		this.stop = false;
-		this.ignore = false;
-		//console.log(`context={"depth":${this.depth} }, "id": ${this.id}`);
-		//this.createtAt = new Error();
-
-		if (parent) {
-			parent.subcontexts.add(this);
-		}
 	}
 
-	get id() {
-		return this.#id;
-	}
-	get depth() {
-		return this.#depth;
-	}
+	/**
+	 * @readonly
+	 * @type {RenderContext}
+	 */
 	get parent() {
 		return this.#parent;
 	}
-	get renderer() {
-		return this.#renderer;
-	}
-	get root() {
-		return this.#root;
-	}
+
 	/**
-	 * @returns {Iterable<Node>|Node} 
+	 * @readonly
+	 * @type {ExpressionResolver}
+	 */
+	get resolver() {
+		return this.#resolver;
+	}
+
+	/**
+	 * @returns {Node|Array<Node>} what is rendered: a node, or an array of nodes
 	 */
 	get template() {
 		return this.#template;
 	}
-	set template(template){
-		this.#template = toTemplate(template);
+
+	get ready() {
+		return this.#ready;
 	}
 
-	get mode() {
-		return this.#mode;
-	}
-	get subcontexts() {
-		return this.#subcontexts;
-	}
-
-	get closed() {
-		return this.#wait.resolved;
+	/**
+	 * @returns {Node|Array<Node>|null} the result: a node, or an array of nodes; `null` leaves nothing in the result
+	 */
+	get content() {
+		return this.#content;
 	}
 
-	ignoreDirective(directive) {
-		const ignoreDirectives = this.#ignoreDirectives;
-		directive instanceof Directive ? ignoreDirectives.add(directive.name) : ignoreDirectives.add(directive);
+	/**
+	 * @param {Node|Array<Node>|null} aContent
+	 * @throws {Error} if `aContent` is none of these types
+	 */
+	set content(aContent) {
+		if (
+			aContent != null &&
+			!(aContent instanceof Node) &&
+			!(aContent instanceof Array)
+		)
+			throw new Error("content must be a Node, an Array of Nodes or null!");
+		this.#content = aContent;
 	}
 
+	/**
+	 * append content to the context
+	 *
+	 * @param {Node|Array<Node>} aContent
+	 */
+	appendContent(aContent) {
+		if (aContent instanceof Node) {
+			if (this.#content == null) this.#content = aContent;
+			else if (this.#content instanceof Array) this.#content.push(aContent);
+			else this.#content = [this.#content, aContent];
+		} else if (aContent instanceof Array) {
+			if (this.#content == null) this.#content = aContent;
+			else if (this.#content instanceof Array)
+				this.#content = [...this.#content, ...aContent];
+			else this.#content = [this.#content, ...aContent];
+		} else throw new Error("content must be a Node or an Array of Nodes!");
+	}
+
+	/**
+	 * add a directive to the list of directives that are ignored during rendering
+	 * @param {Directive|DirectiveElement|string} directive
+	 */
+	addToIgnoreDirectives(directive) {
+		if (directive instanceof Directive || directive instanceof DirectiveElement)
+			this.#ignoreDirectives.add(directive);
+		else if (typeof directive === "string")
+			this.#ignoreDirectives.add(directive);
+		else
+			throw new Error(
+				"directive must be a Directive, a DirectiveElement or a string!",
+			);
+	}
+
+	/**
+	 * checks if a directive is in the list of directives that are ignored during rendering
+	 * @param {Directive|DirectiveElement|string} directive
+	 * @returns {boolean}
+	 */
 	acceptDirective(directive) {
-		const ignoreDirectives = this.#ignoreDirectives;
-		if (directive instanceof Directive) return !(ignoreDirectives.has(directive.name) || ignoreDirectives.has(directive));
-
-		return !ignoreDirectives.has(directive);
+		return !this.#ignoreDirectives.has(directive);
 	}
 
-	finished(callback) {
-		if (this.parent) this.parent.finished(callback);
-		else this.ready(callback);
-	}
-
-	async ready(callback) {
-		const callbacks = this.#callbacks;
-		if (callback) {
-			if (callback instanceof Array) callback.forEach((callback) => this.ready(callback));
-			else if (callback instanceof Promise) callbacks.push(async () => await callback);
-			else if (typeof callback === "function") callbacks.push(callback);
-		} else {
-			const wait = this.#wait;
-			if (!wait.resolved) {
-				if (!this.ignore) for (let callback of callbacks) await callback(this);
-
-				for (let child of this.subcontexts) await child.ready();
-
-				if (this.parent) this.parent.subcontexts.delete(this);
-
-				wait.resolve(this);
-			}
-
-			return wait;
+	/**
+	 * waits for the context to be ready, i.e. all blocks are resolved and all callbacks are called
+	 *
+	 * @async
+	 * @returns {RenderContext} the context of the rendering
+	 */
+	async waitForReady() {
+		await Promise.all(this.#blocks);
+		this.#ready.resolve(this);
+		for (const callback of this.#callbacks) {
+			callback(this);
 		}
+		return this;
 	}
 
-	subContext({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
-		return new Context({ resolver, renderer, template, container, mode, root, target, parent: this, ignoreDirective });
+	/**
+	 * add a promise to the list of blocks that must be resolved before the context is ready
+	 *
+	 * @param {Promise} aPromise
+	 */
+	addBlock(aPromise) {
+		if (!(aPromise instanceof Promise))
+			throw new Error("block must be a Promise!");
+		this.#blocks.push(aPromise);
 	}
 
-	clone({ content = this.content, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = this.#ignoreDirectives } = {}) {
-		return new Context({ content, 
-			resolver: this.resolver, 
-			renderer: this.renderer, 
-			template, 
-			container, 
-			root, 
-			mode, 
-			target, 
-			ignoreDirective,
-			wait: this.#wait,
-			callbacks: this.#callbacks
-		 });
-	}
-
-	toRenderOption({ resolver = this.resolver, renderer = this.renderer, template = this.template, container = this.container, root = this.root, mode = this.mode, target = this.target, ignoreDirective = null } = {}) {
-		return { resolver, renderer, template, container, mode, root, target, parent: null, ignoreDirective };
+	/**
+	 * add a callback to the list of callbacks that are called when the context is ready
+	 *
+	 * @param {Function} aCallback - a function that gets called when the context is ready
+	 * @param {boolean} [onFinish=false] a function gets called when the first context is ready
+	 */
+	addCallback(aCallback, onFinish = false) {
+		if (typeof aCallback !== "function")
+			throw new Error("callback must be a function!");
+		if (onFinish && this.#parent != null)
+			this.#parent.addCallback(aCallback, onFinish);
+		else this.#callbacks.push(aCallback);
 	}
 }

@@ -43,6 +43,14 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
 - The rendering of a node goes on with the context the `execute` of a directive resolves to; the
   value was ignored. A directive resolving to nothing leaves the context as it was. A directive that
   resolves to another value, such as `true`, has to resolve to its context or to nothing instead.
+- The `template` and the `content` of a `Context` are a node or an array of nodes, the `content`
+  also `null`. A `template` given as a `Template` or a `string` becomes an array of its nodes; it was
+  a `NodeList`. A `NodeList` or an `HTMLCollection` given as `template`, and anything but a node, an
+  array of nodes or `null` set as `content`, throws an `Error`: convert a list with `Array.from`.
+- A text rendered with `jstl-text-content-type="html"` delivers its nodes as an array in
+  `context.content`; it delivered a `DocumentFragment`.
+- The children of a node whose `context.content` is an array are not rendered. They failed with a
+  `TypeError`, logged as "error at render node".
 
 - `package.json` declares `"type": "module"`: Node loads the `.js` files of the package as ES
   modules, without the warning `MODULE_TYPELESS_PACKAGE_JSON` and without parsing them twice.

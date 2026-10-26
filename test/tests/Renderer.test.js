@@ -130,7 +130,7 @@ describe("render(option)", () => {
 		await expect(new Renderer().render({ container })).rejects.toBeInstanceOf(Error);
 	});
 
-	it("rejects a mode that is none of replace, append and prepend", async () => {
+	it("rejects a mode that is none of replace, append, prepend and none", async () => {
 		const container = document.createElement("div");
 
 		await expect(new Renderer().render({ container, template: `<p></p>`, mode: "insert" })).rejects.toBeInstanceOf(Error);

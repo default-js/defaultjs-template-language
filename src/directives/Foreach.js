@@ -124,7 +124,7 @@ class Foreach extends Directive {
 				varname: (template.attr(ATTRIBUTE.VAR) || "item").trim(),
 				status: (template.attr(ATTRIBUTE.STATUS) || "status").trim(),
 				condition: template.attr(ATTRIBUTE.CONDITION),
-				template: template.childNodes,
+				template: Array.from(template.childNodes),
 				resolver,
 				renderer,
 				container: content,

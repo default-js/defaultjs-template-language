@@ -9,8 +9,8 @@ export default class ReplaceElement extends DirectiveElement{
 	/**
 	 * Delivers no content.
 	 *
-	 * @param {import("../Context.js").default} aContext - the context of the tag
-	 * @returns {Promise<import("../Context.js").default>} the context
+	 * @param {import("../ContextOld.js").default} aContext - the context of the tag
+	 * @returns {Promise<import("../ContextOld.js").default>} the context
 	 */
 	async execute(aContext){
 		return aContext;

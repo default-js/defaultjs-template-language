@@ -43,7 +43,7 @@ class Initial extends Directive {
 				context.ignore = true;
 			} else if (template instanceof HTMLTemplateElement) {
 				context.content = document.createElement(template.tagName);
-				const subContext = context.subContext({ template: template.content.childNodes, container: context.content.content });
+				const subContext = context.subContext({ template: Array.from(template.content.childNodes), container: context.content.content });
 				await renderer.render(subContext);
 				context.stop = false;
 				context.ignore = true;

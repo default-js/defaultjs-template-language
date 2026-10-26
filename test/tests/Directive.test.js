@@ -75,6 +75,12 @@ Directive.define({ directive: new NodeDirective() });
 defineDirective({ name: "test-stop", rank: 3000, phase: Directive.PHASE.init, execute: (aContext) => { aContext.stop = true; } });
 defineDirective({ name: "test-ignore", rank: 3000, phase: Directive.PHASE.init, execute: (aContext) => { aContext.ignore = true; } });
 defineDirective({ name: "test-remove", rank: Directive.MAX_RANK, phase: Directive.PHASE.finish, execute: (aContext) => { aContext.content = null; } });
+defineDirective({
+	name: "test-array",
+	rank: Directive.MAX_RANK,
+	phase: Directive.PHASE.finish,
+	execute: (aContext) => { aContext.content = [document.createElement("section"), document.createElement("aside")]; }
+});
 
 const awaited = vi.fn();
 defineDirective({
@@ -229,6 +235,31 @@ describe("custom directive", () => {
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];
 		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["I"]);
+	});
+
+	it("puts an array it sets as the content in place of the node", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div><p test-array></p><i></i></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SECTION", "ASIDE", "I"]);
+	});
+
+	// The result alone does not show how the children are left out: rendered into an array, they
+	// fail with a TypeError that renderNode logs, and leave the same result.
+	it("renders no children into an array it sets as the content", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div><p test-array><b></b></p></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SECTION", "ASIDE"]);
+		expect(element.querySelectorAll("b")).toHaveLength(0);
 	});
 
 	it("goes on with the node once execute resolves", async () => {

@@ -25,6 +25,13 @@ class IgnoringTag extends DirectiveElement {
 	}
 }
 
+class ArrayTag extends DirectiveElement {
+	async execute(aContext) {
+		aContext.content = [document.createElement("section"), document.createElement("aside")];
+		return aContext;
+	}
+}
+
 class EmptyTag extends DirectiveElement {
 	async execute(aContext) {
 		return aContext;
@@ -74,6 +81,7 @@ class Card extends DirectiveElement {
 customElements.define("test-section", SectionTag);
 customElements.define("test-prefilled", PrefilledTag);
 customElements.define("test-ignoring", IgnoringTag);
+customElements.define("test-array", ArrayTag);
 customElements.define("test-empty", EmptyTag);
 customElements.define("test-plain", PlainTag);
 customElements.define("test-recording", RecordingTag);
@@ -130,6 +138,31 @@ describe("directive element", () => {
 		const section = container.children[0];
 		expect(section.tagName).toBe("SECTION");
 		expect(section.childNodes).toHaveLength(0);
+	});
+
+	it("puts an array of nodes execute delivers in place of the tag", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div><test-array></test-array><i></i></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SECTION", "ASIDE", "I"]);
+	});
+
+	// The result alone does not show how the children are left out: rendered into an array, they
+	// fail with a TypeError that renderNode logs, and leave the same result.
+	it("renders no children of the tag into an array of nodes", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div><test-array><b></b></test-array></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SECTION", "ASIDE"]);
+		expect(element.querySelectorAll("b")).toHaveLength(0);
 	});
 
 	it("leaves nothing in the result when execute delivers no content", async () => {

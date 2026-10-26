@@ -225,9 +225,10 @@ Agreed 2026-10-12: the `Context` is documented — `index.js` exports it, `READM
 public parts (README first), the type declarations of B21 cover it. Public is all of `Context`
 (the maintainer, 2026-10-12): the constructor, the methods `ignoreDirective`, `acceptDirective`,
 `finished`, `ready`, `subContext`, `clone`, `toRenderOption`, the getters `id`, `depth`, `parent`,
-`renderer`, `root`, `template` (with its setter), `mode`, `subcontexts`, `closed`, and the fields
-`content`, `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives work with
-the same members.
+`renderer`, `root`, `template` and `content` (each with its setter), `mode`, `subcontexts`,
+`closed`, and the fields `container`, `target`, `resolver`, `stop`, `ignore`. Custom directives
+work with the same members. The types of `template` and `content` are decided (`DECISIONS.md`,
+2026-10-18).
 
 ### B44 — a page of `WebContent/` loads a bundle the build does not emit
 
@@ -308,27 +309,6 @@ rendering. Measured
   their own (`DECISIONS.md`, 2026-10-14); the `<template>` branch of `src/directives/Initial.js`
   still hands on the mode, into the empty content of the new `<template>`.
 
-### B49 — unclear types of `template` and `content` in `Renderer` and `Context`
-
-**Status:** open · **Kind:** task
-
-Raised by the maintainer 2026-10-14: `src/Renderer.js` and `src/Context.js` are hard to read, in
-their API and their implementation, because the types of `template` and `content` are unclear in
-the definitions. To be reviewed. Found in the JSDoc as of 2026-10-14:
-
-- **`template`** — `Context`: the constructor documents `Template|string`, `toTemplate` takes
-  `Template|NodeList|Node|string` and accepts an `HTMLCollection` too, the field is typed
-  `Iterable<Node>`, the getter `Iterable<Node>|Node`. `Renderer`: the constructor takes a
-  `Template`, `render` a `Template|string|URL|Node|NodeList|HTMLCollection`, `Renderer.build` that
-  or a `Promise` of it, the static `Renderer.render` a `Template`; `loadTemplateContent` returns a
-  `NodeList`. A directive reads `context.template` as one node, `renderContainer` iterates it.
-- **`content`** — the constructor of `Context` documents a `NodeList`; the directives set an
-  element, a node imported from the template, a `DocumentFragment` (the mode `html` of
-  `src/directives/Text.js`) or `null`, `renderContainer` an `Array` of nodes, the special case of
-  the tag `jstl` a `NodeList`. `renderNode` hands it on as the `container` of the children, which
-  `Context` documents as an `HTMLElement`.
-- `renderNode` and `executeDirectives` are `async` and document `@returns {Context}`.
-
 ### B51 — `Directive.directives` is not documented
 
 **Status:** open · **Kind:** decision
@@ -406,3 +386,9 @@ To do: measure `12ae281` as a state of its own — three runs of `npm run bench`
 each — so that the step splits into the commits up to `12ae281` and those of `7dfd381`. Exported
 with its own `node_modules` outside the working copy, the measurement leaves the working copy as it
 is.
+
+States measured on different days do not compare without a control. Measured again 2026-10-18,
+the sources of `7dfd381`, unchanged, took 121.4 % of their time of 2026-10-15 in Chromium, 112.1 % in
+Firefox and 117.7 % in WebKit, as the geometric mean over every case; the same day, the runs of
+one state lay up to 33 % apart in a series measured alone, up to 14 % in one measured in turns with
+a control. `12ae281` is measured in turns with `7dfd381`, on the same day.
