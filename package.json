@@ -16,10 +16,11 @@
 	"scripts": {
 		"build:dev": "webpack --mode=development --progress",
 		"build:prod": "webpack --mode=production --progress",
-		"build": "npm run test && npm run build:dev && npm run build:prod",
+		"build": "npm run test:build && npm run build:dev && npm run build:prod",
 		"dev": "webpack serve --mode=development --progress",
 		"test:live": "vitest --browser.headless=false --project chromium --inspect --no-file-parallelism",
-		"test": "vitest run",
+		"test": "vitest run --project chromium",
+		"test:build": "vitest run",
 		"bench": "vitest bench --run --no-file-parallelism --project chromium && vitest bench --run --no-file-parallelism --project firefox && vitest bench --run --no-file-parallelism --project webkit"
 	},
 	"keywords": [],
@@ -44,9 +45,9 @@
 	},
 	"homepage": "https://github.com/default-js/defaultjs-template-language#readme",
 	"dependencies": {
-		"@default-js/defaultjs-common-utils": "^1.0.0",
-		"@default-js/defaultjs-expression-language": "^3.0.2",
-		"@default-js/defaultjs-extdom": "^2.0.1"
+		"@default-js/defaultjs-common-utils": "^1",
+		"@default-js/defaultjs-expression-language": "^3",
+		"@default-js/defaultjs-extdom": "^2"
 	},
 	"files": [
 		"index.js",

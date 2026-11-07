@@ -32,8 +32,12 @@ export const toTemplate = (aTemplate) => {
 export default class Context {
 	/** @type {Context|null} */
 	#parent = null;
+	/** @type {import("./Renderer.js").default} */
+	#renderer
 	/** @type {ExpressionResolver} */
 	#resolver = null;
+	/** @type {HTMLElement} */
+	#container = null;
 	/** @type {Node|Array<Node>} */
 	#template = null;
 	/** @type {Node|Array<Node>|null} */
@@ -50,37 +54,45 @@ export default class Context {
 	// attributes that can be set by directives to control the rendering
 	#stop = false;
 	#ignoreChildren = false;
-	#ignoreContent = false;
+	#appendContent = true;
 
 	/**
 	 * Creates an instance of Context.
 	 *
 	 * @constructor
 	 * @param {object} options
-	 * @param {ExpressionResolver} options.resolver
+	 * @param {import("./Renderer.js").default} options.renderer
+	 * @param {ExpressionResolver} [options.resolver]
+	 * @param {HTMLElement} options.container
 	 * @param {Template|string|Node|NodeList|HTMLCollection|Array<Node>} options.template
-	 * @param {Context|null} [options.parent=null]
 	 */
-	constructor({ template, resolver, parent = null } = {}) {
+	constructor({ template, container, renderer, resolver } = {}) {
+		if (!renderer)
+			throw new Error(
+				'Parameter "renderer" is required!',
+			);
 		if (!resolver || !(resolver instanceof ExpressionResolver))
 			throw new Error(
 				'Parameter "resolver" is required and must be an ExpressionResolver!',
 			);
 		if (!template) throw new Error('Parameter "template" is required!');
-		if (parent && !(parent instanceof Context))
-			throw new Error('Parameter "parent" must be a RenderContext or null!');
 
-		this.#parent = parent;
+		this.#container = container
 		this.#template = toTemplate(template);
+		this.#renderer = renderer;
 		this.#resolver = resolver;
 	}
-
+	
 	/**
 	 * @readonly
-	 * @type {Context}
+	 * @type {HTMLElement}
 	 */
-	get parent() {
-		return this.#parent;
+	get container(){
+		return this.#container;
+	}
+
+	get renderer(){
+		return this.#renderer;
 	}
 
 	/**
@@ -114,7 +126,7 @@ export default class Context {
 	 * @throws {Error} if `aContent` is none of these types
 	 */
 	set content(aContent) {
-		if (lazyPromise.resolved)
+		if (this.#ready.resolved)
 			throw new Error("context is resolved! Content can't be changed!");
 		if (
 			aContent != null &&
@@ -127,6 +139,7 @@ export default class Context {
 	}
 
 	/**
+	 * stop the rendering of the current context it's not effective for children
 	 * @returns {boolean}
 	 */
 	get stop() {
@@ -155,20 +168,21 @@ export default class Context {
 		if (this.#ready.resolved) throw new Error("Context is resolved!");
 		this.#ignoreChildren = value;
 	}
-
+	
 	/**
-	 * @returns {boolean}
+	 * @readonly
+	 * @type {boolean}
 	 */
-	get ignoreContent() {
-		return this.#ignoreContent;
+	get appendContent(){
+		return this.#appendContent;
 	}
 
 	/**
 	 * @type {boolean}
 	 */
-	set ignoreContent(value) {
+	set appendContent(value){
 		if (this.#ready.resolved) throw new Error("Context is resolved!");
-		this.#ignoreContent = value;
+		this.#appendContent = value;
 	}
 
 	/**
@@ -177,7 +191,7 @@ export default class Context {
 	 * @param {Node|Array<Node>} aContent
 	 */
 	appendContent(aContent) {
-		if (lazyPromise.resolved)
+		if (this.#ready.resolved)
 			throw new Error("context is resolved! Content can't be changed!");
 		else if (aContent instanceof Node) {
 			if (this.#content == null) this.#content = aContent;
@@ -196,7 +210,7 @@ export default class Context {
 	 * @param {Directive|DirectiveElement|string} directive
 	 */
 	addToIgnoreDirectives(directive) {
-		if (lazyPromise.resolved) throw new Error("Context is resolved!");
+		if (this.#ready.resolved) throw new Error("Context is resolved!");
 		else if (
 			directive instanceof Directive ||
 			directive instanceof DirectiveElement
@@ -223,10 +237,10 @@ export default class Context {
 	 * waits for the context to be ready, i.e. all blocks are resolved and all callbacks are called
 	 *
 	 * @async
-	 * @returns {Context} the context of the rendering
+	 * @returns {Promise<Context>} the context of the rendering
 	 */
 	async waitForReady() {
-		if (lazyPromise.resolved) return this;
+		if (this.#ready.resolved) return this;
 
 		await Promise.all(this.#blocks);
 		this.#freeze();
@@ -245,7 +259,7 @@ export default class Context {
 	 * @param {Promise} aPromise
 	 */
 	addBlocking(aPromise) {
-		if (lazyPromise.resolved)
+		if (this.#ready.resolved)
 			throw new Error("Context is resolved! Blocking no more accepted!");
 		else if (!(aPromise instanceof Promise))
 			throw new Error("block must be a Promise!");
@@ -259,7 +273,7 @@ export default class Context {
 	 * @param {boolean} [onFinish=false] a function gets called when the first context is ready
 	 */
 	addCallback(aCallback, onFinish = false) {
-		if (lazyPromise.resolved)
+		if (this.#ready.resolved)
 			throw new Error("Context is resolved! Callbacks no more accepted!");
 		else if (typeof aCallback !== "function")
 			throw new Error("callback must be a function!");

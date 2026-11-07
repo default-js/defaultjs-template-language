@@ -1038,7 +1038,7 @@ Creates an instance of `Renderer` and loads its template with `Template.load` fi
 
 ### `render(option)` ⇒ `Promise`
 
-Renders a template into a container. The promise resolves, when the rendering is finished.
+Renders a template into a container, or in the place of a target. The promise resolves, when the rendering is finished.
 
 **Kind**: function
 
@@ -1050,28 +1050,28 @@ Renders a template into a container. The promise resolves, when the rendering is
 
 | Properties | Type          | Description  | Default |
 | ---------- | ------------- | ------------ | ------- |
-| container  | `HTMLElement` | the element to render into - `required` | |
+| container  | `HTMLElement` | the element to render into - `required` without `target`, unless `mode` is `none` | |
 | template   | `Template`, `string`, `URL`, `Node`, `NodeList` or `HTMLCollection` | the template to render, loaded with `Template.load` - `optional` | the template of the renderer |
 | data       | `Object`      | data of this rendering; a name it holds hides the same name of the base data - `optional` | |
-| mode       | `string`      | `replace`, `append` or `prepend` - `optional` | `replace` |
-| target     | `HTMLElement` | an element in the container: `replace` replaces it, `append` inserts the result after it, `prepend` before it - `optional` | |
+| mode       | `string`      | `replace`, `append`, `prepend` or `none` - `optional` | `replace` |
+| target     | `HTMLElement` | the element to render at: `replace` replaces it, `append` inserts the result after it, `prepend` before it; given with `container`, `target` applies - `required` without `container`, unless `mode` is `none` | |
 | root       | `HTMLElement` | the element `jstl-on-finished` gets as `$root` - `optional` | the container |
 
-Without `target`, `replace` replaces the content of the container, `append` appends the result to it and `prepend` prepends it. The promise is rejected, if there is no template, neither in `option` nor at the renderer, or if `mode` is none of the three.
+Without `target`, `replace` replaces the content of the container, `append` appends the result to it and `prepend` prepends it; `none` adds the result neither to the container nor at the target, and needs neither of them. The result is the `content` of the `Context` the promise resolves to. The promise is rejected, if neither `container` nor `target` is given in a mode other than `none`, if there is no template, neither in `option` nor at the renderer, or if `mode` is not one of the four.
 
 ### `Renderer.render(option)` ⇒ `Promise`
 
-Renders a template into a container without keeping a renderer: `new Renderer({ template, data }).render({ container, mode, target })`.
+Renders a template into a container, or in the place of a target, without keeping a renderer: `new Renderer({ template, data }).render({ container, mode, target })`.
 
 **Kind**: static function
 
 | Properties | Type          | Description  | Default |
 | ---------- | ------------- | ------------ | ------- |
-| container  | `HTMLElement` | the element to render into - `required` | |
+| container  | `HTMLElement` | the element to render into - `required` without `target`, unless `mode` is `none` | |
 | template   | `Template`    | the template to render - `required` | |
 | data       | `Object`      | data for rendering - `optional` | |
 | mode       | `string`      | as for `render(option)` - `optional` | `replace` |
-| target     | `HTMLElement` | as for `render(option)` - `optional` | |
+| target     | `HTMLElement` | as for `render(option)` - `required` without `container`, unless `mode` is `none` | |
 
 The promise is rejected, if `template` is not a `Template`; load one with `Template.load` first, or use `Renderer.build`.
 

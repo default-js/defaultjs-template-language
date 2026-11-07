@@ -36,8 +36,8 @@ export const EVENTS = { render: EVENT__RENDER, rendered: EVENT__RENDERED };
 
 export const MODE__REPLACE = "replace";
 export const MODE__APPEND = "append";
-export const MODE__PREPEND = "prepand";
-export const MODE__NONE = "NONE";
+export const MODE__PREPEND = "prepend";
+export const MODE__NONE = "none";
 
 /**
  * @readonly
@@ -57,10 +57,14 @@ const MODEWORKER = {
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
 		if (target) {
-			target.replace(content);
+			if(content == null || content.length == 0)
+				target.remove();
+			else
+				target.replace(content);
 		} else {
 			container.empty();
-			container.append(content);
+			if(content != null && content.length != 0)
+				container.append(content);
 		}
 	},
 	[MODE__APPEND]: ({
@@ -68,6 +72,7 @@ const MODEWORKER = {
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
+		if(content == null || content.length == 0) return;
 		if (target) target.after(content);
 		else container.append(content);
 	},
@@ -76,6 +81,7 @@ const MODEWORKER = {
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
+		if(content == null || content.length == 0) return;
 		if (target) target.before(content);
 		else container.prepend(content);
 	},
@@ -113,9 +119,9 @@ const findEventTarget = (event, container, target, mode) => {
 	)
 		return null;
 
-	const useTarget = isUndefinedOrNull(target);
+	const useTarget = !isUndefinedOrNull(target);
 	if (useTarget && event == EVENT__RENDER && mode == MODETYPES.replace)
-		return target.parent;
+		return target.parentElement;
 	return useTarget ? target : container;
 };
 
@@ -136,62 +142,27 @@ const fireEvent = (target, event, context) => {
  * @param {RenderOptions} renderOptions
  * @param {Renderer} renderer
  */
-const toContext = (renderOptions, renderer) => {
-	const { data, template } = renderOptions;
+const toInitialContext = (renderOptions, renderer) => {
+	const { data, template, container } = renderOptions;
 	const resolver = new ExpressionResolver({
 		name: SCOPE__RENDER,
 		context: data,
 		parent: renderer.resolver,
 	});
-
-	return new Context({ template: template || renderer.template, resolver });
+	return new Context({
+		container: new DocumentFragment(),
+		template: template || renderer.template,
+		renderer,
+		resolver,
+	});
 };
 
-
 /**
- * @param {HTMLElement} element 
- * @returns {HTMLElement} 
+ * @param {HTMLElement} element
+ * @returns {HTMLElement}
  */
 const cloneNode = (element) => {
 	return document.createElement(element.nodeName);
-}
-
-/**
- * interal method to render a template into a container, called by `render`.
- *
- * @param {Context} context
- * @returns {Promise<Context>} the context of the rendering
- */
-const renderNodes = async (context) => {
-	const { /**@type {Array<Node>} */ template, resolver } = context;
-	/**@type {Array<Promise<Context>>} */
-	const promises = template.map((template) =>
-		renderNode(new Context({ template, resolver })),
-	);
-	context.content = (await Promise.all(promises))
-		.map((context) => context.content)
-		.filter(content => !isNullOrUndefined(content))
-		.flat();
-
-		
-	console.log("final content:", context.content)
-	return context;
-};
-
-/**
- * interal method to render a template into a container, called by `render`.
- *
- * @param {Context} context
- * @returns {Promise<Context>} the context of the rendering
- */
-const renderNode = async (context) => {
-	const { /**@type {Node} */ template, resolver } = context;
-
-	context.content =[cloneNode(template)];
-	context = await context.waitForReady();
-
-
-	return context;
 };
 
 export default class Renderer {
@@ -200,7 +171,6 @@ export default class Renderer {
 
 	#template;
 	#resolver;
-	#parent;
 
 	/**
 	 * Creates a renderer.
@@ -215,7 +185,6 @@ export default class Renderer {
 		if (template && !(template instanceof Template))
 			throw new Error("template must be an instance of Template!");
 
-		this.#parent = parent;
 		this.#template = template;
 		this.#resolver =
 			resolver ||
@@ -224,10 +193,6 @@ export default class Renderer {
 				context: data ? data : {},
 				parent: APPLICATION_SCOPE_RESOLVER,
 			});
-	}
-
-	get parent() {
-		return this.#parent;
 	}
 
 	get template() {
@@ -245,8 +210,36 @@ export default class Renderer {
 	 * @returns {Promise<Context>} the context of the rendering
 	 */
 	render(context) {
-		if (context instanceof Context) return this.#renderAsChildProcess(context);
-		return this.#render(context);
+		if (context instanceof Context) return this.#render(context);
+		return this.#startRendering(context);
+	}
+
+	/**
+	 * render as external usage
+	 *
+	 * @param {RenderOptions} context
+	 * @returns {Promise<Context>} the context of the rendering
+	 */
+	async #startRendering(context) {
+		const { container, target, mode } = context;
+		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
+
+		context = toInitialContext(context, this);
+		fireEvent(eventTarget, EVENT__RENDER, context);
+
+		context = await this.#render(context);
+
+		context = await context.waitForReady();
+		applyMode({
+			container,
+			target,
+			content: context.content,
+			mode: mode || MODETYPES.replace,
+		});
+
+		eventTarget = findEventTarget(EVENT__RENDERED, container, target, mode);
+		fireEvent(eventTarget, EVENT__RENDERED, context);
+		return context;
 	}
 
 	/**
@@ -256,37 +249,82 @@ export default class Renderer {
 	 * @param {Context} context
 	 * @returns {Promise<Context>}
 	 */
-	async #renderAsChildProcess(context) {
-		if (context.template instanceof Array) return renderNodes(context);
-		return renderNode(context);
+	async #render(context) {
+		context = await (context.template instanceof Array
+			? this.#renderNodes(context)
+			: this.#renderNode(context));
+
+		context = await context.waitForReady();
+		const { container, content } = context;
+		if (!isNullOrUndefined(content) && content.length > 0 && !isNullOrUndefined(container))
+			container.append(content);
+
+		return context;
 	}
 
 	/**
-	 * render as external usage
+	 * interal method to render a template into a container, called by `render`.
 	 *
-	 * @param {RenderOptions} context
+	 * @param {Context} context
 	 * @returns {Promise<Context>} the context of the rendering
 	 */
-	async #render(context) {
-		const { container, target, mode } = context;
-		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
+	async #renderNodes(context) {
+		const { /**@type {Array<Node>} */ template, resolver, container } = context;
+		/**@type {Array<Promise<Context>>} */
+		const promises = template.map((template) =>
+			this.#render(
+				new Context({ container, template, resolver, renderer: this }),
+			),
+		);
+		context.content = (await Promise.all(promises))
+			.map((context) => context.content)
+			.filter((content) => !isNullOrUndefined(content))
+			.flat();
 
-		fireEvent(eventTarget, EVENT__RENDER, context);
-		context = toContext(context, this);
-		context = await (context.template instanceof Array
-			? renderNodes(context)
-			: renderNode(context));
+		return context;
+	}
 
-		context = await context.waitForReady();
-		eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
-		applyMode({
+	/**
+	 * interal method to render a template into a container, called by `render`.
+	 *
+	 * @param {Context} context
+	 * @returns {Promise<Context>} the context of the rendering
+	 */
+	async #renderNode(context) {
+		const {
+			/**@type {HTMLElement} */ container,
+			/**@type {Node} */ template,
+			resolver,
+		} = context;
+
+		context = new Context({
 			container,
-			target,
-			content: context.content,
-			mode: mode || MODETYPES.replace,
+			template,
+			renderer: this,
+			resolver: new ExpressionResolver({ name: SCOPE__NODE, parent: resolver }),
 		});
 
-		fireEvent(eventTarget, EVENT__RENDERED, context);
+		for (const directive of Directive.directives) {
+			if (context.acceptDirective(directive)) {
+				context = await directive.execute(context);
+				if (context.stop) break;
+			}
+		}
+
+		if (!context.ignoreChildren && template.childNodes.length > 0)
+			context.addBlocking(
+				this.#render(
+					new Context({
+						template: template.childNodes,
+						container: context.content,
+						renderer: this,
+						resolver,
+					}),
+				),
+			);
+
+		context = await context.waitForReady();
+
 		return context;
 	}
 

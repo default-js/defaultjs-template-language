@@ -50,10 +50,11 @@ const defineDirective = ({ directive }) => {
  */
 export const PHASE = {
 	init: 0,
-	data: 1,
-	template: 2,
-	content: 3,
-	finish: 4
+	control: 1,
+	data: 2,
+	template: 3,
+	content: 4,
+	finish: 5
 };
 
 /**
@@ -73,13 +74,13 @@ export default class Directive {
 	 *
 	 * @returns {number}
 	 */
-	static get MIN_RANK() { return 0 };
+	static get MIN_RANK() { return Number.MIN_SAFE_INTEGER };
 	/**
 	 * The highest rank of a directive.
 	 *
 	 * @returns {number}
 	 */
-	static get MAX_RANK() { return 100000 };
+	static get MAX_RANK() { return Number.MAX_SAFE_INTEGER };
 
 	constructor() { };
 

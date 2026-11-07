@@ -1,11 +1,11 @@
 import "./Initial.js";
+import "./Text.js";
 import "./Data.js";
 import "./If.js";
 import "./Choose.js";
 import "./Include.js";
 import "./Foreach.js";
 import "./Repeat.js";
-import "./Text.js";
 import "./Attributes.js";
 import "./AttachElement.js";
 import "./OnFinished.js";

@@ -20,6 +20,11 @@ Versions up to 1.7.20 predate this file — the git history is the record for th
   beside `Template` and `Renderer`.
 - The status of `jstl-foreach` and `jstl-repeat` carries `key` — the index of the item in an
   array, the name of the property in an object — and `first`, `last` and `step`.
+- `render(option)` and `Renderer.render` take a `target` instead of a `container`: one of them is
+  required, and with both, `target` applies.
+- `render(option)` and `Renderer.render` take the mode `none`: the template is rendered, and the
+  result is added neither to the container nor at the target; it is the `content` of the `Context`
+  the promise resolves to. In this mode neither `container` nor `target` is required.
 
 ### Changed
 

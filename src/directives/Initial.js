@@ -1,3 +1,4 @@
+import Context from "../Context.js";
 import Directive from "../Directive.js";
 import Replace from "../elements/Replace.js";
 
@@ -22,7 +23,19 @@ class Initial extends Directive {
 		return Directive.PHASE.init;
 	}
 
+	/**
+	 * Description placeholder
+	 *
+	 * @async
+	 * @param {Context} context
+	 * @returns {Promise<Context>}
+	 */
 	async execute(context) {
+		if (!(context instanceof Context))
+			throw new Error(
+				"Content is required and must be an instance of Context!",
+			);
+
 		const { template, renderer, resolver } = context;
 		if (!(template instanceof Element)) {
 			context.content = document.importNode(template, true);
@@ -35,21 +48,34 @@ class Initial extends Directive {
 			} else if (false && template.hasAttribute(MARKER_ASYNC)) {
 				context.content = new Replace();
 				template.attr(MARKER_ASYNC, null);
-				const renderOption = context.toRenderOption({ mode: "replace", target: context.content });
-				setTimeout(() => {
-					renderer.render(renderOption);
-				}, parseInt(template.attr(MARKER_ASYNC) || "250") || 250);
+				const renderOption = context.toRenderOption({
+					mode: "replace",
+					target: context.content,
+				});
+				setTimeout(
+					() => {
+						renderer.render(renderOption);
+					},
+					parseInt(template.attr(MARKER_ASYNC) || "250") || 250,
+				);
 				context.stop = true;
 				context.ignore = true;
 			} else if (template instanceof HTMLTemplateElement) {
 				context.content = document.createElement(template.tagName);
-				const subContext = context.subContext({ template: Array.from(template.content.childNodes), container: context.content.content });
-				await renderer.render(subContext);
-				context.stop = false;
-				context.ignore = true;
+				const subContext = new Context({
+					template: Array.from(template.content.childNodes),
+					container: context.content.content,
+					renderer,
+					resolver,
+				});
+				context.addBlocking(renderer.render(subContext));
+				context.ignoreChildren = true;
 			} else if (template.hasAttribute(MARKER_TAGNAME)) {
 				let tagname = template.attr(MARKER_TAGNAME).trim();
-				if (tagname.length > 0) context.content = document.createElement(await resolver.resolveText(template.attr(MARKER_TAGNAME)));
+				if (tagname.length > 0)
+					context.content = document.createElement(
+						await resolver.resolveText(template.attr(MARKER_TAGNAME)),
+					);
 				else {
 					context.content = document.importNode(template, true);
 					context.stop = true;
@@ -72,7 +98,8 @@ class Initial extends Directive {
 			if (!context.stop && template.hasAttribute(MARKER_IGNORE_CHILDS)) {
 				context.ignore = true;
 				const clone = document.importNode(template, true);
-				if (template instanceof HTMLTemplateElement) context.content.content.append(clone.content);
+				if (template instanceof HTMLTemplateElement)
+					context.content.content.append(clone.content);
 				else context.content.append(clone.childNodes);
 			}
 		}

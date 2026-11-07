@@ -301,7 +301,8 @@ rendering. Measured
   (measured again 2026-10-14, after the fix of `renderNode` below): the children of each element are
   placed after the target instead of into the element. Only a template whose elements have no
   children renders as described. The cases "$mode with a target renders an element with its
-  children as $tagNames" in `test/tests/Renderer.test.js` are marked `it.fails` for it.
+  children as $tagNames", marked `it.fails` for it, were removed with the rebuild of
+  `test/tests/Renderer.test.js` (B63, 2026-10-26).
 - **`mode`** — the children of an element were rendered with the mode of the rendering, so they
   removed what the element held with `replace`, and went after it with `append`, before it with
   `prepend`. Measured with a custom directive putting a `<b>` into the element before its `<p>`
@@ -392,3 +393,58 @@ the sources of `7dfd381`, unchanged, took 121.4 % of their time of 2026-10-15 in
 Firefox and 117.7 % in WebKit, as the geometric mean over every case; the same day, the runs of
 one state lay up to 33 % apart in a series measured alone, up to 14 % in one measured in turns with
 a control. `12ae281` is measured in turns with `7dfd381`, on the same day.
+
+### B63 — the suite during the rewrite of `Renderer` and `Context`
+
+**Status:** in progress · **Kind:** task
+
+The maintainer rewrites `src/Renderer.js` and `src/Context.js`, the old implementations kept as
+`src/RendererOld.js` and `src/ContextOld.js`, and accepts breaking changes of the API of `Context`.
+Set up 2026-10-26, by the maintainer's decisions:
+
+- **Test run** — the script `test` of `package.json` runs `test/tests/Renderer.test.js` and
+  `test/tests/Context.test.js` only; `test:build`, which `build` runs, still runs the whole suite.
+  The filter goes once the directives run on the new `Context`.
+- **`test/tests/Context.test.js`** — removed: each of its cases tested the old API (`subContext`,
+  `clone`, the setter of `template`, `ready` with an array). Cases of the new API are written anew;
+  the filter picks the file up again.
+- **`test/tests/Renderer.test.js`** — rebuilt from scratch: every case removed, then written anew
+  one at a time along the rewrite. Written so far: a single element and a list of elements, each
+  rendered into a container, in the place of a target, and in the mode `none` into the `content`
+  of the context; each mode `replace`, `append` and `prepend` with both, into a container and at a
+  target; an element with a child, red until `#renderNode` renders the children of a node.
+- **`container` or `target`** — `README.md` says since 2026-10-26 that `render(option)` and
+  `Renderer.render` need one of them, `target` applying when both are given, and that the promise is
+  rejected without either; no case covers the rejection or both given. `README.md` documents
+  `root` and `$root`, which the new `Renderer` does not have.
+- **Types of `template`** — the new code applies: `toTemplate` in `src/Context.js` converts a
+  `NodeList`, an `HTMLCollection`, a `DocumentFragment` and an `HTMLTemplateElement` into an array
+  of their nodes. Once the API of the new `Context` is settled, `DECISIONS.md` (2026-10-18), which
+  has a `NodeList` and an `HTMLCollection` throw an `Error`, and the entry of `CHANGELOG.md` under
+  `[Unreleased]` saying the same are revised. B43 lists the members of the old `Context`.
+
+### B64 — defects in the rewritten `Renderer` and `Context`
+
+**Status:** open · **Kind:** defect
+
+Found 2026-10-26 by reading the code of the rewrite in progress (B63); not measured unless stated.
+
+- `src/Context.js` — `CREATEHTML` is `document.create`, which `@default-js/defaultjs-extdom` does
+  not set: it sets the global `create` (`src/Global.js` of that package). A template given as a
+  `string` fails with "TypeError: CREATEHTML is not a function", measured in Chromium with
+  `test/tests/Renderer.test.js` before its rebuild.
+- `src/Context.js` — the method `appendContent` has the name of the getter and setter defined before
+  it, and replaces them: `context.appendContent` is the method, so `#render` in `src/Renderer.js`
+  always appends. Checked in Node with a class of the same shape: the property reads as a function.
+- `src/Renderer.js`, constructor — `this.#parent = parent` reads a `parent` that is no parameter;
+  in the browser it is `window.parent`.
+
+### B65 — the events `render` and `rendered` of the new `Renderer`
+
+**Status:** open · **Kind:** decision
+
+`src/Renderer.js`, `#startRendering`, triggers `render` before and `rendered` after a rendering, at
+the element `findEventTarget` picks — the container, the target, or for `render` in the mode
+`replace` the parent of the target — and none in the mode `none`. `src/RendererOld.js` triggered no
+event, and `README.md` does not describe them; no case covers them. Found 2026-10-26: to be decided
+whether `README.md` describes them.

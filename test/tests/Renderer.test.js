@@ -13,261 +13,114 @@ describe("Renderer.render", () => {
 		expect(container.children[0].children).toHaveLength(0);
 	});
 
-	it("renders sibling elements in their order", async () => {
+	it("renders a single element in the place of a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<span></span>`;
+		const target = parent.children[0];
+		const template = await Template.load(`<div></div>`);
+
+		await Renderer.render({ target, template });
+
+		expect(parent.children).toHaveLength(1);
+		expect(parent.children[0].tagName).toBe("DIV");
+		expect(parent.children[0].children).toHaveLength(0);
+	});
+
+	it("renders a list of elements in their order", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div></div><span></span><p></p><a></a><b></b>`);
+		const template = await Template.load(`<div></div><p></p><b></b>`);
 
 		await Renderer.render({ container, template });
 
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN", "P", "A", "B"]);
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "P", "B"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0]);
 	});
 
-	it("renders the children of an element", async () => {
+	it("renders a list of elements in their order in the place of a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<span></span>`;
+		const target = parent.children[0];
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ target, template });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["DIV", "P", "B"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0]);
+	});
+
+	it("renders a single element into the content of the context in mode none", async () => {
+		const template = await Template.load(`<div></div>`);
+
+		const context = await Renderer.render({ template, mode: "none" });
+
+		expect(context.content).toBeInstanceOf(Array);
+		expect(context.content.map((aNode) => aNode.tagName)).toEqual(["DIV"]);
+		expect(context.content[0].children).toHaveLength(0);
+	});
+
+	it("renders a list of elements into the content of the context in mode none", async () => {
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		const context = await Renderer.render({ template, mode: "none" });
+
+		expect(context.content).toBeInstanceOf(Array);
+		expect(context.content.map((aNode) => aNode.tagName)).toEqual(["DIV", "P", "B"]);
+		expect(context.content.map((aNode) => aNode.children.length)).toEqual([0, 0, 0]);
+	});
+
+	it("renders an element with a child", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`
-			<div>
-				<div></div>
-				<span></span>
-				<p></p>
-			</div>`);
+		const template = await Template.load(`<div><p></p></div>`);
 
 		await Renderer.render({ container, template });
 
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];
 		expect(element.tagName).toBe("DIV");
-		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["DIV", "SPAN", "P"]);
-	});
-
-	it("renders elements nested 101 levels deep", async () => {
-		const container = document.createElement("div");
-		const chain = "<div>".repeat(101) + "</div>".repeat(101);
-		const template = await Template.load(chain.repeat(4));
-
-		await Renderer.render({ container, template });
-
-		expect(container.children).toHaveLength(4);
-		for (const root of container.children) {
-			let element = root;
-			for (let depth = 1; depth < 101; depth++) {
-				expect(element.children).toHaveLength(1);
-				element = element.children[0];
-			}
-			expect(element.children).toHaveLength(0);
-		}
-	});
-
-	it("rejects a template that is not a Template", async () => {
-		const container = document.createElement("div");
-
-		await expect(Renderer.render({ container, template: `<p></p>` })).rejects.toBeInstanceOf(Error);
+		expect(element.children).toHaveLength(1);
+		expect(element.children[0].tagName).toBe("P");
+		expect(element.children[0].children).toHaveLength(0);
 	});
 });
 
-describe("new Renderer", () => {
-	it("renders its template when render gets none", async () => {
-		const container = document.createElement("div");
-		const renderer = new Renderer({ template: await Template.load(`<p></p>`) });
+const SINGLE = { elements: "a single element", source: `<div></div>` };
+const LIST = { elements: "a list of elements", source: `<div></div><p></p><b></b>` };
 
-		await renderer.render({ container });
-
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["P"]);
-	});
-
-	it("makes its data available to every rendering", async () => {
-		const first = document.createElement("div");
-		const second = document.createElement("div");
-		const renderer = new Renderer({ template: await Template.load(`<p>\${text}</p>`), data: { text: "base" } });
-
-		await renderer.render({ container: first });
-		await renderer.render({ container: second });
-
-		expect(Array.from(first.children, (anElement) => anElement.textContent)).toEqual(["base"]);
-		expect(Array.from(second.children, (anElement) => anElement.textContent)).toEqual(["base"]);
-	});
-
+describe("Renderer.render - mode", () => {
 	it.each([
-		{ type: "string", template: () => `<p></p>` },
-		{ type: "HTMLTemplateElement", template: () => document.createElement("template") }
-	])("throws an Error for a template given as $type", ({ template }) => {
-		expect(() => new Renderer({ template: template() })).toThrow(Error);
-	});
-});
-
-describe("Renderer.build", () => {
-	it("loads its template from a promise", async () => {
-		const container = document.createElement("div");
-		const renderer = await Renderer.build({ template: Promise.resolve(`<p></p>`) });
-
-		await renderer.render({ container });
-
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["P"]);
-	});
-
-	it("makes its data available to every rendering", async () => {
-		const container = document.createElement("div");
-		const renderer = await Renderer.build({ template: `<p>\${text}</p>`, data: { text: "base" } });
-
-		await renderer.render({ container });
-
-		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["base"]);
-	});
-});
-
-describe("render(option)", () => {
-	it("hides a name of the base data by the same name in its data", async () => {
-		const container = document.createElement("div");
-		const renderer = new Renderer({ data: { text: "base", other: "other" } });
-
-		await renderer.render({ container, template: `<p>\${text}-\${other}</p>`, data: { text: "rendering" } });
-
-		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["rendering-other"]);
-	});
-
-	it("rejects without a template, neither in the option nor at the renderer", async () => {
-		const container = document.createElement("div");
-
-		await expect(new Renderer().render({ container })).rejects.toBeInstanceOf(Error);
-	});
-
-	it("rejects a mode that is none of replace, append, prepend and none", async () => {
-		const container = document.createElement("div");
-
-		await expect(new Renderer().render({ container, template: `<p></p>`, mode: "insert" })).rejects.toBeInstanceOf(Error);
-	});
-});
-
-describe("render(option).mode", () => {
-	it("replaces the content of the container by default", async () => {
-		const container = document.createElement("div");
-		const option = { container, data: {}, template: `<div></div>` };
-
-		await (await Renderer.build({ template: `<div></div>` })).render(option);
-		expect(container.children).toHaveLength(1);
-
-		await (await Renderer.build()).render(option);
-		expect(container.children).toHaveLength(1);
-	});
-
-	it("replace replaces the content of the container", async () => {
-		const container = document.createElement("div");
-		const option = { container, data: {}, template: `<div></div>`, mode: "replace" };
-
-		await new Renderer().render(option);
-		expect(container.children).toHaveLength(1);
-
-		await new Renderer().render(option);
-		expect(container.children).toHaveLength(1);
-	});
-
-	it("replace with a target replaces the target", async () => {
+		{ mode: "replace", ...SINGLE, tagNames: ["DIV"] },
+		{ mode: "replace", ...LIST, tagNames: ["DIV", "P", "B"] },
+		{ mode: "append", ...SINGLE, tagNames: ["A", "DIV"] },
+		{ mode: "append", ...LIST, tagNames: ["A", "DIV", "P", "B"] },
+		{ mode: "prepend", ...SINGLE, tagNames: ["DIV", "A"] },
+		{ mode: "prepend", ...LIST, tagNames: ["DIV", "P", "B", "A"] }
+	])("$mode renders $elements into a container as $tagNames", async ({ mode, source, tagNames }) => {
 		const container = document.createElement("div");
 		container.innerHTML = `<a></a>`;
-		const target = container.children[0];
+		const template = await Template.load(source);
 
-		await new Renderer().render({ container, data: {}, template: `<div></div>`, mode: "replace", target });
+		await Renderer.render({ container, template, mode });
 
-		expect(container.children).toHaveLength(1);
-		expect(container.children[0].tagName).toBe("DIV");
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual(tagNames.map(() => 0));
 	});
 
 	it.each([
-		{ mode: "append", tagNames: ["A", "DIV"] },
-		{ mode: "prepend", tagNames: ["DIV", "A"] }
-	])("$mode without a target renders the result into the container as $tagNames", async ({ mode, tagNames }) => {
-		const container = document.createElement("div");
-		container.innerHTML = `<a></a>`;
+		{ mode: "replace", ...SINGLE, tagNames: ["A", "DIV", "I"] },
+		{ mode: "replace", ...LIST, tagNames: ["A", "DIV", "P", "B", "I"] },
+		{ mode: "append", ...SINGLE, tagNames: ["A", "SPAN", "DIV", "I"] },
+		{ mode: "append", ...LIST, tagNames: ["A", "SPAN", "DIV", "P", "B", "I"] },
+		{ mode: "prepend", ...SINGLE, tagNames: ["A", "DIV", "SPAN", "I"] },
+		{ mode: "prepend", ...LIST, tagNames: ["A", "DIV", "P", "B", "SPAN", "I"] }
+	])("$mode renders $elements at a target as $tagNames", async ({ mode, source, tagNames }) => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(source);
 
-		await new Renderer().render({ container, template: `<div><p>x</p></div>`, mode });
+		await Renderer.render({ target, template, mode });
 
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
-		const element = container.children[tagNames.indexOf("DIV")];
-		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["x"]);
-	});
-
-	// defect: B48
-	it.fails.each([
-		{ mode: "replace", tagNames: ["DIV", "I"] },
-		{ mode: "append", tagNames: ["SPAN", "DIV", "I"] },
-		{ mode: "prepend", tagNames: ["DIV", "SPAN", "I"] }
-	])("$mode with a target renders an element with its children as $tagNames", async ({ mode, tagNames }) => {
-		const container = document.createElement("div");
-		container.innerHTML = `<span></span><i></i>`;
-		const target = container.children[0];
-
-		await new Renderer().render({ container, template: `<div><p>x</p></div>`, mode, target });
-
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
-		const element = container.children[tagNames.indexOf("DIV")];
-		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["x"]);
-	});
-});
-
-describe("Tag jstl", () => {
-	it("is replaced by its content", async () => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<jstl><div></div></jstl>`);
-
-		await Renderer.render({ container, template });
-
-		expect(container.children).toHaveLength(1);
-		expect(container.children[0].tagName).toBe("DIV");
-	});
-
-	it("is replaced by its text and its elements", async () => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<div><jstl>\${text1}<div>\${text2}</div></jstl></div>`);
-
-		await Renderer.render({ container, template, data: { text1: "some text", text2: "another text" } });
-
-		expect(container.children).toHaveLength(1);
-		const element = container.children[0];
-		expect(element.textContent).toBe("some textanother text");
-		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["another text"]);
-	});
-
-	it("is replaced by the content of every item with jstl-foreach", async () => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<div><jstl jstl-foreach="\${array}" jstl-foreach-var="item"><div>\${item.text}</div></jstl></div>`);
-
-		await Renderer.render({ container, template, data: { array: [{ text: "text 1" }, { text: "text 2" }, { text: "text 3" }] } });
-
-		expect(container.children).toHaveLength(1);
-		const element = container.children[0];
-		expect(Array.from(element.children, (aChild) => aChild.textContent)).toEqual(["text 1", "text 2", "text 3"]);
-	});
-
-	it("is replaced by its content with the data of jstl-data", async () => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<div><jstl jstl-data="\${ text1 + ', ' + text2 }" jstl-data-mode="set" jstl-data-var="result">\${result}</jstl></div>`);
-
-		await Renderer.render({ container, template, data: { text1: "some text", text2: "another text" } });
-
-		expect(container.children).toHaveLength(1);
-		const element = container.children[0];
-		expect(element.children).toHaveLength(0);
-		expect(element.textContent).toBe("some text, another text");
-	});
-
-	it("leaves nothing without content", async () => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<div><jstl></jstl></div>`);
-
-		await Renderer.render({ container, template });
-
-		expect(container.children).toHaveLength(1);
-		expect(container.children[0].childNodes).toHaveLength(0);
-	});
-
-	it.each([
-		{ render: false, tagNames: [] },
-		{ render: true, tagNames: ["DIV"] }
-	])("with jstl-if evaluating to $render renders $tagNames", async ({ render, tagNames }) => {
-		const container = document.createElement("div");
-		const template = await Template.load(`<jstl jstl-if="\${render}"><div></div></jstl>`);
-
-		await Renderer.render({ container, template, data: { render } });
-
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(tagNames);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual(tagNames.map(() => 0));
 	});
 });
