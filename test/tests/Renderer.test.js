@@ -83,44 +83,142 @@ describe("Renderer.render", () => {
 	});
 });
 
-const SINGLE = { elements: "a single element", source: `<div></div>` };
-const LIST = { elements: "a list of elements", source: `<div></div><p></p><b></b>` };
-
 describe("Renderer.render - mode", () => {
-	it.each([
-		{ mode: "replace", ...SINGLE, tagNames: ["DIV"] },
-		{ mode: "replace", ...LIST, tagNames: ["DIV", "P", "B"] },
-		{ mode: "append", ...SINGLE, tagNames: ["A", "DIV"] },
-		{ mode: "append", ...LIST, tagNames: ["A", "DIV", "P", "B"] },
-		{ mode: "prepend", ...SINGLE, tagNames: ["DIV", "A"] },
-		{ mode: "prepend", ...LIST, tagNames: ["DIV", "P", "B", "A"] }
-	])("$mode renders $elements into a container as $tagNames", async ({ mode, source, tagNames }) => {
+	it("replace renders a single element in place of the content of a container", async () => {
 		const container = document.createElement("div");
 		container.innerHTML = `<a></a>`;
-		const template = await Template.load(source);
+		const template = await Template.load(`<div></div>`);
 
-		await Renderer.render({ container, template, mode });
+		await Renderer.render({ container, template, mode: "replace" });
 
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
-		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual(tagNames.map(() => 0));
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0]);
 	});
 
-	it.each([
-		{ mode: "replace", ...SINGLE, tagNames: ["A", "DIV", "I"] },
-		{ mode: "replace", ...LIST, tagNames: ["A", "DIV", "P", "B", "I"] },
-		{ mode: "append", ...SINGLE, tagNames: ["A", "SPAN", "DIV", "I"] },
-		{ mode: "append", ...LIST, tagNames: ["A", "SPAN", "DIV", "P", "B", "I"] },
-		{ mode: "prepend", ...SINGLE, tagNames: ["A", "DIV", "SPAN", "I"] },
-		{ mode: "prepend", ...LIST, tagNames: ["A", "DIV", "P", "B", "SPAN", "I"] }
-	])("$mode renders $elements at a target as $tagNames", async ({ mode, source, tagNames }) => {
+	it("replace renders a list of elements in place of the content of a container", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = `<a></a>`;
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ container, template, mode: "replace" });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "P", "B"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0]);
+	});
+
+	it("append renders a single element after the content of a container", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = `<a></a>`;
+		const template = await Template.load(`<div></div>`);
+
+		await Renderer.render({ container, template, mode: "append" });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0]);
+	});
+
+	it("append renders a list of elements after the content of a container", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = `<a></a>`;
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ container, template, mode: "append" });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV", "P", "B"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0]);
+	});
+
+	it("prepend renders a single element before the content of a container", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = `<a></a>`;
+		const template = await Template.load(`<div></div>`);
+
+		await Renderer.render({ container, template, mode: "prepend" });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "A"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0]);
+	});
+
+	it("prepend renders a list of elements before the content of a container", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = `<a></a>`;
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ container, template, mode: "prepend" });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "P", "B", "A"]);
+		expect(Array.from(container.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0]);
+	});
+
+	it("replace renders a single element in place of a target", async () => {
 		const parent = document.createElement("div");
 		parent.innerHTML = `<a></a><span></span><i></i>`;
 		const target = parent.children[1];
-		const template = await Template.load(source);
+		const template = await Template.load(`<div></div>`);
 
-		await Renderer.render({ target, template, mode });
+		await Renderer.render({ target, template, mode: "replace" });
 
-		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(tagNames);
-		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual(tagNames.map(() => 0));
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0]);
+	});
+
+	it("replace renders a list of elements in place of a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ target, template, mode: "replace" });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV", "P", "B", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0, 0]);
+	});
+
+	it("append renders a single element after a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(`<div></div>`);
+
+		await Renderer.render({ target, template, mode: "append" });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "SPAN", "DIV", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0]);
+	});
+
+	it("append renders a list of elements after a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ target, template, mode: "append" });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "SPAN", "DIV", "P", "B", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0, 0, 0]);
+	});
+
+	it("prepend renders a single element before a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(`<div></div>`);
+
+		await Renderer.render({ target, template, mode: "prepend" });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV", "SPAN", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0]);
+	});
+
+	it("prepend renders a list of elements before a target", async () => {
+		const parent = document.createElement("div");
+		parent.innerHTML = `<a></a><span></span><i></i>`;
+		const target = parent.children[1];
+		const template = await Template.load(`<div></div><p></p><b></b>`);
+
+		await Renderer.render({ target, template, mode: "prepend" });
+
+		expect(Array.from(parent.children, (anElement) => anElement.tagName)).toEqual(["A", "DIV", "P", "B", "SPAN", "I"]);
+		expect(Array.from(parent.children, (anElement) => anElement.children.length)).toEqual([0, 0, 0, 0, 0, 0]);
 	});
 });

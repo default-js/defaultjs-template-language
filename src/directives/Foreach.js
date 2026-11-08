@@ -1,15 +1,19 @@
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 import {isUndefinedOrNullOrBlank, isUndefinedOrNull} from "../Utils.js";
+import Context from "../Context.js";
+
+
+const BASEATTRIBUTE = "jstl-foreach";
 
 const ATTRIBUTE = {
-	DATA: "jstl-foreach",
-	VAR: "jstl-foreach-var",
-	STATUS: "jstl-foreach-status",
-	COUNT: "jstl-foreach-count",
-	START: "jstl-foreach-start",
-	STEP: "jstl-foreach-step",
-	CONDITION: "jstl-foreach-condition"
+	DATA: BASEATTRIBUTE,
+	VAR: `${BASEATTRIBUTE}-var`,
+	STATUS: `${BASEATTRIBUTE}-status`,
+	COUNT: `${BASEATTRIBUTE}-count`,
+	START: `${BASEATTRIBUTE}-start`,
+	STEP: `${BASEATTRIBUTE}-step`,
+	CONDITION: `${BASEATTRIBUTE}-condition`
 };
 
 
@@ -23,8 +27,8 @@ const ATTRIBUTE = {
  * @param {ExpressionResolver} option.resolver 
  * @returns {Promise<void>}
  */
-const doCount = async (option) => {
-	let { start, step, count, varname, status, resolver } = option;
+const doCount = async ({  start, step, count, varname, status, condition}, context) => {
+	const { resolver } = context;
 
 	count = await resolver.resolve(count);
 	const length = start + (count * step);
@@ -40,7 +44,9 @@ const doCount = async (option) => {
 			step,
 			count
 		};
-		stop = !(await iterate(iteration, option));
+		let itemContext = toContext(iteration, context);
+		itemContext = await iterate(condition, itemContext);
+		stop = itemContext.stop;
 	}
 };
 
@@ -57,8 +63,8 @@ const doCount = async (option) => {
  * @param {ExpressionResolver} option.resolver 
  * @returns {Promise<void>}
  */
-const doForeach = async (option) => {
-	let { data, start, step, count, varname, status, resolver } = option;
+const doForeach = async ({ data, start, step, count, varname, status, condition}, context) => {
+	const { resolver } = context;
 
 	data = await resolver.resolve(data, []);
 	let array = data;
@@ -81,21 +87,39 @@ const doForeach = async (option) => {
 			key: isObject ? array[i] : i,
 			data
 		};
-		stop = !(await iterate(iteration, option));
+		let itemContext = toContext(iteration, context);
+		itemContext = await iterate(condition, itemContext);
+		stop = itemContext.stop;
 	}
 };
 
-const iterate = async (data, option) => {
-	let { template, resolver, renderer, container, condition, context } = option;
-	resolver = new ExpressionResolver({ context: data, name: "jstl-foreach", parent: resolver });
+const toContext = (iteration, context) => {
+	return new Context({
+		template: context.template.childNodes,
+		container: context.content,
+		renderer: context.renderer,
+		resolver: new ExpressionResolver({ context: iteration, name: BASEATTRIBUTE, parent: context.resolver })
+	});
+};
+	
 
+/**
+ * Description placeholder
+ *
+ * @async
+ * @param {String|null} condition 
+ * @param {Context} context 
+ * @returns {Context} 
+ */
+const iterate = async (condition, context) => {
+	const { resolver, renderer, template, container } = context;
 	condition = condition ? await resolver.resolve(condition, false) : false;
-	if (condition)
-		return false;
-	const itemContext = context.subContext({ resolver, container, template, mode: "append" });
-	await renderer.render(itemContext);
-	await itemContext.ready();
-	return true;
+	if (condition){
+		context.stop = true;
+		return context;
+	}await renderer.render(context);
+	await context.waitForReady();	
+	return context;
 };
 
 class Foreach extends Directive {
@@ -107,13 +131,22 @@ class Foreach extends Directive {
 	get rank() { return Directive.MIN_RANK + 2 }
 	get phase() { return Directive.PHASE.template }
 
+	
+	/**
+	 * Description placeholder
+	 *
+	 * @async
+	 * @param {Context} context 
+	 * @returns {unknown} 
+	 */
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || (!context.template.attr(ATTRIBUTE.DATA) && !context.template.attr(ATTRIBUTE.COUNT)))
 			return context;
 
-		context.ignore = true;
+		context.ignoreChildren = true;
+
 		try {
-			const { template, resolver, renderer, content } = context;
+			const { template, resolver } = context;
 			const data = (template.attr(ATTRIBUTE.DATA) || "").trim();
 			const count = (template.attr(ATTRIBUTE.COUNT) || "").trim();
 			const option = {
@@ -123,17 +156,12 @@ class Foreach extends Directive {
 				step: await resolver.resolve(template.attr(ATTRIBUTE.STEP) || "1"),
 				varname: (template.attr(ATTRIBUTE.VAR) || "item").trim(),
 				status: (template.attr(ATTRIBUTE.STATUS) || "status").trim(),
-				condition: template.attr(ATTRIBUTE.CONDITION),
-				template: Array.from(template.childNodes),
-				resolver,
-				renderer,
-				container: content,
-				context
+				condition: template.attr(ATTRIBUTE.CONDITION)
 			};
 			if (isUndefinedOrNullOrBlank(data) && !isUndefinedOrNullOrBlank(count))
-				await doCount(option);
+				await doCount(option, context);
 			else if(!isUndefinedOrNullOrBlank(data))
-				await doForeach(option);
+				await doForeach(option, context);
 
 		} catch (error) {
 			console.error("error at jstl-foreach:", error);

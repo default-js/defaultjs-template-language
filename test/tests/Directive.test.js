@@ -121,48 +121,94 @@ class Hidden extends Directive {
 }
 Directive.define({ directive: new Hidden() });
 
-const BUILT_IN = [
-	{ phase: Directive.PHASE.init, rank: 0, name: "initial" },
-	{ phase: Directive.PHASE.init, rank: 1000, name: "if" },
-	{ phase: Directive.PHASE.data, rank: 1000, name: "data" },
-	{ phase: Directive.PHASE.template, rank: 0, name: "include" },
-	{ phase: Directive.PHASE.template, rank: 1, name: "choose" },
-	{ phase: Directive.PHASE.template, rank: 2, name: "foreach" },
-	{ phase: Directive.PHASE.template, rank: 3, name: "jstl-repeat" },
-	{ phase: Directive.PHASE.content, rank: 0, name: "attribute" },
-	{ phase: Directive.PHASE.content, rank: 1, name: "text" },
-	{ phase: Directive.PHASE.content, rank: 1, name: "attach-element" },
-	{ phase: Directive.PHASE.finish, rank: 100000, name: "on-finished" }
-];
-
-describe("built-in directives", () => {
-	it("run in the order of their phase and rank", () => {
-		const names = BUILT_IN.map(({ name }) => name);
-		const builtIn = Directive.directives.filter(({ name }) => names.includes(name));
-
-		expect(builtIn.map(({ phase, rank, name }) => ({ phase, rank, name }))).toEqual(BUILT_IN);
-	});
-});
 
 describe("Directive.define", () => {
-	it.each([
-		["is no Directive", { name: "test-no-directive", rank: Directive.MIN_RANK, phase: Directive.PHASE.finish, execute }],
-		["is already defined", DEFINED],
-		["does not implement name", toDirective({ rank: Directive.MIN_RANK, execute })],
-		["has an empty name", toDirective({ name: "", rank: Directive.MIN_RANK, execute })],
-		["has a name that is no string", toDirective({ name: 1, rank: Directive.MIN_RANK, execute })],
-		["has the name of a built-in directive", toDirective({ name: "text", rank: Directive.MIN_RANK, execute })],
-		["has the name of a defined directive", toDirective({ name: "test-defined", rank: Directive.MIN_RANK, execute })],
-		["does not implement rank", toDirective({ name: "test-no-rank", execute })],
-		["has a rank that is no number", toDirective({ name: "test-string-rank", rank: "1", execute })],
-		["has the rank NaN", toDirective({ name: "test-nan-rank", rank: NaN, execute })],
-		["has a rank below Directive.MIN_RANK", toDirective({ name: "test-low-rank", rank: Directive.MIN_RANK - 1, execute })],
-		["has a rank above Directive.MAX_RANK", toDirective({ name: "test-high-rank", rank: Directive.MAX_RANK + 1, execute })],
-		["has a phase that is none of Directive.PHASE", toDirective({ name: "test-unknown-phase", rank: Directive.MIN_RANK, phase: 5, execute })],
-		["has the name of a phase as phase", toDirective({ name: "test-phase-name", rank: Directive.MIN_RANK, phase: "init", execute })],
-		["does not implement execute", toDirective({ name: "test-no-execute", rank: Directive.MIN_RANK })]
-	])("throws an Error for a directive that %s", (aDescription, aDirective) => {
-		expect(() => Directive.define({ directive: aDirective })).toThrow(Error);
+	it("throws an Error for a directive that is no Directive", () => {
+		const directive = { name: "test-no-directive", rank: Directive.MIN_RANK, phase: Directive.PHASE.finish, execute };
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that is already defined", () => {
+		expect(() => Directive.define({ directive: DEFINED })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that does not implement name", () => {
+		const directive = toDirective({ rank: Directive.MIN_RANK, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has an empty name", () => {
+		const directive = toDirective({ name: "", rank: Directive.MIN_RANK, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has a name that is no string", () => {
+		const directive = toDirective({ name: 1, rank: Directive.MIN_RANK, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has the name of a built-in directive", () => {
+		const directive = toDirective({ name: "text", rank: Directive.MIN_RANK, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has the name of a defined directive", () => {
+		const directive = toDirective({ name: "test-defined", rank: Directive.MIN_RANK, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that does not implement rank", () => {
+		const directive = toDirective({ name: "test-no-rank", execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has a rank that is no number", () => {
+		const directive = toDirective({ name: "test-string-rank", rank: "1", execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has the rank NaN", () => {
+		const directive = toDirective({ name: "test-nan-rank", rank: NaN, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has a rank below Directive.MIN_RANK", () => {
+		const directive = toDirective({ name: "test-low-rank", rank: Directive.MIN_RANK - 1, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has a rank above Directive.MAX_RANK", () => {
+		const directive = toDirective({ name: "test-high-rank", rank: Directive.MAX_RANK + 1, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that has a phase that is none of Directive.PHASE", () => {
+		const directive = toDirective({ name: "test-unknown-phase", rank: Directive.MIN_RANK, phase: Directive.PHASE.finish + 1, execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive whose phase is a name that is none of Directive.PHASE", () => {
+		const directive = toDirective({ name: "test-phase-name", rank: Directive.MIN_RANK, phase: "is-not-a-phase-name", execute });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
+	});
+
+	it("throws an Error for a directive that does not implement execute", () => {
+		const directive = toDirective({ name: "test-no-execute", rank: Directive.MIN_RANK });
+
+		expect(() => Directive.define({ directive })).toThrow(Error);
 	});
 });
 

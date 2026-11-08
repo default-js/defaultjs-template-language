@@ -14,14 +14,21 @@ describe("jstl-include", () => {
 		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
 	});
 
-	it.each([
-		{ kind: "an expression", attribute: "${url}", data: { url: INCLUDE_URL } },
-		{ kind: "an expression awaiting an async function", attribute: "${await url()}", data: { url: async () => INCLUDE_URL } }
-	])("renders the template loaded from a URL given by $kind", async ({ attribute, data }) => {
+	it("renders the template loaded from a URL given by an expression", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div jstl-include="${attribute}"></div>`);
+		const template = await Template.load(`<div jstl-include="\${url}"></div>`);
 
-		await Renderer.render({ container, template, data });
+		await Renderer.render({ container, template, data: { url: INCLUDE_URL } });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
+	});
+
+	it("renders the template loaded from a URL given by an expression awaiting an async function", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-include="\${await url()}"></div>`);
+
+		await Renderer.render({ container, template, data: { url: async () => INCLUDE_URL } });
 
 		expect(container.children).toHaveLength(1);
 		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV"]);
@@ -38,17 +45,25 @@ describe("jstl-include", () => {
 	});
 
 	// defect: B46
-	it.fails.each([
-		{ mode: "append", tags: ["P", "DIV", "DIV", "DIV", "DIV", "DIV"] },
-		{ mode: "prepend", tags: ["DIV", "DIV", "DIV", "DIV", "DIV", "P"] }
-	])("keeps the content of the element in mode $mode", async ({ mode, tags }) => {
+	it.fails("keeps the content of the element in mode append", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div jstl-include="${INCLUDE_URL}" jstl-include-mode="${mode}"><p></p></div>`);
+		const template = await Template.load(`<div jstl-include="${INCLUDE_URL}" jstl-include-mode="append"><p></p></div>`);
 
 		await Renderer.render({ container, template });
 
 		expect(container.children).toHaveLength(1);
-		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(tags);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["P", "DIV", "DIV", "DIV", "DIV", "DIV"]);
+	});
+
+	// defect: B46
+	it.fails("keeps the content of the element in mode prepend", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-include="${INCLUDE_URL}" jstl-include-mode="prepend"><p></p></div>`);
+
+		await Renderer.render({ container, template });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (aChild) => aChild.tagName)).toEqual(["DIV", "DIV", "DIV", "DIV", "DIV", "P"]);
 	});
 
 	it("renders the template after jstl-if evaluated to true", async () => {

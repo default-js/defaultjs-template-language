@@ -100,8 +100,20 @@ const MODEWORKER = {
 const applyMode = ({ container, target, content, mode }) => {
 	if (!mode || !MODEWORKER[mode])
 		throw new Error(`Mode "${mode}" is not supported!`);
+
+	if(content instanceof HTMLElement)
+		content = resovleJstlElement(content);
+	else 
+		content = Array.from(content).map((c) => resovleJstlElement(c)).flat();
+
 	MODEWORKER[mode]({ container, target, content });
 };
+
+const resovleJstlElement = (content) => {
+	if(content instanceof HTMLElement && content.nodeName == "JSTL")
+		return Array.from(content.childNodes);
+	return content;	
+}
 
 /**
  * find the event target by mode, container and target definition
@@ -157,13 +169,6 @@ const toInitialContext = (renderOptions, renderer) => {
 	});
 };
 
-/**
- * @param {HTMLElement} element
- * @returns {HTMLElement}
- */
-const cloneNode = (element) => {
-	return document.createElement(element.nodeName);
-};
 
 export default class Renderer {
 	static MODETYPES = MODETYPES;
@@ -225,15 +230,13 @@ export default class Renderer {
 		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
 
 		context = toInitialContext(context, this);
-		fireEvent(eventTarget, EVENT__RENDER, context);
-
+		fireEvent(eventTarget, EVENT__RENDER, context);		
 		context = await this.#render(context);
-
-		context = await context.waitForReady();
+		
 		applyMode({
 			container,
 			target,
-			content: context.content,
+			content: context.container.childNodes,
 			mode: mode || MODETYPES.replace,
 		});
 
@@ -257,7 +260,11 @@ export default class Renderer {
 		context = await context.waitForReady();
 		const { container, content } = context;
 		if (!isNullOrUndefined(content) && content.length > 0 && !isNullOrUndefined(container))
-			container.append(content);
+			applyMode({
+			container,
+			content,
+			mode: MODETYPES.append
+		});
 
 		return context;
 	}
@@ -269,10 +276,11 @@ export default class Renderer {
 	 * @returns {Promise<Context>} the context of the rendering
 	 */
 	async #renderNodes(context) {
-		const { /**@type {Array<Node>} */ template, resolver, container } = context;
+		const { resolver, container } = context;
+		const template = /** @type {Array<Node>} */ (context.template);
 		/**@type {Array<Promise<Context>>} */
 		const promises = template.map((template) =>
-			this.#render(
+			this.#renderNode(
 				new Context({ container, template, resolver, renderer: this }),
 			),
 		);
@@ -318,12 +326,12 @@ export default class Renderer {
 						template: template.childNodes,
 						container: context.content,
 						renderer: this,
-						resolver,
+						resolver: context.resolver,
 					}),
 				),
 			);
 
-		context = await context.waitForReady();
+		context = await context.waitForReady();		
 
 		return context;
 	}

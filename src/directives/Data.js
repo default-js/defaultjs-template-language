@@ -1,23 +1,27 @@
+import Context from "../Context.js";
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 
 const MODES = {
-	"remote": async ({ data, context }) => {		
+	/** @param {{data: string, context: Context}} anOption */
+	"remote": async ({ data, context }) => {
 		const {resolver, template} = context;
 		data = await resolver.resolveText(data);
-		data = new URL(data, location);
+		const url = new URL(data, location);
 		let option = await resolver.resolveText(template.attr("jstl-data-option") || "{}");
 		option = JSON.parse(option);
 
-		data = await fetch(data.toString(), option);
+		data = await fetch(url, option);
 		return data.json();
 	},	
+	/** @param {{data: string, context: Context}} anOption */
 	"set": async ({ data, context }) => {
 		const {resolver} = context;
 		
 		data = await resolver.resolve(data);
 		return data;
 	},
+	/** @param {{data: string, context: Context}} anOption */
 	"direct": async ({ data, context }) => {
 		const {resolver} = context;
 		
@@ -26,17 +30,14 @@ const MODES = {
 	}
 };
 
+/** @param {{varname: string, data: *, scope: string, context: Context}} anOption */
 const updateContext = ({ varname, data, scope, context }) => {
 	if (varname)
 		context.resolver.updateData(varname, data, scope);
 	else if (scope)
 		context.resolver.mergeContext(data, scope);
-	else{
-		const resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
-		//context = context.subContext({resolver});
-		context.resolver = resolver;
-	}
-	
+	else
+		context.resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });	
 		
 	return context;
 };
@@ -52,6 +53,11 @@ class Data extends Directive {
 	get rank() { return 1000 }
 	get phase(){return Directive.PHASE.data}
 
+	/**
+	 * 
+	 * @param {Context} context 
+	 * @returns 
+	 */
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-data"))
 			return context;

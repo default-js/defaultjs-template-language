@@ -77,7 +77,10 @@ its backlog entry decides otherwise.
   `render` is awaited the handlers are bound, and `trigger` of `@default-js/defaultjs-extdom`
   dispatches synchronously. No timeout, no race, no `throw` or `expect` inside a handler, where a
   failure does not reach the case.
-- **One behaviour per case.** Variants of one behaviour stand as a table in `it.each`.
+- **One behaviour per case.** Every variant of a behaviour is a case of its own, written out with
+  its own name, data and assertions, so that a failure points at the line of that variant. No
+  `it.each`, no `describe.each`, no helper holding the assertions, no loop repeating assertions
+  within a case.
 
 ## How a case is written
 

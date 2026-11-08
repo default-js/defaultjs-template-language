@@ -83,16 +83,50 @@ describe("rendering an element", () => {
 });
 
 describe("jstl-tagname", () => {
-	it.each([
-		{ source: "div", template: `<div jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></div>`, data: {} },
-		{ source: "jstl", template: `<jstl jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: {} },
-		{ source: "an expression", template: `<jstl jstl-tagname="\${tagname}" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: { tagname: "span" } },
-		{ source: "an expression awaiting an async function", template: `<jstl jstl-tagname="\${await tagname()}" test-attr="attr"><span></span><span></span><span></span></jstl>`, data: { tagname: async () => "span" } }
-	])("renders the element as span, given by $source", async ({ template: source, data }) => {
+	it("renders a div as the tag it names", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(source);
+		const template = await Template.load(`<div jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></div>`);
 
-		await Renderer.render({ container, template, data });
+		await Renderer.render({ container, template, data: {} });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element).toBeInstanceOf(HTMLSpanElement);
+		expect(element.getAttribute("test-attr")).toBe("attr");
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SPAN", "SPAN", "SPAN"]);
+	});
+
+	it("renders a jstl tag as the tag it names", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<jstl jstl-tagname="span" test-attr="attr"><span></span><span></span><span></span></jstl>`);
+
+		await Renderer.render({ container, template, data: {} });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element).toBeInstanceOf(HTMLSpanElement);
+		expect(element.getAttribute("test-attr")).toBe("attr");
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SPAN", "SPAN", "SPAN"]);
+	});
+
+	it("renders the element as the tag an expression results in", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<jstl jstl-tagname="\${tagname}" test-attr="attr"><span></span><span></span><span></span></jstl>`);
+
+		await Renderer.render({ container, template, data: { tagname: "span" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element).toBeInstanceOf(HTMLSpanElement);
+		expect(element.getAttribute("test-attr")).toBe("attr");
+		expect(Array.from(element.children, (aChild) => aChild.tagName)).toEqual(["SPAN", "SPAN", "SPAN"]);
+	});
+
+	it("renders the element as the tag an expression awaiting an async function results in", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<jstl jstl-tagname="\${await tagname()}" test-attr="attr"><span></span><span></span><span></span></jstl>`);
+
+		await Renderer.render({ container, template, data: { tagname: async () => "span" } });
 
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];
@@ -140,14 +174,23 @@ describe("jstl-ignore-childs", () => {
 });
 
 describe("is", () => {
-	it.skipIf(server.browser === "webkit").each([
-		{ kind: "an expression", attribute: "${name}", data: { name: "test-div" } },
-		{ kind: "an expression awaiting an async function", attribute: "${await name()}", data: { name: async () => "test-div" } }
-	])("renders the customized built-in element named by $kind", async ({ attribute, data }) => {
+	it.skipIf(server.browser === "webkit")("renders the customized built-in element named by an expression", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div is="${attribute}"></div>`);
+		const template = await Template.load(`<div is="\${name}"></div>`);
 
-		await Renderer.render({ container, template, data });
+		await Renderer.render({ container, template, data: { name: "test-div" } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element).toBeInstanceOf(ExtDivTestElement);
+		expect(element.getAttribute("is")).toBe("test-div");
+	});
+
+	it.skipIf(server.browser === "webkit")("renders the customized built-in element named by an expression awaiting an async function", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div is="\${await name()}"></div>`);
+
+		await Renderer.render({ container, template, data: { name: async () => "test-div" } });
 
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];

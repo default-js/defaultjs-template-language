@@ -2,13 +2,23 @@ import { describe, it, expect, onTestFinished } from "vitest";
 import { Renderer, Template } from "../../../index.js";
 
 describe("jstl-attach-element", () => {
-	it.each([
-		{ mode: "by default", attribute: "" },
-		{ mode: "in mode replace", attribute: ` jstl-attach-element-mode="replace"` }
-	])("replaces the content by the element $mode", async ({ attribute }) => {
+	it("replaces the content by the element by default", async () => {
 		const container = document.createElement("div");
 		const span = document.createElement("span");
-		const template = await Template.load(`<div jstl-attach-element="\${element}"${attribute}><div></div></div>`);
+		const template = await Template.load(`<div jstl-attach-element="\${element}"><div></div></div>`);
+
+		await Renderer.render({ container, template, data: { element: span } });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.children).toHaveLength(1);
+		expect(element.children[0]).toBe(span);
+	});
+
+	it("replaces the content by the element in mode replace", async () => {
+		const container = document.createElement("div");
+		const span = document.createElement("span");
+		const template = await Template.load(`<div jstl-attach-element="\${element}" jstl-attach-element-mode="replace"><div></div></div>`);
 
 		await Renderer.render({ container, template, data: { element: span } });
 
@@ -59,18 +69,31 @@ describe("jstl-attach-element", () => {
 		expect(element.children[1].tagName).toBe("P");
 	});
 
-	it.each([
-		{ kind: "a selector", attribute: "#attach-element-test-by-selector", data: {} },
-		{ kind: "an expression resolving to a selector", attribute: "${selector}", data: { selector: "#attach-element-test-by-selector" } }
-	])("attaches the element of the document found by $kind", async ({ attribute, data }) => {
+	it("attaches the element of the document found by a selector", async () => {
 		const span = document.createElement("span");
 		span.id = "attach-element-test-by-selector";
 		document.body.append(span);
 		onTestFinished(() => span.remove());
 		const container = document.createElement("div");
-		const template = await Template.load(`<div jstl-attach-element="${attribute}"></div>`);
+		const template = await Template.load(`<div jstl-attach-element="#attach-element-test-by-selector"></div>`);
 
-		await Renderer.render({ container, template, data });
+		await Renderer.render({ container, template, data: {} });
+
+		expect(container.children).toHaveLength(1);
+		const element = container.children[0];
+		expect(element.children).toHaveLength(1);
+		expect(element.children[0]).toBe(span);
+	});
+
+	it("attaches the element of the document found by an expression resolving to a selector", async () => {
+		const span = document.createElement("span");
+		span.id = "attach-element-test-by-selector";
+		document.body.append(span);
+		onTestFinished(() => span.remove());
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-attach-element="\${selector}"></div>`);
+
+		await Renderer.render({ container, template, data: { selector: "#attach-element-test-by-selector" } });
 
 		expect(container.children).toHaveLength(1);
 		const element = container.children[0];

@@ -29,6 +29,12 @@ export const toTemplate = (aTemplate) => {
 	else throw new Error("Template type is not supported!");
 };
 
+
+/**
+ * @export
+ * @class Context
+ * @typedef {Context}
+ */
 export default class Context {
 	/** @type {Context|null} */
 	#parent = null;
@@ -61,26 +67,28 @@ export default class Context {
 	 *
 	 * @constructor
 	 * @param {object} options
+	 * @param {Node|Array<Node>|null} [options.content]
 	 * @param {import("./Renderer.js").default} options.renderer
 	 * @param {ExpressionResolver} [options.resolver]
 	 * @param {HTMLElement} options.container
 	 * @param {Template|string|Node|NodeList|HTMLCollection|Array<Node>} options.template
 	 */
-	constructor({ template, container, renderer, resolver } = {}) {
+	constructor({ content = null, template, container, renderer, resolver = null }) {
 		if (!renderer)
 			throw new Error(
 				'Parameter "renderer" is required!',
 			);
-		if (!resolver || !(resolver instanceof ExpressionResolver))
+		if (resolver && !(resolver instanceof ExpressionResolver))
 			throw new Error(
-				'Parameter "resolver" is required and must be an ExpressionResolver!',
+				'Parameter "resolver" must be an ExpressionResolver!',
 			);
 		if (!template) throw new Error('Parameter "template" is required!');
 
+		this.#content = content;
 		this.#container = container
 		this.#template = toTemplate(template);
 		this.#renderer = renderer;
-		this.#resolver = resolver;
+		this.#resolver = resolver ? resolver : renderer.resolver;
 	}
 	
 	/**
@@ -101,6 +109,13 @@ export default class Context {
 	 */
 	get resolver() {
 		return this.#resolver;
+	}
+
+	set resolver(aResolver) {
+		if (this.#ready.resolved) throw new Error("Context is resolved!");
+		else if (!(aResolver instanceof ExpressionResolver))
+			throw new Error("resolver must be an ExpressionResolver!");
+		else this.#resolver = aResolver;
 	}
 
 	/**

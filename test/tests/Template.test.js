@@ -92,12 +92,16 @@ describe("Template.load", () => {
 		expect(Array.from(content.children[0].children, (anElement) => anElement.tagName)).toEqual(["DIV", "SPAN"]);
 	});
 
-	it.each([
-		{ type: "number", value: 42 },
-		{ type: "plain object", value: {} },
-		{ type: "null", value: null }
-	])("rejects a $type with an Error", async ({ value }) => {
-		await expect(Template.load(value, false)).rejects.toBeInstanceOf(Error);
+	it("rejects a number with an Error", async () => {
+		await expect(Template.load(42, false)).rejects.toBeInstanceOf(Error);
+	});
+
+	it("rejects a plain object with an Error", async () => {
+		await expect(Template.load({}, false)).rejects.toBeInstanceOf(Error);
+	});
+
+	it("rejects null with an Error", async () => {
+		await expect(Template.load(null, false)).rejects.toBeInstanceOf(Error);
 	});
 });
 
@@ -128,12 +132,16 @@ describe("Template.fetch", () => {
 		expect(result.template.content.children).toHaveLength(5);
 	});
 
-	it.each([
-		{ type: "number", value: 42 },
-		{ type: "plain object", value: {} },
-		{ type: "null", value: null }
-	])("rejects a $type with an Error", async ({ value }) => {
-		await expect(Template.fetch(value, false)).rejects.toBeInstanceOf(Error);
+	it("rejects a number with an Error", async () => {
+		await expect(Template.fetch(42, false)).rejects.toBeInstanceOf(Error);
+	});
+
+	it("rejects a plain object with an Error", async () => {
+		await expect(Template.fetch({}, false)).rejects.toBeInstanceOf(Error);
+	});
+
+	it("rejects null with an Error", async () => {
+		await expect(Template.fetch(null, false)).rejects.toBeInstanceOf(Error);
 	});
 });
 
@@ -171,14 +179,20 @@ describe("Template.load - cache", () => {
 		expect(result).toBe(expected);
 	});
 
-	it.each([
-		{ type: "Node", source: () => create(`<div><div></div><span></span></div>`).first() },
-		{ type: "NodeList", source: () => create(`<div><div></div><span></span></div>`) }
-	])("creates a new template from a $type when cache is false", async ({ source }) => {
-		const node = source();
+	it("creates a new template from a Node when cache is false", async () => {
+		const node = create(`<div><div></div><span></span></div>`).first();
 
 		const expected = await Template.load(node, false);
 		const result = await Template.load(node, false);
+
+		expect(result).not.toBe(expected);
+	});
+
+	it("creates a new template from a NodeList when cache is false", async () => {
+		const nodelist = create(`<div><div></div><span></span></div>`);
+
+		const expected = await Template.load(nodelist, false);
+		const result = await Template.load(nodelist, false);
 
 		expect(result).not.toBe(expected);
 	});
@@ -264,12 +278,26 @@ describe("toAsyncTemplateLoader", () => {
 		expect(source).toHaveBeenCalledOnce();
 	});
 
-	it.each([
-		{ kind: "a source", template: () => `<p></p>` },
-		{ kind: "a promise of a source", template: () => Promise.resolve(`<p></p>`) },
-		{ kind: "a function answering a source", template: () => () => `<p></p>` }
-	])("loads the template from $kind", async ({ template }) => {
-		const loader = toAsyncTemplateLoader(template());
+	it("loads the template from a source", async () => {
+		const loader = toAsyncTemplateLoader(`<p></p>`);
+
+		const result = await loader();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+	});
+
+	it("loads the template from a promise of a source", async () => {
+		const loader = toAsyncTemplateLoader(Promise.resolve(`<p></p>`));
+
+		const result = await loader();
+
+		expect(result).toBeInstanceOf(Template);
+		expect(Array.from(result.template.content.children, (aChild) => aChild.tagName)).toEqual(["P"]);
+	});
+
+	it("loads the template from a function answering a source", async () => {
+		const loader = toAsyncTemplateLoader(() => `<p></p>`);
 
 		const result = await loader();
 

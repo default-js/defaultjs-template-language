@@ -448,3 +448,31 @@ the element `findEventTarget` picks — the container, the target, or for `rende
 `replace` the parent of the target — and none in the mode `none`. `src/RendererOld.js` triggered no
 event, and `README.md` does not describe them; no case covers them. Found 2026-10-26: to be decided
 whether `README.md` describes them.
+
+### B66 — `Directive.define` does not check a numeric `phase`, and does not convert a name
+
+**Status:** open · **Kind:** defect
+
+`src/Directive.js`, `defineDirective`, in the uncommitted state of 2026-11-08: only a `string` is
+looked up in `Directive.PHASE`, a `number` passes unchecked; the check before, `Object.values(PHASE)
+.includes(phase)`, rejected it. Measured 2026-11-08 in Chromium: "throws an Error for a directive
+that has a phase that is none of Directive.PHASE" of `test/tests/Directive.test.js`, with
+`Directive.PHASE.finish + 1`, fails with "expected function to throw an error, but it didn't".
+
+The name of a phase is accepted, and the number it stands for only reaches a local variable. The
+sort of `DEFINED_DIRECTIVES` reads `phase` of the directive, so `a.phase - b.phase` is `NaN` and the
+place of the directive is undetermined. Found 2026-11-08 by reading the code; not measured.
+`README.md` says "one of `Directive.PHASE`" and mentions no names: whether names are accepted goes
+into `README.md` first.
+
+### B67 — `README.md` and the code disagree on the ranks and phases of directives
+
+**Status:** open · **Kind:** defect
+
+`README.md`, "Custom Directives", gives `Directive.MIN_RANK` as 0, `Directive.MAX_RANK` as 100000,
+the phases `init`, `data`, `template`, `content` and `finish`, and `if` in the phase `init`.
+`src/Directive.js` has `Number.MIN_SAFE_INTEGER` and `Number.MAX_SAFE_INTEGER` as the limits and a
+further phase `control`; `src/directives/If.js` runs in `control` since `68904ac`. Found 2026-11-08
+by reading the code. The case "run in the order of their phase and rank" of
+`test/tests/Directive.test.js`, which asserted the table of `README.md`, is removed in the
+uncommitted state of 2026-11-08.

@@ -19,6 +19,27 @@ A decision that is only a step inside a running undertaking stays in that undert
 
 ---
 
+## 2026-11-08 — Are the variants of a behaviour written as a table?
+
+**Decision:** No. Every variant is a case of its own, written out with its own name, data and
+assertions: no `it.each`, no `describe.each`, no helper holding the assertions, no loop repeating
+assertions within a case. `TESTING.md` sets it out under "What a case asserts". The maintainer's
+decision.
+
+**Reasoning:** A table is hard to evaluate (the maintainer). Seen 2026-11-08 with the 15 rows of
+`Directive.define` in `test/tests/Directive.test.js`: the report named the failing row in its title
+only, while the code frame and its link pointed at the one line of the shared body, whichever row
+failed. A case of its own fails at its own line. The report prints the code frame of the first
+stack frame only, so a helper holding the assertions would again point at a shared line.
+
+**Alternatives:** Tables, as `TESTING.md` asked for until then — fewer lines, and one place to
+change what the variants share. One `it` per variant calling a helper that holds the assertions —
+shorter, with the code frame in the helper.
+
+**Consequences:** The 37 tables of the suite are written out, and the test files grew from 3040 to
+3647 lines (measured 2026-11-08). What the variants of a behaviour share is changed in each of
+them.
+
 ## 2026-10-18 — Which types do the `template` and the `content` of a `Context` have?
 
 **Decision:** A `Node` or an `Array<Node>`, the `content` also `null`. The constructor and the

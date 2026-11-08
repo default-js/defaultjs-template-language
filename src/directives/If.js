@@ -1,3 +1,4 @@
+import Context from "../Context.js";
 import Directive from "../Directive.js";
 
 const ATTRIBUTE_NAME = "jstl-if";
@@ -11,6 +12,11 @@ class If extends Directive {
 	get rank() { return 1000 }
 	get phase() { return Directive.PHASE.control }
 
+	/**
+	 * 
+	 * @param {Context} context 
+	 * @returns 
+	 */
 	async execute(context) {
 		const { template, resolver } = context;
 		if (!(template instanceof HTMLElement) || !template.attr(ATTRIBUTE_NAME))

@@ -1,3 +1,4 @@
+import Context from "../Context.js";
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
 
@@ -16,23 +17,29 @@ class OnFinished extends Directive {
 
 
 
+	
+	/**
+	 * Description placeholder
+	 *
+	 * @async
+	 * @param {Context} context 
+	 * @returns {Context} 
+	 */
 	async execute(context) {
-		const { template, content, root } = context;
+		const { template, content } = context;
 		if (!(template instanceof HTMLElement) || !template.hasAttribute(ATTRIBUTE_ON_FINISHED))
 			return context;
 
 		const expression = template.attr(ATTRIBUTE_ON_FINISHED);
 		const asyncCall = template.hasAttribute(ATTRIBUTE_ON_FINISHED_ASYNC);
 
-		const data = {
+		const resolver = new ExpressionResolver({ context: {
 			$element: content,
-			$root: root,
 			$template: template
-		};
-		const resolver = new ExpressionResolver({ context: data, name: "jstl-data", parent: context.resolver });
+		}, name: ATTRIBUTE_ON_FINISHED, parent: context.resolver });
 
-
-		context.finished(async () => {
+		
+		context.addCallback(async () => {
 			try {
 				if(!asyncCall)
 					return resolver.resolve(expression, null);
@@ -41,7 +48,7 @@ class OnFinished extends Directive {
 			} catch (e) {
 				console.error(e);
 			}
-		});
+		}, true);
 
 		return context;
 	}

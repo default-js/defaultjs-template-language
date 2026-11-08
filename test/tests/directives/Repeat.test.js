@@ -42,17 +42,31 @@ describe("jstl-repeat", () => {
 		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["a-false", "c-false", "e-true"]);
 	});
 
-	it.each([
-		{ start: 1, step: 1, count: 3, expected: ["b-4", "c-4", "d-4"] },
-		{ start: 0, step: 2, count: 3, expected: ["a-3", "c-3"] },
-		{ start: 0, step: 1, count: 0, expected: ["a-5", "b-5", "c-5", "d-5", "e-5"] }
-	])("iterates the items below start $start + count $count with step $step, status.count the end", async ({ start, step, count, expected }) => {
+	it("iterates only the items with an index below start + count, with that limit as status.count", async () => {
 		const container = document.createElement("div");
-		const template = await Template.load(`<div jstl-repeat="\${list}" jstl-repeat-start="${start}" jstl-repeat-step="${step}" jstl-repeat-count="\${count}">\${item}-\${status.count}</div>`);
+		const template = await Template.load(`<div jstl-repeat="\${list}" jstl-repeat-start="1" jstl-repeat-step="1" jstl-repeat-count="\${count}">\${item}-\${status.count}</div>`);
 
-		await Renderer.render({ container, template, data: { list: ["a", "b", "c", "d", "e"], count } });
+		await Renderer.render({ container, template, data: { list: ["a", "b", "c", "d", "e"], count: 3 } });
 
-		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(expected);
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["b-4", "c-4", "d-4"]);
+	});
+
+	it("applies the step to the items with an index below count, with count as status.count", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-repeat="\${list}" jstl-repeat-start="0" jstl-repeat-step="2" jstl-repeat-count="\${count}">\${item}-\${status.count}</div>`);
+
+		await Renderer.render({ container, template, data: { list: ["a", "b", "c", "d", "e"], count: 3 } });
+
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["a-3", "c-3"]);
+	});
+
+	it("iterates all items with a count of 0, with their number as status.count", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-repeat="\${list}" jstl-repeat-start="0" jstl-repeat-step="1" jstl-repeat-count="\${count}">\${item}-\${status.count}</div>`);
+
+		await Renderer.render({ container, template, data: { list: ["a", "b", "c", "d", "e"], count: 0 } });
+
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["a-5", "b-5", "c-5", "d-5", "e-5"]);
 	});
 
 	it("stops before the item for which jstl-repeat-condition is true", async () => {
@@ -75,14 +89,21 @@ describe("jstl-repeat", () => {
 		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["0-true-false-1", "1-false-false-1", "2-false-true-1"]);
 	});
 
-	it.each([
-		{ kind: "an array", data: ["x", "y"] },
-		{ kind: "an object", data: { a: "x", b: "y" } }
-	])("carries number and data in the status of $kind", async ({ data }) => {
+	it("carries number and data in the status of an array", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<div jstl-repeat="\${data}">\${item}-\${status.number}-\${status.data === data}</div>`);
 
-		await Renderer.render({ container, template, data: { data } });
+		await Renderer.render({ container, template, data: { data: ["x", "y"] } });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "DIV"]);
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["x-1-true", "y-2-true"]);
+	});
+
+	it("carries number and data in the status of an object", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<div jstl-repeat="\${data}">\${item}-\${status.number}-\${status.data === data}</div>`);
+
+		await Renderer.render({ container, template, data: { data: { a: "x", b: "y" } } });
 
 		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["DIV", "DIV"]);
 		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["x-1-true", "y-2-true"]);

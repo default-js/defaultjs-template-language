@@ -1,5 +1,8 @@
+import Context from "../Context.js";
 import Directive from "../Directive.js";
 import Template from "../Template.js";
+
+const ATTRIBUTE_BASE = "jstl-include";
 
 class Include extends Directive {
 	constructor() {
@@ -16,28 +19,38 @@ class Include extends Directive {
 		return Directive.PHASE.template;
 	}
 
+	/**
+	 *
+	 * @param {Context} context
+	 * @returns
+	 */
 	async execute(context) {
-		if (!(context.template instanceof HTMLElement) || !context.template.attr("jstl-include")) return context;
+		if (
+			!(context.template instanceof HTMLElement) ||
+			!context.template.attr(ATTRIBUTE_BASE)
+		)
+			return context;
 		try {
 			const { template, resolver, renderer } = context;
-			let include = template.attr("jstl-include");
+			let include = template.attr(ATTRIBUTE_BASE);
 			include = await resolver.resolveText(include);
 			include = new URL(include, location);
 			include = await Template.load(include);
 
-			const mode = template.attr("jstl-include-mode") || "replace";
-
-			const subContext = context.subContext({ template: include, container: context.content, mode});
-			await renderer.render(subContext);
-			await subContext.ready();
-			context.ignore = true;
-			context.stop = false;
-
-			return context;
+			context.stop = true;
+			context.ignoreChildren = true;
+			await renderer.render(
+					new Context({
+						template: include,
+						container: context.content,
+						renderer: context.renderer,
+					})
+			);
 		} catch (e) {
 			console.error(e, context.template);
-			return context;
 		}
+
+		return context;
 	}
 }
 

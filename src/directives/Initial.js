@@ -1,5 +1,6 @@
 import Context from "../Context.js";
 import Directive from "../Directive.js";
+import DirectiveElement from "../DirectiveElement.js";
 import Replace from "../elements/Replace.js";
 
 const MARKER_IGNORE = "jstl-ignore";
@@ -39,34 +40,21 @@ class Initial extends Directive {
 		const { template, renderer, resolver } = context;
 		if (!(template instanceof Element)) {
 			context.content = document.importNode(template, true);
-		} else {
+		} else if (template instanceof DirectiveElement) {
+			context.stop = true;
+			context.ignoreChildren = true;
+		}else {
 			if (template.hasAttribute(MARKER_IGNORE)) {
 				context.content = document.importNode(template, true);
 				context.content.removeAttribute(MARKER_IGNORE);
 				context.stop = true;
-				context.ignore = true;
-			} else if (false && template.hasAttribute(MARKER_ASYNC)) {
-				context.content = new Replace();
-				template.attr(MARKER_ASYNC, null);
-				const renderOption = context.toRenderOption({
-					mode: "replace",
-					target: context.content,
-				});
-				setTimeout(
-					() => {
-						renderer.render(renderOption);
-					},
-					parseInt(template.attr(MARKER_ASYNC) || "250") || 250,
-				);
-				context.stop = true;
-				context.ignore = true;
+				context.ignoreChildren = true;
 			} else if (template instanceof HTMLTemplateElement) {
 				context.content = document.createElement(template.tagName);
 				const subContext = new Context({
-					template: Array.from(template.content.childNodes),
+					template: template.content.childNodes,
 					container: context.content.content,
-					renderer,
-					resolver,
+					renderer
 				});
 				context.addBlocking(renderer.render(subContext));
 				context.ignoreChildren = true;
@@ -96,7 +84,7 @@ class Initial extends Directive {
 			}
 
 			if (!context.stop && template.hasAttribute(MARKER_IGNORE_CHILDS)) {
-				context.ignore = true;
+				context.ignoreChildren = true;
 				const clone = document.importNode(template, true);
 				if (template instanceof HTMLTemplateElement)
 					context.content.content.append(clone.content);

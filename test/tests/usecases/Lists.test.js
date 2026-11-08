@@ -37,16 +37,22 @@ describe("list", () => {
 		expect(Array.from(element.children, (aList) => Array.from(aList.children, (anItem) => anItem.textContent))).toEqual([["0-0-a", "0-1-b"], ["1-0-c"]]);
 	});
 
-	it.each([
-		{ render: true, lists: [["a", "b"]] },
-		{ render: false, lists: [] }
-	])("with jstl-if evaluating to $render beside jstl-foreach renders $lists", async ({ render, lists }) => {
+	it("renders the loop with jstl-if evaluating to true beside jstl-foreach", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<ul jstl-if="\${render}" jstl-foreach="\${items}"><li>\${item}</li></ul>`);
 
-		await Renderer.render({ container, template, data: { render, items: ["a", "b"] } });
+		await Renderer.render({ container, template, data: { render: true, items: ["a", "b"] } });
 
-		expect(Array.from(container.children, (aList) => Array.from(aList.children, (anItem) => anItem.textContent))).toEqual(lists);
+		expect(Array.from(container.children, (aList) => Array.from(aList.children, (anItem) => anItem.textContent))).toEqual([["a", "b"]]);
+	});
+
+	it("renders nothing with jstl-if evaluating to false beside jstl-foreach", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<ul jstl-if="\${render}" jstl-foreach="\${items}"><li>\${item}</li></ul>`);
+
+		await Renderer.render({ container, template, data: { render: false, items: ["a", "b"] } });
+
+		expect(Array.from(container.children, (aList) => Array.from(aList.children, (anItem) => anItem.textContent))).toEqual([]);
 	});
 
 	it("renders only the items a jstl tag with jstl-if lets through", async () => {
@@ -79,18 +85,36 @@ describe("list", () => {
 		expect(Array.from(container.children[0].children, (anItem) => anItem.textContent)).toEqual(["first", "a", "b", "last"]);
 	});
 
-	it.each([
-		{ mode: "replace", children: ["LI:a", "LI:b", "I:"] },
-		{ mode: "append", children: ["SPAN:", "LI:a", "LI:b", "I:"] },
-		{ mode: "prepend", children: ["LI:a", "LI:b", "SPAN:", "I:"] }
-	])("places the elements of a jstl-repeat at the top of the template by the target with mode $mode", async ({ mode, children }) => {
+	it("places the elements of a jstl-repeat at the top of the template by the target with mode replace", async () => {
 		const container = document.createElement("div");
 		container.innerHTML = "<span></span><i></i>";
 		const template = await Template.load(`<li jstl-repeat="\${items}">\${item}</li>`);
 
-		await Renderer.render({ container, template, data: { items: ["a", "b"] }, mode, target: container.children[0] });
+		await Renderer.render({ container, template, data: { items: ["a", "b"] }, mode: "replace", target: container.children[0] });
 
-		expect(Array.from(container.children, (anElement) => `${anElement.tagName}:${anElement.textContent}`)).toEqual(children);
+		expect(Array.from(container.children, (anElement) => `${anElement.tagName}:${anElement.textContent}`)).toEqual(["LI:a", "LI:b", "I:"]);
+		expect(container.textContent).toBe("ab");
+	});
+
+	it("places the elements of a jstl-repeat at the top of the template by the target with mode append", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = "<span></span><i></i>";
+		const template = await Template.load(`<li jstl-repeat="\${items}">\${item}</li>`);
+
+		await Renderer.render({ container, template, data: { items: ["a", "b"] }, mode: "append", target: container.children[0] });
+
+		expect(Array.from(container.children, (anElement) => `${anElement.tagName}:${anElement.textContent}`)).toEqual(["SPAN:", "LI:a", "LI:b", "I:"]);
+		expect(container.textContent).toBe("ab");
+	});
+
+	it("places the elements of a jstl-repeat at the top of the template by the target with mode prepend", async () => {
+		const container = document.createElement("div");
+		container.innerHTML = "<span></span><i></i>";
+		const template = await Template.load(`<li jstl-repeat="\${items}">\${item}</li>`);
+
+		await Renderer.render({ container, template, data: { items: ["a", "b"] }, mode: "prepend", target: container.children[0] });
+
+		expect(Array.from(container.children, (anElement) => `${anElement.tagName}:${anElement.textContent}`)).toEqual(["LI:a", "LI:b", "SPAN:", "I:"]);
 		expect(container.textContent).toBe("ab");
 	});
 
@@ -104,30 +128,44 @@ describe("list", () => {
 		expect(container.children[0].childNodes).toHaveLength(0);
 	});
 
-	it.each([
-		{ items: [], tagNames: ["P"], texts: ["empty"] },
-		{ items: ["a", "b"], tagNames: ["UL"], texts: ["ab"] }
-	])("shows an empty state by jstl-choose, rendering $tagNames for $items", async ({ items, tagNames, texts }) => {
+	it("shows the empty state by jstl-choose for an empty list", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<jstl jstl-choose><p jstl-when="\${items.length == 0}">empty</p><ul jstl-otherwise jstl-foreach="\${items}"><li>\${item}</li></ul></jstl>`);
 
-		await Renderer.render({ container, template, data: { items } });
+		await Renderer.render({ container, template, data: { items: [] } });
 
-		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(tagNames);
-		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(texts);
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["P"]);
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["empty"]);
 	});
 
-	it.each([
-		{ render: true, texts: ["a", "b"] },
-		{ render: false, texts: [] }
-	])("with jstl-if evaluating to $render beside jstl-repeat renders $texts", async ({ render, texts }) => {
+	it("shows the list instead of the empty state by jstl-choose for a list with items", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<jstl jstl-choose><p jstl-when="\${items.length == 0}">empty</p><ul jstl-otherwise jstl-foreach="\${items}"><li>\${item}</li></ul></jstl>`);
+
+		await Renderer.render({ container, template, data: { items: ["a", "b"] } });
+
+		expect(Array.from(container.children, (anElement) => anElement.tagName)).toEqual(["UL"]);
+		expect(Array.from(container.children, (anElement) => anElement.textContent)).toEqual(["ab"]);
+	});
+
+	it("renders the elements of jstl-repeat with jstl-if evaluating to true beside it", async () => {
 		const container = document.createElement("div");
 		const template = await Template.load(`<ul><li jstl-if="\${render}" jstl-repeat="\${items}">\${item}</li></ul>`);
 
-		await Renderer.render({ container, template, data: { render, items: ["a", "b"] } });
+		await Renderer.render({ container, template, data: { render: true, items: ["a", "b"] } });
 
 		expect(container.children).toHaveLength(1);
-		expect(Array.from(container.children[0].children, (anItem) => anItem.textContent)).toEqual(texts);
+		expect(Array.from(container.children[0].children, (anItem) => anItem.textContent)).toEqual(["a", "b"]);
+	});
+
+	it("renders no element of jstl-repeat with jstl-if evaluating to false beside it", async () => {
+		const container = document.createElement("div");
+		const template = await Template.load(`<ul><li jstl-if="\${render}" jstl-repeat="\${items}">\${item}</li></ul>`);
+
+		await Renderer.render({ container, template, data: { render: false, items: ["a", "b"] } });
+
+		expect(container.children).toHaveLength(1);
+		expect(Array.from(container.children[0].children, (anItem) => anItem.textContent)).toEqual([]);
 	});
 
 	it("sets the attributes of each element of jstl-repeat by its item and status", async () => {

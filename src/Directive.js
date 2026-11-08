@@ -16,7 +16,7 @@ const defineDirective = ({ directive }) => {
 	if (!(directive instanceof Directive))
 		throw new Error("The directive does not extend the class Directive!");
 
-	const { name, rank, phase } = directive;
+	let { name, rank, phase } = directive;
 	if (typeof name !== "string" || name.length == 0)
 		throw new Error("The name of a directive must be a non-empty string!");
 
@@ -26,8 +26,16 @@ const defineDirective = ({ directive }) => {
 	if (typeof rank !== "number" || !(rank >= Directive.MIN_RANK && rank <= Directive.MAX_RANK))
 		throw new Error(`The rank of the directive "${name}" must be a number from ${Directive.MIN_RANK} to ${Directive.MAX_RANK}!`);
 
-	if (!Object.values(PHASE).includes(phase))
-		throw new Error(`The phase of the directive "${name}" must be one of Directive.PHASE!`);
+	if( typeof phase !== "number" && typeof phase !== "string")		
+		throw new Error(`The phase of the directive "${name}" must be a number or a string from Directive.PHASE!`);	
+
+	if( typeof phase === "string" && typeof Directive.PHASE[phase] === 'undefined')
+		throw new Error(`The phase of the directive "${name}" must be a number or a string from Directive.PHASE!`);	
+	if( typeof phase === "string")
+		phase = Directive.PHASE[phase];
+
+	if(phase < Directive.PHASE.init || phase > Directive.PHASE.finish)
+		throw new Error(`The phase of the directive "${name}" must be a number or a string from Directive.PHASE!`);
 
 	if (directive.execute === Directive.prototype.execute)
 		throw new Error(`The directive "${name}" does not implement execute!`);
@@ -68,19 +76,19 @@ export default class Directive {
 	 *
 	 * @returns {typeof PHASE}
 	 */
-	static get PHASE() { return PHASE };
+	static PHASE = PHASE ;
 	/**
 	 * The lowest rank of a directive.
 	 *
 	 * @returns {number}
 	 */
-	static get MIN_RANK() { return Number.MIN_SAFE_INTEGER };
+	static MIN_RANK = Number.MIN_SAFE_INTEGER ;
 	/**
 	 * The highest rank of a directive.
 	 *
 	 * @returns {number}
 	 */
-	static get MAX_RANK() { return Number.MAX_SAFE_INTEGER };
+	static MAX_RANK = Number.MAX_SAFE_INTEGER ;
 
 	constructor() { };
 
