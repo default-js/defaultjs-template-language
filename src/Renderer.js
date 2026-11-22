@@ -256,10 +256,7 @@ export default class Renderer {
 
 		context = await context.waitForReady();
 		const { container, content } = context;
-		if (
-			!isNullOrUndefined(content) &&
-			!isNullOrUndefined(container)
-		)
+		if (!isNullOrUndefined(content) && !isNullOrUndefined(container))
 			applyMode({
 				container,
 				content,
@@ -312,7 +309,8 @@ export default class Renderer {
 			resolver: new ExpressionResolver({ name: SCOPE__NODE, parent: resolver }),
 			excludedDirectives: context.excludedDirectives,
 		});
-
+		//Todo how to hande if one node results in multiple nodes, e.g. a directive that renders a list of items 
+		// how to handle the switch from one Context to multiple Contexts
 		for (const directive of Directive.directives) {
 			const accepted = context.acceptDirective(directive);
 			if (accepted) {
