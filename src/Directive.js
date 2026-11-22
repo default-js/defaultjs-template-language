@@ -2,6 +2,7 @@ import Context from "./ContextOld.js";
 
 
 const DEFINED_DIRECTIVES = [];
+const DIRECTIVE_MAP = new Map();
 
 
 /**
@@ -41,6 +42,7 @@ const defineDirective = ({ directive }) => {
 		throw new Error(`The directive "${name}" does not implement execute!`);
 
 	DEFINED_DIRECTIVES.push(directive);
+	DIRECTIVE_MAP.set(name, directive);
 	DEFINED_DIRECTIVES.sort((a, b) => {
 		const phase = a.phase - b.phase;
 		if(phase == 0)
@@ -135,6 +137,15 @@ export default class Directive {
 		defineDirective(anOption);
 	}
 
+	/**
+	 * Gets a directive by its name.
+	 *
+	 * @param {String} name 
+	 * @returns {Directive|null} the directive with the given name, or null if not found
+	 */
+	static getDirectiveByName(name) {
+		return DIRECTIVE_MAP.get(name);
+	}
 
 	/**
 	 * The defined directives, in the order they run.

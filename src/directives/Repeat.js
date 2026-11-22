@@ -1,5 +1,6 @@
 import Directive from "../Directive.js";
 import ExpressionResolver from "@default-js/defaultjs-expression-language/src/ExpressionResolver.js";
+import Context from "../Context.js";
 
 const DIRECTIVENAME = "jstl-repeat";
 const IGNOREDIRECTIVE = new Set([DIRECTIVENAME]);
@@ -14,8 +15,30 @@ const ATTRIBUTE = {
 	CONDITION: `${DIRECTIVENAME}-condition`,
 };
 
-const doCount = async (option) => {
-	let { start, step, count, varname, status, resolver } = option;
+/**
+ * Description placeholder
+ *
+ * @param {*} iteration 
+ * @param {Context} context 
+ * @returns {Context} 
+ */
+const toContext = (iteration, {template, resolver, content, renderer}) => {
+	return new Context({
+		template: template,
+		container: content,
+		renderer: renderer,
+		resolver: new ExpressionResolver({ context: iteration, name: DIRECTIVENAME, parent: resolver }),
+		excludedDirectives: IGNOREDIRECTIVE
+	});
+};
+
+/**
+ * 
+ * @param {*} options 
+ * @param {Context} context 
+ */
+const doCount = async ({ start, step, count, varname, status, condition }, context) => {
+	const {resolver} = context;
 	count = await resolver.resolve(count);
 	const length = start + count * step;
 	let stop = false;
@@ -30,12 +53,20 @@ const doCount = async (option) => {
 			step,
 			count,
 		};
-		stop = !(await iterate(iteration, option));
+		
+		let itemContext = toContext(iteration, context);
+		itemContext = await iterate(condition, itemContext);
+		stop = itemContext.stop;
 	}
 };
 
-const doRepeat = async (option) => {
-	let { data, start, step, count, varname, status, resolver } = option;
+/**
+ * 
+ * @param {*} options 
+ * @param {Context} context 
+ */
+const doRepeat = async ({ data, start, step, count, varname, status, condition }, context) => {
+	const {resolver} = context;
 
 	data = await resolver.resolve(data);
 	const isObject = !(data instanceof Array);
@@ -46,6 +77,7 @@ const doRepeat = async (option) => {
 	const length = count ? Math.min(start + count, array.length) : array.length;
 	let stop = false;
 	for (let i = start; i < length && !stop; i = i + step) {
+		console.log("repeat", i, length, start, step, count, data, array);
 		const iteration = {};
 		iteration[varname] = isObject ? data[array[i]] : data[i];
 		iteration[status] = {
@@ -58,22 +90,31 @@ const doRepeat = async (option) => {
 			key: isObject ? array[i] : i,
 			data
 		};
-		stop = !(await iterate(iteration, option));
+		
+		let itemContext = toContext(iteration, context);
+		itemContext = await iterate(condition, itemContext);
+		stop = itemContext.stop;
 	}
 };
 
-const iterate = async (data, option) => {
-	let { template, resolver, renderer, condition, context, container } = option;
-	resolver = new ExpressionResolver({ context: data, name: DIRECTIVENAME, parent: resolver });
-
+/**
+ * Description placeholder
+ *
+ * @async
+ * @param {String|null} condition 
+ * @param {Context} context 
+ * @returns {Context} 
+ */
+const iterate = async (condition, context) => {
+	const { resolver, renderer } = context;
 	condition = condition ? await resolver.resolve(condition, false) : false;
-	if (condition) return false;
-
-	const itemContext = context.subContext({ resolver, template, container, target: null, mode: "append", ignoreDirective: IGNOREDIRECTIVE });
-	await renderer.render(itemContext);
-	await itemContext.ready();
-
-	return true;
+	if (condition){
+		context.stop = true;
+		return context;
+	}
+	await renderer.render(context);
+	await context.waitForReady();	
+	return context;
 };
 
 class Repeat extends Directive {
@@ -85,18 +126,22 @@ class Repeat extends Directive {
 		return DIRECTIVENAME;
 	}
 	get rank() {
-		return Directive.MIN_RANK + 3;
+		return 3;
 	}
 	get phase() {
 		return Directive.PHASE.template;
 	}
 
+	/**
+	 * 
+	 * @param {Context} context 
+	 * @returns {Promise<Context>}
+	 */
 	async execute(context) {
 		if (!(context.template instanceof HTMLElement) || (!context.template.attr(ATTRIBUTE.DATA) && !context.template.attr(ATTRIBUTE.COUNT))) return context;
 
-		const container = new DocumentFragment();
 		try {
-			const { template, resolver, renderer, content } = context;
+			const { template, resolver} = context;
 			const option = {
 				data: (template.attr(ATTRIBUTE.DATA) || "").trim(),
 				count: (template.attr(ATTRIBUTE.COUNT) || "").trim(),
@@ -104,23 +149,19 @@ class Repeat extends Directive {
 				step: await resolver.resolve(template.attr(ATTRIBUTE.STEP) || "1"),
 				varname: (template.attr(ATTRIBUTE.VAR) || "item").trim(),
 				status: (template.attr(ATTRIBUTE.STATUS) || "status").trim(),
-				condition: template.attr(ATTRIBUTE.CONDITION),
-				template: template,
-				tagname: content.tagName,
-				resolver,
-				renderer,
-				container,
-				context,
+				condition: template.attr(ATTRIBUTE.CONDITION)
 			};
-			if ((!option.data || option.data == "") && option.count) await doCount(option);
-			else await doRepeat(option);
+
+			context.stop = true;
+			context.ignoreChildren = true;
+			context.content = new DocumentFragment();
+
+			if ((!option.data || option.data == "") && option.count) await doCount(option, context);
+			else await doRepeat(option, context);
 		} catch (error) {
 			console.error("error at jstl-repeat:", error);
 		}
 
-		context.content = Array.from(container.childNodes);
-		context.stop = true;
-		context.ignore = true;
 		return context;
 	}
 }

@@ -29,7 +29,6 @@ export const toTemplate = (aTemplate) => {
 	else throw new Error("Template type is not supported!");
 };
 
-
 /**
  * @export
  * @class Context
@@ -39,7 +38,7 @@ export default class Context {
 	/** @type {Context|null} */
 	#parent = null;
 	/** @type {import("./Renderer.js").default} */
-	#renderer
+	#renderer;
 	/** @type {ExpressionResolver} */
 	#resolver = null;
 	/** @type {HTMLElement} */
@@ -49,7 +48,7 @@ export default class Context {
 	/** @type {Node|Array<Node>|null} */
 	#content = null;
 	/** @type {Set<Directive|DirectiveElement|string>} */
-	#ignoreDirectives = new Set();
+	#excludedDirectives = new Set();
 	/** @type {import("@default-js/defaultjs-common-utils/src/PromiseUtils.js").LazyPromise<Context>} */
 	#ready = lazyPromise();
 	/** @type {Array<Promise>} */
@@ -60,7 +59,6 @@ export default class Context {
 	// attributes that can be set by directives to control the rendering
 	#stop = false;
 	#ignoreChildren = false;
-	#appendContent = true;
 
 	/**
 	 * Creates an instance of Context.
@@ -72,34 +70,43 @@ export default class Context {
 	 * @param {ExpressionResolver} [options.resolver]
 	 * @param {HTMLElement} options.container
 	 * @param {Template|string|Node|NodeList|HTMLCollection|Array<Node>} options.template
+	 * @param {Set<Directive|DirectiveElement|string>} [options.excludedDirectives]
 	 */
-	constructor({ content = null, template, container, renderer, resolver = null }) {
-		if (!renderer)
-			throw new Error(
-				'Parameter "renderer" is required!',
-			);
+	constructor({
+		content = null,
+		template,
+		container,
+		renderer,
+		resolver = null,
+		excludedDirectives,
+	}) {
+		if (!renderer) throw new Error('Parameter "renderer" is required!');
 		if (resolver && !(resolver instanceof ExpressionResolver))
-			throw new Error(
-				'Parameter "resolver" must be an ExpressionResolver!',
-			);
+			throw new Error('Parameter "resolver" must be an ExpressionResolver!');
 		if (!template) throw new Error('Parameter "template" is required!');
 
 		this.#content = content;
-		this.#container = container
+		this.#container = container;
 		this.#template = toTemplate(template);
 		this.#renderer = renderer;
 		this.#resolver = resolver ? resolver : renderer.resolver;
+		this.#excludedDirectives = new Set();
+		if(excludedDirectives && excludedDirectives[Symbol.iterator]) {
+			for (const directive of excludedDirectives) {
+				this.excludeDirective(directive);
+			}
+		}
 	}
-	
+
 	/**
 	 * @readonly
 	 * @type {HTMLElement}
 	 */
-	get container(){
+	get container() {
 		return this.#container;
 	}
 
-	get renderer(){
+	get renderer() {
 		return this.#renderer;
 	}
 
@@ -183,22 +190,6 @@ export default class Context {
 		if (this.#ready.resolved) throw new Error("Context is resolved!");
 		this.#ignoreChildren = value;
 	}
-	
-	/**
-	 * @readonly
-	 * @type {boolean}
-	 */
-	get appendContent(){
-		return this.#appendContent;
-	}
-
-	/**
-	 * @type {boolean}
-	 */
-	set appendContent(value){
-		if (this.#ready.resolved) throw new Error("Context is resolved!");
-		this.#appendContent = value;
-	}
 
 	/**
 	 * append content to the context
@@ -220,23 +211,31 @@ export default class Context {
 		} else throw new Error("content must be a Node or an Array of Nodes!");
 	}
 
+	get excludedDirectives() {
+		return new Set(this.#excludedDirectives);
+	}
+
 	/**
 	 * add a directive to the list of directives that are ignored during rendering
-	 * @param {Directive|DirectiveElement|string} directive
+	 * @param {Directive|DirectiveElement|string} aDirective
 	 */
-	addToIgnoreDirectives(directive) {
+	excludeDirective(aDirective) {
 		if (this.#ready.resolved) throw new Error("Context is resolved!");
+		else if (aDirective == null) return this;
 		else if (
-			directive instanceof Directive ||
-			directive instanceof DirectiveElement
+			aDirective instanceof Directive ||
+			aDirective instanceof DirectiveElement
 		)
-			this.#ignoreDirectives.add(directive);
-		else if (typeof directive === "string")
-			this.#ignoreDirectives.add(directive);
-		else
+			this.#excludedDirectives.add(aDirective);
+		else if (typeof aDirective === "string") {
+			aDirective = Directive.getDirectiveByName(aDirective);
+			this.#excludedDirectives.add(aDirective);
+		} else
 			throw new Error(
 				"directive must be a Directive, a DirectiveElement or a string!",
 			);
+
+		return this;
 	}
 
 	/**
@@ -245,7 +244,7 @@ export default class Context {
 	 * @returns {boolean}
 	 */
 	acceptDirective(directive) {
-		return !this.#ignoreDirectives.has(directive);
+		return !this.#excludedDirectives.has(directive);
 	}
 
 	/**
@@ -301,5 +300,4 @@ export default class Context {
 		if (this.#content instanceof Array)
 			this.#content = Object.freeze(this.#content);
 	}
-
 }

@@ -112,7 +112,7 @@ const toContext = (iteration, context) => {
  * @returns {Context} 
  */
 const iterate = async (condition, context) => {
-	const { resolver, renderer, template, container } = context;
+	const { resolver, renderer } = context;
 	condition = condition ? await resolver.resolve(condition, false) : false;
 	if (condition){
 		context.stop = true;

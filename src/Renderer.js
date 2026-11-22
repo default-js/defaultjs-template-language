@@ -57,14 +57,11 @@ const MODEWORKER = {
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
 		if (target) {
-			if(content == null || content.length == 0)
-				target.remove();
-			else
-				target.replace(content);
+			if (content == null || content.length == 0) target.remove();
+			else target.replace(content);
 		} else {
 			container.empty();
-			if(content != null && content.length != 0)
-				container.append(content);
+			if (content != null && content.length != 0) container.append(content);
 		}
 	},
 	[MODE__APPEND]: ({
@@ -72,7 +69,7 @@ const MODEWORKER = {
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
-		if(content == null || content.length == 0) return;
+		if (content == null || content.length == 0) return;
 		if (target) target.after(content);
 		else container.append(content);
 	},
@@ -81,7 +78,7 @@ const MODEWORKER = {
 		/**@type {HTMLElement} */ target = null,
 		/**@type {Node|Array<Node>} */ content,
 	}) => {
-		if(content == null || content.length == 0) return;
+		if (content == null || content.length == 0) return;
 		if (target) target.before(content);
 		else container.prepend(content);
 	},
@@ -101,19 +98,20 @@ const applyMode = ({ container, target, content, mode }) => {
 	if (!mode || !MODEWORKER[mode])
 		throw new Error(`Mode "${mode}" is not supported!`);
 
-	if(content instanceof HTMLElement)
-		content = resovleJstlElement(content);
-	else 
-		content = Array.from(content).map((c) => resovleJstlElement(c)).flat();
+	if (content instanceof HTMLElement) content = resovleJstlElement(content);
+	else
+		content = Array.from(content)
+			.map((c) => resovleJstlElement(c))
+			.flat();
 
 	MODEWORKER[mode]({ container, target, content });
 };
 
 const resovleJstlElement = (content) => {
-	if(content instanceof HTMLElement && content.nodeName == "JSTL")
+	if (content instanceof HTMLElement && content.nodeName == "JSTL")
 		return Array.from(content.childNodes);
-	return content;	
-}
+	return content;
+};
 
 /**
  * find the event target by mode, container and target definition
@@ -168,7 +166,6 @@ const toInitialContext = (renderOptions, renderer) => {
 		resolver,
 	});
 };
-
 
 export default class Renderer {
 	static MODETYPES = MODETYPES;
@@ -230,9 +227,9 @@ export default class Renderer {
 		let eventTarget = findEventTarget(EVENT__RENDER, container, target, mode);
 
 		context = toInitialContext(context, this);
-		fireEvent(eventTarget, EVENT__RENDER, context);		
+		fireEvent(eventTarget, EVENT__RENDER, context);
 		context = await this.#render(context);
-		
+
 		applyMode({
 			container,
 			target,
@@ -259,12 +256,15 @@ export default class Renderer {
 
 		context = await context.waitForReady();
 		const { container, content } = context;
-		if (!isNullOrUndefined(content) && content.length > 0 && !isNullOrUndefined(container))
+		if (
+			!isNullOrUndefined(content) &&
+			!isNullOrUndefined(container)
+		)
 			applyMode({
-			container,
-			content,
-			mode: MODETYPES.append
-		});
+				container,
+				content,
+				mode: MODETYPES.append,
+			});
 
 		return context;
 	}
@@ -302,7 +302,7 @@ export default class Renderer {
 		const {
 			/**@type {HTMLElement} */ container,
 			/**@type {Node} */ template,
-			resolver,
+			/**@type {ExpressionResolver}*/ resolver,
 		} = context;
 
 		context = new Context({
@@ -310,30 +310,44 @@ export default class Renderer {
 			template,
 			renderer: this,
 			resolver: new ExpressionResolver({ name: SCOPE__NODE, parent: resolver }),
+			excludedDirectives: context.excludedDirectives,
 		});
 
 		for (const directive of Directive.directives) {
-			if (context.acceptDirective(directive)) {
+			const accepted = context.acceptDirective(directive);
+			if (accepted) {
 				context = await directive.execute(context);
 				if (context.stop) break;
 			}
 		}
 
-		if (!context.ignoreChildren && template.childNodes.length > 0)
+		// TODO DirectiveElement should be handled here, but it is not yet implemented
+
+		this.#renderChildren(context.content, context);
+		context = await context.waitForReady();
+		return context;
+	}
+
+	#renderChildren(content, context) {
+		if (
+			content == null ||
+			context.ignoreChildren ||
+			context.template.childNodes.length < 1
+		)
+			return;
+
+		if (content instanceof HTMLElement) {
 			context.addBlocking(
 				this.#render(
 					new Context({
-						template: template.childNodes,
-						container: context.content,
+						template: context.template.childNodes,
+						container: content,
 						renderer: this,
 						resolver: context.resolver,
 					}),
 				),
 			);
-
-		context = await context.waitForReady();		
-
-		return context;
+		} else content.map((node) => this.#renderChildren(node, context));
 	}
 
 	/**

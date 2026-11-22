@@ -438,6 +438,19 @@ Found 2026-10-26 by reading the code of the rewrite in progress (B63); not measu
   always appends. Checked in Node with a class of the same shape: the property reads as a function.
 - `src/Renderer.js`, constructor — `this.#parent = parent` reads a `parent` that is no parameter;
   in the browser it is `window.parent`.
+- `src/directives/Repeat.js`, `toContext`, with `Context.acceptDirective` — an iteration renders the
+  element of `jstl-repeat` itself and excludes the directive by the string `"jstl-repeat"`, but
+  `acceptDirective` asks `Set.has` with the `Directive` instance, which never matches a string: the
+  directive runs again on the same element in every iteration, without end. Each step awaits
+  microtasks only, so the page never reaches a timer again: `testTimeout` does not fire, the
+  reporter stops reporting, and the run never ends. Measured 2026-11-21 in Chromium on the
+  uncommitted state of 2026-11-08: "scope jstl-repeat" of `test/tests/directives/Data.test.js`
+  hangs alone as well; a probe outside the repository counted 8 executions on one `DIV`, each
+  with `excludedDirectives` `["jstl-repeat"]` and `acceptDirective` `true`.
+- `src/directives/Repeat.js`, `doRepeat` and `doCount` — `context.appendContent(itemContext.content)`
+  throws "content must be a Node or an Array of Nodes!" for an iteration without content, as
+  `iterate` leaves it when `jstl-repeat-condition` stops the loop. The throw for `null` measured
+  with the same probe; the path through the condition found by reading, not measured.
 
 ### B65 — the events `render` and `rendered` of the new `Renderer`
 
